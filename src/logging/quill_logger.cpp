@@ -102,7 +102,8 @@ auto set_log_level(int level) -> void { quill_logger()->set_log_level(to_quill_l
 
 auto get_log_level() -> int { return from_quill_level(quill_logger()->get_log_level()); }
 
-auto emit(int level, char const* message, unsigned long length) -> void {
+auto emit(int level, char const* file, unsigned line, char const* function, char const* message,
+          unsigned long length) -> void {
   // The message is already formatted, so the format string of the statement is "{}" and the
   // message itself is the only value that goes onto the queue.
   static constexpr quill::MacroMetadata metadata{
@@ -110,7 +111,8 @@ auto emit(int level, char const* message, unsigned long length) -> void {
       quill::MacroMetadata::Event::LogWithRuntimeMetadataShallowCopy};
 
   quill_logger()->template log_statement_runtime_metadata<true>(
-      &metadata, "{}", "", "", "", 0U, to_quill_level(level), std::string{message, length});
+      &metadata, "{}", file, function, "", line, to_quill_level(level),
+      std::string{message, length});
 }
 
 auto format_double(double value, char type, int precision, char* out, unsigned long capacity)

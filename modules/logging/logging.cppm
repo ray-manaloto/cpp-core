@@ -48,13 +48,27 @@ enum class level : unsigned char {
 // a format string that is malformed, or that does not match the number of arguments, does not
 // compile.
 //
+// The constructor also captures the source location of the call that built the format string. The
+// three location parameters have default arguments, and a default argument is evaluated at the
+// call site, so __builtin_FILE(), __builtin_LINE() and __builtin_FUNCTION() name the caller's file,
+// line and function - not this module's.
+//
+// That is how the module path gets a source location without a macro. A function cannot learn its
+// call site in any other way: the module's interface deliberately avoids the standard library (see
+// the top of this file), so std::source_location is not available, and a macro cannot be used
+// because a macro defined in this module's global module fragment is not visible in the importing
+// translation units (clang and GCC both drop it).
+//
 // The template parameter is the list of the arguments, each of them wrapped in a type_identity so
 // that the format string is not used to deduce them (see the log functions below).
 template <typename... Wrapped>
 class format_string {
 public:
   template <unsigned long N>
-  consteval format_string(char const (&text)[N]) : text(text), length(N - 1U) {
+  consteval format_string(char const (&text)[N], char const *file = __builtin_FILE(),
+                           unsigned line = __builtin_LINE(),
+                           char const *function = __builtin_FUNCTION())
+      : text(text), length(N - 1U), file(file), line(line), function(function) {
     if (!detail::format_matches<sizeof...(Wrapped)>(text, N - 1U)) {
       // A consteval function can only fail at compile time by throwing: the compiler reports the
       // throw at the call site.
@@ -64,6 +78,9 @@ public:
 
   char const *text;
   unsigned long length;
+  char const *file;
+  unsigned line;
+  char const *function;
 };
 
 // Starts the logging backend. Idempotent: the first log call starts it too.
@@ -82,17 +99,21 @@ auto set_level(level l) -> void { detail::set_log_level(static_cast<int>(l)); }
 
 // Logs a message that is already formatted. It has its own name, so that it does not compete
 // with the formatted overload below.
-auto log_raw(level l, char const *message, unsigned long length) -> void {
-  detail::emit(static_cast<int>(l), message, length);
+//
+// The location parameters are defaulted, so they name the call site (see format_string).
+auto log_raw(level l, char const *message, unsigned long length, char const *file = __builtin_FILE(),
+             unsigned line = __builtin_LINE(), char const *function = __builtin_FUNCTION()) -> void {
+  detail::emit(static_cast<int>(l), file, line, function, message, length);
 }
 
 // Logs a formatted message. The format string is checked at compile time: a format string that
-// does not match the arguments does not compile.
+// does not match the arguments does not compile. The source location comes from the format string
+// itself, which captured it where it was built.
 template <typename... Args>
 auto log(level l, format_string<detail::type_identity_t<Args>...> fmt, Args &&...args) -> void {
   detail::message_buffer buffer;
   detail::format_message(buffer, fmt.text, fmt.length, detail::forward<Args>(args)...);
-  detail::emit(static_cast<int>(l), buffer.data(), buffer.size());
+  detail::emit(static_cast<int>(l), fmt.file, fmt.line, fmt.function, buffer.data(), buffer.size());
 }
 
 // Logs a message at the trace level.

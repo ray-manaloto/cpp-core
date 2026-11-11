@@ -121,6 +121,31 @@ The module's interface is the whole API: `setup`, `flush`, `set_level`, `current
 `consteval` and throws (a compile-time error) when the format string is malformed or does not
 match the arguments.
 
+The module path reports the call site's file and line, like the catalog path does, and it does it
+without a macro. `format_string<>`'s constructor takes the location as defaulted parameters:
+
+```cpp
+template <unsigned long N>
+consteval format_string(char const (&text)[N], char const *file = __builtin_FILE(),
+                         unsigned line = __builtin_LINE(),
+                         char const *function = __builtin_FUNCTION())
+```
+
+A default argument is evaluated at the call site, so the builtins name the *caller's* file, line
+and function, not the module's. The location travels with the format string into `log()`, which
+hands it to the implementation, and quill prints it in the `%(short_source_location)` field.
+`log_raw()` takes the same defaulted parameters directly.
+
+A macro is the usual way to capture a call site, and it does not work here. A macro defined in
+the module's global module fragment does not reach the importing translation units — neither in
+clang nor in GCC, both of which drop it — and the module cannot include a header that its
+importers include, because the global module fragment is copied into every importer and the two
+copies of the header would collide. The default-argument trick needs neither a macro nor a
+header, and it works the same way on both compilers.
+
+The alternatives that were measured, the reproductions and the upstream sources are in
+[`docs/module-source-location/`](docs/module-source-location/README.md).
+
 The module's interface does not use the standard library. A module's global module fragment is
 copied into every translation unit that imports it, so a standard header that the interface
 depends on ends up next to the standard headers of any translation unit that includes them, and
@@ -195,9 +220,9 @@ to refer to.
 ### What the two paths share
 
 - **Call site fidelity:** the call site's file and line are passed to the logger, so quill
-  reports the `CIB_INFO` (or `info`) call site, not the adapter. The module path does not report
-  a source location: a function of a module cannot know its call site's location without a macro,
-  so the field is empty there. The catalog path (the `CIB_*` macros) does report it.
+  reports the `CIB_INFO` (or `info`) call site, not the adapter. Both paths report it: the
+  catalog path gets it from the `CIB_*` macros, the module path from the defaulted location
+  parameters of `format_string<>`'s constructor (see [The module path](#the-module-path)).
 - **Levels:** cib's levels follow MIPI Sys-T (0 = most severe); quill's scale runs the other way,
   so they are mapped to keep the relative order — `MAX`→`TraceL3`, `FATAL`→`Critical`,
   `ERROR`→`Error`, `WARN`→`Warning`, `INFO`→`Info`, `USER1`→`Debug`, `USER2`→`TraceL1`,
@@ -233,6 +258,18 @@ suite tests = [] {
 `tests/logging_test.cpp` is an object library (`cpp-core-test-code`), so that the catalog tooling
 can scan it for the messages that need a catalog ID; the test executable links the objects. ctest
 runs it as `cpp-core-tests`.
+
+The source location of a log call is checked by capturing what the sink writes: the capture
+redirects the file descriptor of stdout to a temporary file for the duration of the test, and the
+test then looks for `logging_test.cpp:<line>` in it. The line is the line of the log call, so the
+check fails if the location is missing or points somewhere else.
+
+A malformed format string is a compile-time error, but inside the `ut` suite the diagnostic is
+hard to read: the suite's initializer is evaluated at compile time, and the `consteval`
+constructor's throw is reported as `call to immediate function ... is not a constant expression`,
+with the notes pointing at the first non-constexpr call in the suite instead of at the format
+string. The same call outside the suite names the real cause (`call to consteval function ... is
+not a constant expression`).
 
 ## Include-what-you-use
 

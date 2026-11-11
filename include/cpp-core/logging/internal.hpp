@@ -39,7 +39,12 @@ auto set_log_level(int level) -> void;
 [[nodiscard]] auto get_log_level() -> int;
 
 // Hands a message to quill. The message is copied into quill's queue.
-auto emit(int level, char const* message, unsigned long length) -> void;
+//
+// The source location is passed as plain values, because this interface cannot name the module's
+// own types (see above). The file and the function name are string literals with static storage
+// duration (they come from __builtin_FILE() and __builtin_FUNCTION()), so they outlive the call.
+auto emit(int level, char const* file, unsigned line, char const* function, char const* message,
+          unsigned long length) -> void;
 
 // Formats a floating-point value into `out` (at most `capacity` bytes) and returns the number of
 // bytes written. `type` is the format specifier's type character ('f', 'e', 'g', or '\0' for the
