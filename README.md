@@ -38,6 +38,35 @@ workflow presets of the same name. Every build directory is `build/<preset>`.
 - CMake ≥ 3.31, Ninja.
 - `gcc-16`, `g++-16`, `clang-p2996` and `clang++-p2996` on PATH under those names, or named through the environment variables `CPP_CORE_CXX` and `CPP_CORE_CC` (for example in the `environment` of a preset in a gitignored `CMakeUserPresets.json`). The triplets pass both through to vcpkg (`VCPKG_ENV_PASSTHROUGH`), so the ports get the same compiler.
 
+## Logging
+
+Logging uses [Intel's compile-time-init-build (cib)](https://github.com/intel/compile-time-init-build) logging interface with [quill](https://github.com/odygrd/quill) as the logger.
+
+cib splits logging in two: the interface (`<log/log.hpp>`, the `CIB_*` macros) and an implementation the application selects. The implementation here is `include/cpp-core/logging/cib_quill.hpp`, which specializes `logging::config<>` with a logger that forwards to quill:
+
+```cpp
+#include <cpp-core/logging/cib_quill.hpp>
+
+namespace my_module {
+CIB_LOG_MODULE("my_module");   // declares cib_log_env_t, so it goes inside a namespace
+
+auto f() {
+  CIB_INFO("The answer is: {}", 42);   // 42 is a compile-time argument: folded into the format
+                                       // string at compile time
+  CIB_INFO("point has {} data members", count);   // runtime argument: formatted by quill's backend
+}
+} // namespace my_module
+```
+
+- **Call site fidelity:** cib passes `__FILE__`/`__LINE__` to the logger, so quill reports the `CIB_INFO` call site, not the adapter.
+- **Levels:** cib's levels follow MIPI Sys-T (0 = most severe); quill's scale runs the other way, so they are mapped to keep the relative order — `MAX`→`TraceL3`, `FATAL`→`Critical`, `ERROR`→`Error`, `WARN`→`Warning`, `INFO`→`Info`, `USER1`→`Debug`, `USER2`→`TraceL1`, `TRACE`→`TraceL2`.
+- **Modules:** the cib module is passed to quill as a tag, and shown in the `%(tags)` field of the pattern.
+- **Threading:** quill formats on its backend thread, so runtime arguments are queued rather than formatted on the calling thread.
+- **ODR:** `logging::config<>` is a variable template: every translation unit that logs must include `cpp-core/logging/cib_quill.hpp` and link `cpp-core::logging`, or it would use cib's null logger.
+- `cpp_core::logging::setup()` starts quill's backend (done automatically on the first log call), and `cpp_core::logging::flush()` waits for the queued messages to be written.
+
+The cib library is not in the vcpkg registry, so `ports/intel-cib` and its dependencies (`ports/intel-cpp-std-extensions`, `ports/intel-baremetal-concurrency`, `ports/intel-baremetal-senders-and-receivers`) are overlay ports, pinned by commit.
+
 ## Pieces
 
 - **`cmake/toolchains/cpp-core.cmake`** is one toolchain for every compiler. It picks the compiler from `CPP_CORE_COMPILER` by its bare name on PATH and sets the flags for C++26, reflection, libc++, hardening and sanitizers.
@@ -47,7 +76,7 @@ workflow presets of the same name. Every build directory is `build/<preset>`.
   - `vcpkg.json` pins `builtin-baseline`; add dependencies here (as features, if they are optional).
   - `vcpkg-configuration.json` adds only the overlays. It has no default registry, because one would silently replace the manifest's baseline.
 - **`triplets/arm64-osx-<compiler>[-asan|-tsan].cmake`** makes vcpkg build its ports with our toolchain (`VCPKG_CHAINLOAD_TOOLCHAIN_FILE`), so libraries and project share the compiler, standard library and sanitizers.
-- **`ports/`** holds overlay ports for libraries vcpkg lacks or that need a patch (empty for now).
+- **`ports/`** holds overlay ports for libraries vcpkg lacks or that need a patch (currently the cib family; see [Logging](#logging)).
 
 ## Without vcpkg
 
