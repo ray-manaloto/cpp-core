@@ -44,17 +44,16 @@ template <typename T> struct remove_cv<T const volatile> {
 template <typename T> struct remove_ref {
   using type = T;
 };
-template <typename T> struct remove_ref<T&> {
+template <typename T> struct remove_ref<T &> {
   using type = T;
 };
-template <typename T> struct remove_ref<T&&> {
+template <typename T> struct remove_ref<T &&> {
   using type = T;
 };
 
 // The type without its references and without its top-level cv-qualifiers. The reference goes
 // first: a cv-qualified reference is a cv-qualified object, not a cv-qualified reference.
-template <typename T>
-using remove_cvref_t = typename remove_cv<typename remove_ref<T>::type>::type;
+template <typename T> using remove_cvref_t = typename remove_cv<typename remove_ref<T>::type>::type;
 
 template <typename T> struct remove_extent {
   using type = T;
@@ -66,8 +65,7 @@ template <typename T> struct remove_extent<T[]> {
   using type = T;
 };
 
-template <typename T>
-using remove_extent_t = typename remove_extent<T>::type;
+template <typename T> using remove_extent_t = typename remove_extent<T>::type;
 
 template <typename T> struct is_array : false_type<T> {};
 template <typename T> struct is_array<T[]> : true_type<T> {};
@@ -108,9 +106,7 @@ template <typename T> constexpr bool is_signed_v = T(-1) < T(0);
 
 // The detection of the members that the formatter uses.
 template <typename From, typename To>
-concept convertible_to = requires(From &&from) {
-  static_cast<To>(static_cast<From &&>(from));
-};
+concept convertible_to = requires(From &&from) { static_cast<To>(static_cast<From &&>(from)); };
 
 // A type that behaves like a string: it has a c_str() and a size(). This covers std::string and
 // std::string_view without the module's interface having to name them.
@@ -141,13 +137,13 @@ template <typename T> [[nodiscard]] auto forward(T &&t) noexcept -> T && {
 
 struct field_spec {
   char fill = ' ';
-  char align = '\0';      // '<', '>', '^' or '\0' for the default
-  char sign = '\0';       // '+', '-' or '\0'
+  char align = '\0'; // '<', '>', '^' or '\0' for the default
+  char sign = '\0'; // '+', '-' or '\0'
   bool alternate = false; // '#'
-  bool zero_pad = false;  // '0'
+  bool zero_pad = false; // '0'
   unsigned long width = 0U;
   int precision = -1; // the digits after the decimal point, -1 if not given
-  char type = '\0';   // the type character, '\0' if not given
+  char type = '\0'; // the type character, '\0' if not given
   char default_align = '<'; // the alignment to use when the specification does not give one
 };
 
@@ -330,9 +326,8 @@ template <unsigned long arg_count>
   return upper ? upper_digits[value] : lower_digits[value];
 }
 
-template <typename T>
-auto format_integer(T value, field_spec &spec, char *out, unsigned long capacity) noexcept
-    -> unsigned long {
+template <typename T> auto format_integer(T value, field_spec &spec, char *out,
+                                          unsigned long capacity) noexcept -> unsigned long {
   auto base = 10U;
   auto upper = false;
   switch (spec.type) {
@@ -426,9 +421,8 @@ auto format_integer(T value, field_spec &spec, char *out, unsigned long capacity
 }
 
 // The formatter of one argument. The type of the argument decides how it is formatted.
-template <typename T>
-auto format_value(void const *value, field_spec &spec, char *out,
-                  unsigned long capacity) noexcept -> unsigned long {
+template <typename T> auto format_value(void const *value, field_spec &spec, char *out,
+                                        unsigned long capacity) noexcept -> unsigned long {
   auto const &v = *static_cast<T const *>(value);
   if constexpr (is_same<T, bool>::value) {
     spec.default_align = '<';
@@ -444,7 +438,7 @@ auto format_value(void const *value, field_spec &spec, char *out,
     // An array - a string literal, for example - is formatted as the string it holds.
     using element = remove_cvref_t<remove_extent_t<T>>;
     static_assert(is_same<element, char>::value || is_same<element, signed char>::value ||
-                      is_same<element, unsigned char>::value,
+                    is_same<element, unsigned char>::value,
                   "only an array of characters can be formatted");
     spec.default_align = '<';
     auto const *text = static_cast<char const *>(static_cast<void const *>(v));
@@ -456,7 +450,8 @@ auto format_value(void const *value, field_spec &spec, char *out,
     return format_double(static_cast<double>(v), spec.type, spec.precision, out, capacity);
   } else if constexpr (string_like<T>) {
     spec.default_align = '<';
-    return copy_text(v.c_str(), static_cast<unsigned long>(v.size()), spec.precision, out, capacity);
+    return copy_text(v.c_str(), static_cast<unsigned long>(v.size()), spec.precision, out,
+                     capacity);
   } else if constexpr (self_formatting<T>) {
     spec.default_align = '<';
     return v.format_to(out, capacity);
@@ -534,13 +529,13 @@ auto append_escaped(message_buffer &out, char const *text, unsigned long length)
 }
 
 // Formats the message into the buffer.
-template <typename... Args>
-auto format_message(message_buffer &out, char const *text, unsigned long length, Args &&...args)
-    -> void {
+template <typename... Args> auto format_message(message_buffer &out, char const *text,
+                                                unsigned long length, Args &&...args) -> void {
   if constexpr (sizeof...(Args) == 0U) {
     append_escaped(out, text, length);
   } else {
-    using formatter_fn = unsigned long (*)(void const *, field_spec &, char *, unsigned long) noexcept;
+    using formatter_fn =
+      unsigned long (*)(void const *, field_spec &, char *, unsigned long) noexcept;
     formatter_fn const formatters[] = {&format_value<remove_cvref_t<Args>>...};
     void const *const values[] = {argument_value(args)...};
 
@@ -584,7 +579,7 @@ auto format_message(message_buffer &out, char const *text, unsigned long length,
         if (arg_index < static_cast<unsigned long>(sizeof...(Args))) {
           char value[1024]{};
           auto const value_length =
-              formatters[arg_index](values[arg_index], spec, value, sizeof(value));
+            formatters[arg_index](values[arg_index], spec, value, sizeof(value));
           out.append_padded(value, value_length, spec);
         }
         i = j + 1U;

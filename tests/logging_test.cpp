@@ -74,7 +74,7 @@ suite tests = [] {
   "the level can be set and read back"_test = [] {
     com::rsm::logging::set_level(com::rsm::logging::level::warning);
     expect(com::rsm::logging::current_level() == com::rsm::logging::level::warning)
-        << "the level was not changed";
+      << "the level was not changed";
 
     com::rsm::logging::set_level(com::rsm::logging::level::info);
     expect(com::rsm::logging::current_level() == com::rsm::logging::level::info);
@@ -138,7 +138,7 @@ suite tests = [] {
     auto const expected = "logging_test.cpp:" + std::to_string(expected_line) + " ";
     auto const output = capture.contents();
     expect(output.find(expected) != std::string::npos)
-        << "the source location is not in the log output: " << output;
+      << "the source location is not in the log output: " << output;
   };
 
   "a raw log call carries the source location of the call"_test = [] {
@@ -155,7 +155,7 @@ suite tests = [] {
     auto const expected = "logging_test.cpp:" + std::to_string(expected_line) + " ";
     auto const output = capture.contents();
     expect(output.find(expected) != std::string::npos)
-        << "the source location is not in the log output: " << output;
+      << "the source location is not in the log output: " << output;
   };
 };
 

@@ -21,11 +21,11 @@ struct point {
 auto reflection_demo() -> void {
   // GCC 16's member range cannot outlive constant evaluation, so call size() on the temporary.
   constexpr auto member_count =
-      std::meta::nonstatic_data_members_of(^^point, std::meta::access_context::unchecked()).size();
+    std::meta::nonstatic_data_members_of(^^point, std::meta::access_context::unchecked()).size();
   static_assert(member_count == 2);
 
   com::rsm::logging::info("cpp-core: C++26 static reflection OK (point has {} data members)",
-                           member_count);
+                          member_count);
 }
 
 } // namespace demo

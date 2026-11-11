@@ -101,9 +101,8 @@ template <typename Str> [[nodiscard]] consteval auto string_type() {
 
 // The catalog's message type: the format string and the types of the runtime arguments. The
 // catalog tooling assigns a string ID to each distinct type.
-template <typename Str, typename... Args>
-using message_type_t = sc::message<sc::undefined<sc::args<Args...>, -1, decltype(string_type<Str>()),
-                                                sc::tags<>, sc::named_args<>>>;
+template <typename Str, typename... Args> using message_type_t = sc::message<
+  sc::undefined<sc::args<Args...>, -1, decltype(string_type<Str>()), sc::tags<>, sc::named_args<>>>;
 
 // The catalog's string type for a module name.
 template <typename Env> [[nodiscard]] consteval auto module_string_type() {
@@ -117,8 +116,8 @@ template <typename Env> [[nodiscard]] consteval auto module_string_type() {
 }
 
 // The catalog's module type.
-template <typename Env>
-using module_type_t = sc::module_string<sc::undefined<void, -1, decltype(module_string_type<Env>())>>;
+template <typename Env> using module_type_t =
+  sc::module_string<sc::undefined<void, -1, decltype(module_string_type<Env>())>>;
 
 // The quill-backed implementation of cib's logging customization point.
 //
@@ -151,12 +150,13 @@ struct quill_config {
         // The metadata of the statement. The placeholders are unused on the runtime-metadata
         // path: the real file, line, format string and tags are passed as arguments below.
         static constexpr quill::MacroMetadata metadata{
-            "[placeholder]", "[placeholder]", "[placeholder]", nullptr, quill::LogLevel::None,
-            quill::MacroMetadata::Event::LogWithRuntimeMetadataShallowCopy};
+          "[placeholder]",       "[placeholder]",
+          "[placeholder]",       nullptr,
+          quill::LogLevel::None, quill::MacroMetadata::Event::LogWithRuntimeMetadataShallowCopy};
 
         quill_logger()->template log_statement_runtime_metadata<true>(
-            &metadata, fmt.c_str(), file, "", tags.c_str(), static_cast<std::uint32_t>(line), level,
-            decay_enum_value(std::forward<Args>(args))...);
+          &metadata, fmt.c_str(), file, "", tags.c_str(), static_cast<std::uint32_t>(line), level,
+          decay_enum_value(std::forward<Args>(args))...);
       });
     }
   } logger;
@@ -167,6 +167,5 @@ struct quill_config {
 // Select the quill implementation for cib's logging. Every TU that logs must see this
 // specialization (see the ODR note at the top of this header).
 namespace logging {
-template <>
-inline auto config<> = com::rsm::logging::detail::quill_config{};
+template <> inline auto config<> = com::rsm::logging::detail::quill_config{};
 } // namespace logging

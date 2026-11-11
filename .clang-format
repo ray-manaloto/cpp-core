@@ -1,116 +1,65 @@
 ---
+# The style of cpp-core. It was derived from the code that was already in the repository (the
+# .clang-format that was here before was glaze's, and the code never followed it: the code uses
+# two-space indentation and attaches the braces, glaze's config uses three-space indentation and
+# detaches them). The tool is now enforced by the `format` and `format-check` targets (see
+# cmake/format.cmake), so this file is the single source of truth for the layout of the C++.
+#
+# The parts that the tools cannot decide are in .editorconfig (line endings, final newline).
 Language: Cpp
-AccessModifierOffset: -1
+BasedOnStyle: LLVM
+AccessModifierOffset: -2
 AlignAfterOpenBracket: Align
-AlignConsecutiveMacros: false
-AlignConsecutiveAssignments: false
-AlignConsecutiveDeclarations: false
 AlignEscapedNewlines: Left
 AlignOperands: true
-AlignTrailingComments: false
 AllowAllArgumentsOnNextLine: true
 AllowAllConstructorInitializersOnNextLine: true
 AllowAllParametersOfDeclarationOnNextLine: true
+AlignTrailingComments: false
 AllowShortBlocksOnASingleLine: Never
 AllowShortCaseLabelsOnASingleLine: false
 AllowShortFunctionsOnASingleLine: All
+AllowShortIfStatementsOnASingleLine: Never
 AllowShortLambdasOnASingleLine: All
-AllowShortIfStatementsOnASingleLine: WithoutElse
-AllowShortLoopsOnASingleLine: true
+AllowShortLoopsOnASingleLine: false
 AlwaysBreakAfterDefinitionReturnType: None
 AlwaysBreakAfterReturnType: None
 AlwaysBreakBeforeMultilineStrings: true
-AlwaysBreakTemplateDeclarations: Yes
+AlwaysBreakTemplateDeclarations: No
+PenaltyBreakTemplateDeclaration: 10
+PenaltyReturnTypeOnItsOwnLine: 1000
 BinPackArguments: true
 BinPackParameters: true
-BraceWrapping:
-  AfterCaseLabel: false
-  AfterClass: true
-  AfterControlStatement: false
-  AfterEnum: false
-  AfterFunction: true
-  AfterNamespace: true
-  AfterObjCDeclaration: false
-  AfterStruct: true
-  AfterUnion: false
-  AfterExternBlock: false
-  BeforeCatch: true
-  BeforeElse: true
-  IndentBraces: false
-  SplitEmptyFunction: false
-  SplitEmptyRecord: false
-  SplitEmptyNamespace: false
-BreakBeforeBinaryOperators: None
-BreakBeforeBraces: Custom
-BreakBeforeInheritanceComma: false
-BreakInheritanceList: BeforeColon
-BreakBeforeTernaryOperators: true
-BreakConstructorInitializersBeforeComma: false
-BreakConstructorInitializers: BeforeColon
-BreakAfterJavaFieldAnnotations: false
+BreakBeforeBraces: Attach
+BreakConstructorInitializers: BeforeComma
 BreakStringLiterals: true
-ColumnLimit: 120
-CompactNamespaces: false
+ColumnLimit: 100
 ConstructorInitializerAllOnOneLineOrOnePerLine: true
-ConstructorInitializerIndentWidth: 3
-ContinuationIndentWidth: 3
+ConstructorInitializerIndentWidth: 2
+ContinuationIndentWidth: 2
 Cpp11BracedListStyle: true
-DeriveLineEnding: true
+DeriveLineEnding: false
 DerivePointerAlignment: false
-DisableFormat: false
-ExperimentalAutoDetectBinPacking: false
 FixNamespaceComments: false
-IncludeBlocks: Regroup
-IncludeCategories:
-  - Regex: ^<ext/.*\.h>
-    Priority: 2
-    SortPriority: 0
-  - Regex: ^<.*\.h>
-    Priority: 1
-    SortPriority: 0
-  - Regex: ^<.*
-    Priority: 2
-    SortPriority: 0
-  - Regex: .*
-    Priority: 3
-    SortPriority: 0
-IncludeIsMainRegex: ([-_](test|unittest))?$
-IncludeIsMainSourceRegex: ""
+IncludeBlocks: Preserve
 IndentCaseLabels: false
-IndentGotoLabels: true
 IndentPPDirectives: None
-IndentWidth: 3
+IndentWidth: 2
 IndentWrappedFunctionNames: false
-JavaScriptQuotes: Leave
-JavaScriptWrapImports: true
 KeepEmptyLinesAtTheStartOfBlocks: false
-MacroBlockBegin: ""
-MacroBlockEnd: ""
 MaxEmptyLinesToKeep: 1
-NamespaceIndentation: All
-ObjCBinPackProtocolList: Never
-ObjCBlockIndentWidth: 2
-ObjCSpaceAfterProperty: false
-ObjCSpaceBeforeProtocolList: true
-PenaltyBreakAssignment: 2
-PenaltyBreakBeforeFirstCallParameter: 1
-PenaltyBreakComment: 300
-PenaltyBreakFirstLessLess: 120
-PenaltyBreakString: 1000
-PenaltyBreakTemplateDeclaration: 10
-PenaltyExcessCharacter: 1000000
-PenaltyReturnTypeOnItsOwnLine: 200
-PointerAlignment: Left
-ReflowComments: true
-SortIncludes: true
-SortUsingDeclarations: true
+NamespaceIndentation: None
+PointerAlignment: Right
+ReferenceAlignment: Right
+ReflowComments: false
+SortIncludes: false
+SortUsingDeclarations: false
 SpaceAfterCStyleCast: false
 SpaceAfterLogicalNot: false
 SpaceAfterTemplateKeyword: true
 SpaceBeforeAssignmentOperators: true
 SpaceBeforeCpp11BracedList: false
 SpaceBeforeCtorInitializerColon: true
-SpaceBeforeInheritanceColon: true
 SpaceBeforeParens: ControlStatements
 SpaceBeforeRangeBasedForLoopColon: true
 SpaceInEmptyBlock: false
@@ -124,12 +73,5 @@ SpacesInParentheses: false
 SpacesInSquareBrackets: false
 SpaceBeforeSquareBrackets: false
 Standard: Auto
-TabWidth: 8
-UseCRLF: false
+TabWidth: 2
 UseTab: Never
-SpaceBeforeCaseColon: false
-BitFieldColonSpacing: Both
-EmptyLineAfterAccessModifier: Never
-EmptyLineBeforeAccessModifier: Always
-QualifierAlignment: Left
-ReferenceAlignment: Left

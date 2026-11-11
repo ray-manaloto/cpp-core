@@ -61,14 +61,13 @@ enum class level : unsigned char {
 //
 // The template parameter is the list of the arguments, each of them wrapped in a type_identity so
 // that the format string is not used to deduce them (see the log functions below).
-template <typename... Wrapped>
-class format_string {
+template <typename... Wrapped> class format_string {
 public:
   template <unsigned long N>
   consteval format_string(char const (&text)[N], char const *file = __builtin_FILE(),
-                           unsigned line = __builtin_LINE(),
-                           char const *function = __builtin_FUNCTION())
-      : text(text), length(N - 1U), file(file), line(line), function(function) {
+                          unsigned line = __builtin_LINE(),
+                          char const *function = __builtin_FUNCTION())
+    : text(text), length(N - 1U), file(file), line(line), function(function) {
     if (!detail::format_matches<sizeof...(Wrapped)>(text, N - 1U)) {
       // A consteval function can only fail at compile time by throwing: the compiler reports the
       // throw at the call site.
@@ -93,16 +92,15 @@ auto flush() -> void { detail::flush_logger(); }
 auto set_level(level l) -> void { detail::set_log_level(static_cast<int>(l)); }
 
 // The least severe level that is logged.
-[[nodiscard]] auto current_level() -> level {
-  return static_cast<level>(detail::get_log_level());
-}
+[[nodiscard]] auto current_level() -> level { return static_cast<level>(detail::get_log_level()); }
 
 // Logs a message that is already formatted. It has its own name, so that it does not compete
 // with the formatted overload below.
 //
 // The location parameters are defaulted, so they name the call site (see format_string).
-auto log_raw(level l, char const *message, unsigned long length, char const *file = __builtin_FILE(),
-             unsigned line = __builtin_LINE(), char const *function = __builtin_FUNCTION()) -> void {
+auto log_raw(level l, char const *message, unsigned long length,
+             char const *file = __builtin_FILE(), unsigned line = __builtin_LINE(),
+             char const *function = __builtin_FUNCTION()) -> void {
   detail::emit(static_cast<int>(l), file, line, function, message, length);
 }
 

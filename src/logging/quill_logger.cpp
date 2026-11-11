@@ -31,8 +31,8 @@ constexpr auto sink_id = "cpp-core-console";
 
 // The pattern shows the tags (the cib module and the catalog IDs) next to the logger name.
 constexpr auto pattern =
-    "%(time) [%(thread_id)] %(short_source_location:<28) LOG_%(log_level:<9) %(logger:<12) "
-    "[%(tags)] %(message)";
+  "%(time) [%(thread_id)] %(short_source_location:<28) LOG_%(log_level:<9) %(logger:<12) "
+  "[%(tags)] %(message)";
 
 [[nodiscard]] auto to_quill_level(int level) -> quill::LogLevel {
   switch (level) {
@@ -80,8 +80,8 @@ constexpr auto pattern =
 
 } // namespace
 
-auto quill_logger() -> quill::Logger* {
-  static quill::Logger* logger = []() -> quill::Logger* {
+auto quill_logger() -> quill::Logger * {
+  static quill::Logger *logger = []() -> quill::Logger * {
     quill::Backend::start();
     auto sink = quill::Frontend::create_or_get_sink<quill::ConsoleSink>(sink_id);
     return quill::Frontend::create_or_get_logger(logger_name, std::move(sink),
@@ -93,7 +93,7 @@ auto quill_logger() -> quill::Logger* {
 auto start_logger() -> void { (void)quill_logger(); }
 
 auto flush_logger() -> void {
-  if (auto* logger = quill_logger(); logger != nullptr) {
+  if (auto *logger = quill_logger(); logger != nullptr) {
     logger->flush_log();
   }
 }
@@ -102,21 +102,24 @@ auto set_log_level(int level) -> void { quill_logger()->set_log_level(to_quill_l
 
 auto get_log_level() -> int { return from_quill_level(quill_logger()->get_log_level()); }
 
-auto emit(int level, char const* file, unsigned line, char const* function, char const* message,
+auto emit(int level, char const *file, unsigned line, char const *function, char const *message,
           unsigned long length) -> void {
   // The message is already formatted, so the format string of the statement is "{}" and the
   // message itself is the only value that goes onto the queue.
   static constexpr quill::MacroMetadata metadata{
-      "[cpp-core]", "[cpp-core]", "{}", nullptr, quill::LogLevel::None,
-      quill::MacroMetadata::Event::LogWithRuntimeMetadataShallowCopy};
+    "[cpp-core]",
+    "[cpp-core]",
+    "{}",
+    nullptr,
+    quill::LogLevel::None,
+    quill::MacroMetadata::Event::LogWithRuntimeMetadataShallowCopy};
 
   quill_logger()->template log_statement_runtime_metadata<true>(
-      &metadata, "{}", file, function, "", line, to_quill_level(level),
-      std::string{message, length});
+    &metadata, "{}", file, function, "", line, to_quill_level(level), std::string{message, length});
 }
 
-auto format_double(double value, char type, int precision, char* out, unsigned long capacity)
-    -> unsigned long {
+auto format_double(double value, char type, int precision, char *out, unsigned long capacity)
+  -> unsigned long {
   if (capacity == 0U) {
     return 0U;
   }

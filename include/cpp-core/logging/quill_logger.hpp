@@ -15,6 +15,6 @@
 namespace com::rsm::logging::detail {
 
 // The quill logger that every log message is routed to. Starts quill's backend on first use.
-[[nodiscard]] auto quill_logger() -> quill::Logger*;
+[[nodiscard]] auto quill_logger() -> quill::Logger *;
 
 } // namespace com::rsm::logging::detail
