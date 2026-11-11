@@ -1,0 +1,7 @@
+{
+  "name": "ut",
+  "version": "1.2.1",
+  "description": "ut: a simple and fast compiling C++ unit-testing library (header-only).",
+  "homepage": "https://github.com/stephenberry/ut",
+  "license": "MIT"
+}

@@ -1,0 +1,27 @@
+# The include-what-you-use mappings of this project.
+#
+# A mapping tells IWYU which header provides a symbol, when the header that IWYU would pick is
+# not the one that this project wants to use. The file is YAML, so the comments start with a '#'.
+
+[
+  # The CIB macros come from this project's header, which also provides the logging
+  # configuration that the macros need: the headers of the macros themselves cannot be included
+  # on their own.
+  { include: [ "<log/log.hpp>", "private", "<cpp-core/logging/cib_quill.hpp>", "public" ] },
+  { include: [ "<log/module.hpp>", "private", "<cpp-core/logging/cib_quill.hpp>", "public" ] },
+  { include: [ "<stdx/ct_format.hpp>", "private", "<cpp-core/logging/cib_quill.hpp>", "public" ] },
+  { include: [ "<stdx/ct_string.hpp>", "private", "<cpp-core/logging/cib_quill.hpp>", "public" ] },
+  { include: [ "<stdx/utility.hpp>", "private", "<cpp-core/logging/cib_quill.hpp>", "public" ] },
+  { symbol: [ "CIB_INFO", "full", "<cpp-core/logging/cib_quill.hpp>", "public" ] },
+  { symbol: [ "CIB_WARN", "full", "<cpp-core/logging/cib_quill.hpp>", "public" ] },
+  { symbol: [ "CIB_ERROR", "full", "<cpp-core/logging/cib_quill.hpp>", "public" ] },
+  { symbol: [ "CIB_LOG_MODULE", "full", "<cpp-core/logging/cib_quill.hpp>", "public" ] },
+
+  # The C standard library headers are used through their C++ wrappers.
+  { include: [ "<_stdio.h>", "private", "<cstdio>", "public" ] },
+  { include: [ "<stdio.h>", "private", "<cstdio>", "public" ] },
+
+  # Quill's public headers include the headers of the implementation details: those are not
+  # included directly.
+  { include: [ "<quill/core/ThreadContextManager.h>", "private", "<quill/Logger.h>", "public" ] },
+]

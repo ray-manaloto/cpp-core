@@ -14,20 +14,22 @@ include(cmake/variables.cmake)
 find_package(intel-cib CONFIG REQUIRED)
 find_package(quill CONFIG REQUIRED)
 
-# Logging: cib's logging interface with quill as the logger. The logging::config<> specialization
-# lives in the header, so every translation unit that logs includes it and links this target.
-add_library(cpp-core-logging STATIC src/logging/cib_quill.cpp)
-add_library(cpp-core::logging ALIAS cpp-core-logging)
-target_compile_features(cpp-core-logging PUBLIC cxx_std_26)
-target_include_directories(cpp-core-logging PUBLIC "${PROJECT_SOURCE_DIR}/include")
-target_link_libraries(cpp-core-logging PUBLIC intel::cib quill::quill)
+# The modular libraries: each library is a C++ module.
+add_subdirectory(modules)
 
-# Main executable. The current main doubles as the C++26 static-reflection smoke test that
-# ctest runs as cpp-core-smoke; replace it when the real project takes shape.
+# The application. The log calls live in an object library (and not in main.cpp), so that the
+# string catalog tooling can scan them for the catalog IDs (see cmake/catalog.cmake).
+add_library(cpp-core-app OBJECT src/app.cpp src/reflection_demo.cpp)
+target_compile_features(cpp-core-app PRIVATE cxx_std_26)
+target_link_libraries(cpp-core-app PRIVATE cpp-core::logging)
+
 add_executable(cpp-core src/main.cpp)
 target_compile_features(cpp-core PRIVATE cxx_std_26)
-target_link_libraries(cpp-core PRIVATE cpp-core::logging)
+target_link_libraries(cpp-core PRIVATE cpp-core-app cpp-core::logging cpp-core-catalog)
 
 if(cpp_core_DEVELOPER_MODE)
   include(cmake/dev-mode.cmake)
 endif()
+
+# The string catalog: the IDs of the log messages of the application and of the tests.
+include(cmake/catalog.cmake)

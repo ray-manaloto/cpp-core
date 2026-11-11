@@ -1,0 +1,18 @@
+ut is header-only and provides the CMake target ut::ut:
+
+  find_package(ut CONFIG REQUIRED)
+  target_link_libraries(my_tests PRIVATE ut::ut)
+
+The tests then use:
+
+  #include "ut/ut.hpp"
+
+  using namespace ut;
+
+  suite tests = [] {
+    "a test"_test = [] {
+      expect(1 + 1 == 2) << "arithmetic is broken";
+    };
+  };
+
+  int main() {}

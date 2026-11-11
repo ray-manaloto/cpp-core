@@ -1,6 +1,6 @@
 {
   "name": "intel-cpp-std-extensions",
-  "version-date": "2026-10-30",
+  "version-date": "2026-11-09",
   "description": "Intel cpp-std-extensions (stdx): C++ standard library extensions, including stdx::optional (header-only).",
   "homepage": "https://github.com/intel/cpp-std-extensions",
   "license": "BSL-1.0",

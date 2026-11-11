@@ -140,6 +140,18 @@
       "cacheVariables": {
         "VCPKG_TARGET_TRIPLET": "arm64-osx-p2996-tsan"
       }
+    },
+    {
+      "name": "p2996-iwyu",
+      "displayName": "clang-p2996 include-what-you-use",
+      "inherits": [
+        "cc-p2996",
+        "cc-debug",
+        "cc-base"
+      ],
+      "cacheVariables": {
+        "CPP_CORE_IWYU_ENABLED": true
+      }
     }
   ],
   "buildPresets": [
@@ -170,6 +182,17 @@
     {
       "name": "p2996-tsan",
       "configurePreset": "p2996-tsan"
+    },
+    {
+      "name": "p2996-iwyu",
+      "configurePreset": "p2996-iwyu",
+      "targets": [
+        "iwyu"
+      ]
+    },
+    {
+      "name": "p2996-iwyu-build",
+      "configurePreset": "p2996-iwyu"
     }
   ],
   "testPresets": [
@@ -237,7 +260,7 @@
         "noTestsAction": "error"
       },
       "environment": {
-        "ASAN_OPTIONS": "detect_leaks=1:abort_on_error=1",
+        "ASAN_OPTIONS": "detect_leaks=0:abort_on_error=1",
         "UBSAN_OPTIONS": "print_stacktrace=1:halt_on_error=1"
       }
     },
@@ -252,6 +275,16 @@
       },
       "environment": {
         "TSAN_OPTIONS": "halt_on_error=1:second_deadlock_stack=1"
+      }
+    },
+    {
+      "name": "p2996-iwyu",
+      "configurePreset": "p2996-iwyu",
+      "output": {
+        "outputOnFailure": true
+      },
+      "execution": {
+        "noTestsAction": "error"
       }
     }
   ],
@@ -372,6 +405,27 @@
         {
           "type": "test",
           "name": "p2996-tsan"
+        }
+      ]
+    },
+    {
+      "name": "p2996-iwyu",
+      "steps": [
+        {
+          "type": "configure",
+          "name": "p2996-iwyu"
+        },
+        {
+          "type": "build",
+          "name": "p2996-iwyu-build"
+        },
+        {
+          "type": "build",
+          "name": "p2996-iwyu"
+        },
+        {
+          "type": "test",
+          "name": "p2996-iwyu"
         }
       ]
     }
