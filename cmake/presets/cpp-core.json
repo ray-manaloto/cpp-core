@@ -1,0 +1,379 @@
+{
+  "version": 10,
+  "$comment": "cpp-core presets: compiler (gcc16, p2996) x config (debug, release, asan; tsan on p2996 only - GCC 16 has no TSan runtime on macOS). Included from CMakePresets.json. Run: cmake --workflow --preset gcc16-release",
+  "configurePresets": [
+    {
+      "name": "cc-base",
+      "hidden": true,
+      "description": "cpp-core base: Ninja, vcpkg manifest mode chain-loading cmake/toolchains/cpp-core.cmake",
+      "generator": "Ninja",
+      "binaryDir": "${sourceDir}/build/${presetName}",
+      "toolchainFile": "$env{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake",
+      "cacheVariables": {
+        "VCPKG_CHAINLOAD_TOOLCHAIN_FILE": "${sourceDir}/cmake/toolchains/cpp-core.cmake",
+        "CMAKE_PROJECT_INCLUDE": "${sourceDir}/cmake/cpp-core-check.cmake",
+        "CMAKE_EXPORT_COMPILE_COMMANDS": true,
+        "cpp_core_DEVELOPER_MODE": true,
+        "BUILD_TESTING": true
+      }
+    },
+    {
+      "name": "cc-gcc16",
+      "hidden": true,
+      "cacheVariables": {
+        "CPP_CORE_COMPILER": "gcc16",
+        "VCPKG_TARGET_TRIPLET": "arm64-osx-gcc16"
+      }
+    },
+    {
+      "name": "cc-p2996",
+      "hidden": true,
+      "cacheVariables": {
+        "CPP_CORE_COMPILER": "p2996",
+        "VCPKG_TARGET_TRIPLET": "arm64-osx-p2996"
+      }
+    },
+    {
+      "name": "cc-debug",
+      "hidden": true,
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Debug",
+        "CPP_CORE_SANITIZER": "none",
+        "CPP_CORE_HARDENING": "debug"
+      }
+    },
+    {
+      "name": "cc-release",
+      "hidden": true,
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Release",
+        "CPP_CORE_SANITIZER": "none",
+        "CPP_CORE_HARDENING": "none"
+      }
+    },
+    {
+      "name": "cc-asan",
+      "hidden": true,
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Debug",
+        "CPP_CORE_SANITIZER": "asan",
+        "CPP_CORE_HARDENING": "debug"
+      }
+    },
+    {
+      "name": "cc-tsan",
+      "hidden": true,
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Debug",
+        "CPP_CORE_SANITIZER": "tsan",
+        "CPP_CORE_HARDENING": "debug"
+      }
+    },
+    {
+      "name": "gcc16-debug",
+      "displayName": "GCC 16.2 debug",
+      "inherits": [
+        "cc-gcc16",
+        "cc-debug",
+        "cc-base"
+      ]
+    },
+    {
+      "name": "gcc16-release",
+      "displayName": "GCC 16.2 release",
+      "inherits": [
+        "cc-gcc16",
+        "cc-release",
+        "cc-base"
+      ]
+    },
+    {
+      "name": "gcc16-asan",
+      "displayName": "GCC 16.2 asan",
+      "inherits": [
+        "cc-gcc16",
+        "cc-asan",
+        "cc-base"
+      ],
+      "cacheVariables": {
+        "VCPKG_TARGET_TRIPLET": "arm64-osx-gcc16-asan"
+      }
+    },
+    {
+      "name": "p2996-debug",
+      "displayName": "clang-p2996 debug",
+      "inherits": [
+        "cc-p2996",
+        "cc-debug",
+        "cc-base"
+      ]
+    },
+    {
+      "name": "p2996-release",
+      "displayName": "clang-p2996 release",
+      "inherits": [
+        "cc-p2996",
+        "cc-release",
+        "cc-base"
+      ]
+    },
+    {
+      "name": "p2996-asan",
+      "displayName": "clang-p2996 asan",
+      "inherits": [
+        "cc-p2996",
+        "cc-asan",
+        "cc-base"
+      ],
+      "cacheVariables": {
+        "VCPKG_TARGET_TRIPLET": "arm64-osx-p2996-asan"
+      }
+    },
+    {
+      "name": "p2996-tsan",
+      "displayName": "clang-p2996 tsan",
+      "inherits": [
+        "cc-p2996",
+        "cc-tsan",
+        "cc-base"
+      ],
+      "cacheVariables": {
+        "VCPKG_TARGET_TRIPLET": "arm64-osx-p2996-tsan"
+      }
+    }
+  ],
+  "buildPresets": [
+    {
+      "name": "gcc16-debug",
+      "configurePreset": "gcc16-debug"
+    },
+    {
+      "name": "gcc16-release",
+      "configurePreset": "gcc16-release"
+    },
+    {
+      "name": "gcc16-asan",
+      "configurePreset": "gcc16-asan"
+    },
+    {
+      "name": "p2996-debug",
+      "configurePreset": "p2996-debug"
+    },
+    {
+      "name": "p2996-release",
+      "configurePreset": "p2996-release"
+    },
+    {
+      "name": "p2996-asan",
+      "configurePreset": "p2996-asan"
+    },
+    {
+      "name": "p2996-tsan",
+      "configurePreset": "p2996-tsan"
+    }
+  ],
+  "testPresets": [
+    {
+      "name": "gcc16-debug",
+      "configurePreset": "gcc16-debug",
+      "output": {
+        "outputOnFailure": true
+      },
+      "execution": {
+        "noTestsAction": "error"
+      }
+    },
+    {
+      "name": "gcc16-release",
+      "configurePreset": "gcc16-release",
+      "output": {
+        "outputOnFailure": true
+      },
+      "execution": {
+        "noTestsAction": "error"
+      }
+    },
+    {
+      "name": "gcc16-asan",
+      "configurePreset": "gcc16-asan",
+      "output": {
+        "outputOnFailure": true
+      },
+      "execution": {
+        "noTestsAction": "error"
+      },
+      "environment": {
+        "ASAN_OPTIONS": "detect_leaks=0:abort_on_error=1",
+        "UBSAN_OPTIONS": "print_stacktrace=1:halt_on_error=1"
+      }
+    },
+    {
+      "name": "p2996-debug",
+      "configurePreset": "p2996-debug",
+      "output": {
+        "outputOnFailure": true
+      },
+      "execution": {
+        "noTestsAction": "error"
+      }
+    },
+    {
+      "name": "p2996-release",
+      "configurePreset": "p2996-release",
+      "output": {
+        "outputOnFailure": true
+      },
+      "execution": {
+        "noTestsAction": "error"
+      }
+    },
+    {
+      "name": "p2996-asan",
+      "configurePreset": "p2996-asan",
+      "output": {
+        "outputOnFailure": true
+      },
+      "execution": {
+        "noTestsAction": "error"
+      },
+      "environment": {
+        "ASAN_OPTIONS": "detect_leaks=1:abort_on_error=1",
+        "UBSAN_OPTIONS": "print_stacktrace=1:halt_on_error=1"
+      }
+    },
+    {
+      "name": "p2996-tsan",
+      "configurePreset": "p2996-tsan",
+      "output": {
+        "outputOnFailure": true
+      },
+      "execution": {
+        "noTestsAction": "error"
+      },
+      "environment": {
+        "TSAN_OPTIONS": "halt_on_error=1:second_deadlock_stack=1"
+      }
+    }
+  ],
+  "workflowPresets": [
+    {
+      "name": "gcc16-debug",
+      "steps": [
+        {
+          "type": "configure",
+          "name": "gcc16-debug"
+        },
+        {
+          "type": "build",
+          "name": "gcc16-debug"
+        },
+        {
+          "type": "test",
+          "name": "gcc16-debug"
+        }
+      ]
+    },
+    {
+      "name": "gcc16-release",
+      "steps": [
+        {
+          "type": "configure",
+          "name": "gcc16-release"
+        },
+        {
+          "type": "build",
+          "name": "gcc16-release"
+        },
+        {
+          "type": "test",
+          "name": "gcc16-release"
+        }
+      ]
+    },
+    {
+      "name": "gcc16-asan",
+      "steps": [
+        {
+          "type": "configure",
+          "name": "gcc16-asan"
+        },
+        {
+          "type": "build",
+          "name": "gcc16-asan"
+        },
+        {
+          "type": "test",
+          "name": "gcc16-asan"
+        }
+      ]
+    },
+    {
+      "name": "p2996-debug",
+      "steps": [
+        {
+          "type": "configure",
+          "name": "p2996-debug"
+        },
+        {
+          "type": "build",
+          "name": "p2996-debug"
+        },
+        {
+          "type": "test",
+          "name": "p2996-debug"
+        }
+      ]
+    },
+    {
+      "name": "p2996-release",
+      "steps": [
+        {
+          "type": "configure",
+          "name": "p2996-release"
+        },
+        {
+          "type": "build",
+          "name": "p2996-release"
+        },
+        {
+          "type": "test",
+          "name": "p2996-release"
+        }
+      ]
+    },
+    {
+      "name": "p2996-asan",
+      "steps": [
+        {
+          "type": "configure",
+          "name": "p2996-asan"
+        },
+        {
+          "type": "build",
+          "name": "p2996-asan"
+        },
+        {
+          "type": "test",
+          "name": "p2996-asan"
+        }
+      ]
+    },
+    {
+      "name": "p2996-tsan",
+      "steps": [
+        {
+          "type": "configure",
+          "name": "p2996-tsan"
+        },
+        {
+          "type": "build",
+          "name": "p2996-tsan"
+        },
+        {
+          "type": "test",
+          "name": "p2996-tsan"
+        }
+      ]
+    }
+  ]
+}

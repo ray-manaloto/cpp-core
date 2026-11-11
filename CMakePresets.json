@@ -1,0 +1,9 @@
+{
+    "version": 10,
+    "include": ["cmake/presets/cpp-core.json"],
+    "cmakeMinimumRequired": {
+        "major": 3,
+        "minor": 31,
+        "patch": 0
+    }
+}

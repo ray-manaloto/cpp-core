@@ -1,0 +1,26 @@
+# Build directories
+build/
+out/
+
+# CMake
+CMakeUserPresets.json
+CMakeFiles/
+CMakeCache.txt
+Testing/
+compile_commands.json
+
+# vcpkg
+vcpkg_installed/
+vcpkg-lock.json
+vcpkg_manual_installs.txt
+
+# macOS
+.DS_Store
+
+# IDE
+.idea/
+.vs/
+.vscode/
+.claude/
+*.swp
+*~
