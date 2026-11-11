@@ -11,10 +11,13 @@ project(
 include(cmake/project-is-top-level.cmake)
 include(cmake/variables.cmake)
 
+find_package(quill CONFIG REQUIRED)
+
 # Main executable. The current main doubles as the C++26 static-reflection smoke test that
 # ctest runs as cpp-core-smoke; replace it when the real project takes shape.
 add_executable(cpp-core src/main.cpp)
 target_compile_features(cpp-core PRIVATE cxx_std_26)
+target_link_libraries(cpp-core PRIVATE quill::quill)
 
 if(cpp_core_DEVELOPER_MODE)
   include(cmake/dev-mode.cmake)
