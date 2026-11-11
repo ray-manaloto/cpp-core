@@ -1,0 +1,37 @@
+Call graph:
+    1464 Thread_62361398   DispatchQueue_1: com.apple.main-thread  (serial)
+    + 1464 start  (in dyld) + 6700  [0x1930a4dac]
+    +   1464 dyld4::LibSystemHelpersWrapper::exit(int) const  (in dyld) + 164  [0x1930a5250]
+    +     1464 dyld4::LibSystemHelpers::exit(int) const  (in libdyld.dylib) + 20  [0x1930539ec]
+    +       1464 exit  (in libsystem_c.dylib) + 44  [0x1931b99ac]
+    +         1464 __lsan::DoLeakCheck()  (in libasan.8.dylib) + 128  [0x10525f9c4]
+    +           1464 __sanitizer::StopTheWorld(void (*)(__sanitizer::SuspendedThreadsList const&, void*), void*)  (in libasan.8.dylib) + 28  [0x10525131c]
+    +             1464 _pthread_join  (in libsystem_pthread.dylib) + 620  [0x19317afd8]
+    +               1464 __ulock_wait  (in libsystem_kernel.dylib) + 8  [0x193135af4]
+    1464 Thread_62361399
+      1464 thread_start  (in libsystem_pthread.dylib) + 8  [0x193173cd0]
+        1464 __sanitizer::get_dyld_hdr()  (in libasan.8.dylib) + 256  [0x1052496c0]
+          1464 dyld_shared_cache_iterate_text_swift  (in Dyld) + 28  [0x1c1696404]
+            1464 _Block_copy  (in libsystem_blocks.dylib) + 84  [0x1980f3d94]
+              1464 _malloc_type_malloc_outlined  (in libsystem_malloc.dylib) + 68  [0x194a83ed8]
+                1403 __sanitizer::Semaphore::Wait()  (in libasan.8.dylib) + 44  [0x10524660c]
+                ! 1373 cthread_yield  (in libsystem_pthread.dylib) + 36  [0x193175cec]
+                ! : 1373 swtch_pri  (in libsystem_kernel.dylib) + 8,0  [0x193133c74,0x193133c6c]
+                ! 26 cthread_yield  (in libsystem_pthread.dylib) + 36,40,...  [0x193175cec,0x193175cf0,...]
+                ! 3 ???  (in <unknown binary>)  [0x19ac59000]
+                ! 1 ???  (in <unknown binary>)  [0x19ac59008]
+                61 __sanitizer::SizeClassAllocator64<__asan::AP64<__sanitizer::LocalAddressSpaceView>>::GetFromAllocator(__sanitizer::AllocatorStats*, unsigned long, unsigned int*, unsigned long)  (in libasan.8.dylib) + 392  [0x1051e2a0c]
+                  61 __sanitizer::Semaphore::Wait()  (in libasan.8.dylib) + 44  [0x10524660c]
+                    44 __sanitizer::Semaphore::Wait()  (in libasan.8.dylib) + 44,48  [0x10524660c,0x105246610]
+                    16 DYLD-STUB$$sched_yield  (in libasan.8.dylib) + 0,4  [0x105262ed4,0x105262ed8]
+                    1 __sanitizer::FutexWait(__sanitizer::atomic_uint32_t*, unsigned int)  (in libasan.8.dylib) + 0  [0x105244630]
+
+Total number in stack (recursive counted multiple, when >=5):
+
+Sort by top of stack, same collapsed (when >= 5):
+        __ulock_wait  (in libsystem_kernel.dylib)        1464
+        swtch_pri  (in libsystem_kernel.dylib)        1373
+        __sanitizer::Semaphore::Wait()  (in libasan.8.dylib)        44
+        cthread_yield  (in libsystem_pthread.dylib)        26
+        DYLD-STUB$$sched_yield  (in libasan.8.dylib)        16
+

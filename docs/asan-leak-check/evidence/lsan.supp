@@ -1,0 +1,24 @@
+# LeakSanitizer suppressions for the clang runtimes (macOS).
+#
+# The clang ASan runtime reports a few allocations that macOS itself makes and that no program
+# can free: the Objective-C runtime's class list, dyld's thread-local storage, and the buffer
+# that Apple's libc uses to format a floating-point number. Each entry below matches only the
+# leaks whose allocation stack passes through that platform frame, so a leak in our own code is
+# still reported (verified: a deliberate 1234 byte leak is still reported with this file).
+#
+# The GCC runtime needs none of this, because its leak check cannot run on macOS at all: it
+# deadlocks inside libasan's StopTheWorld at exit, in a two-line program as well (see
+# docs/asan-leak-check/README.md).
+#
+# See docs/asan-leak-check/README.md for the analysis and the measurements behind every entry.
+
+# libobjc's class initialization: _fetchInitializingClassList -> initializeNonMetaClass.
+leak:libobjc
+
+# dyld's thread-local storage: any thread_local makes dyld allocate the block for the slot.
+leak:libdyld
+leak:_dyld_shared_cache_iterate_text
+
+# Apple's libc allocates a buffer to format a floating-point number (snprintf "%f", "%g", ...).
+leak:snprintf
+leak:_vfprintf

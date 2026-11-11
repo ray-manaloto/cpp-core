@@ -53,9 +53,35 @@ workflow presets of the same name. Every build directory is `build/<preset>`.
 
 - **release:** `Release`, standard library hardening off.
 - **debug:** `Debug`, libc++ hardening set to `debug`. On GCC this is `_GLIBCXX_ASSERTIONS`.
-- **asan:** `debug` plus AddressSanitizer and UBSan (`-fno-sanitize-recover`, so UB fails the test), with vcpkg's libraries built the same way (`-asan` triplets). Leak checking is off on both compilers, where an ASan binary with leak checking hangs at exit on this Mac.
+- **asan:** `debug` plus AddressSanitizer and UBSan (`-fno-sanitize-recover`, so UB fails the test), with vcpkg's libraries built the same way (`-asan` triplets). Leak checking is on for clang-p2996 and off for GCC 16.2, whose LeakSanitizer deadlocks at exit on macOS (see [Leak checking](#leak-checking)).
 - **tsan:** `debug` plus ThreadSanitizer, with vcpkg's libraries built with TSan too. TSan cannot share a build with ASan, hence a separate preset.
 - **iwyu:** `debug` plus the include-what-you-use checks (see [Include-what-you-use](#include-what-you-use)).
+
+## Leak checking
+
+The `p2996-asan` preset runs with `detect_leaks=1` and
+`LSAN_OPTIONS=suppressions=${sourceDir}/cmake/lsan.supp`. The suppressions are the allocations that
+macOS itself makes and that no program can free:
+
+| suppression | what it is |
+|---|---|
+| `leak:libobjc` | the Objective-C runtime's class initialization |
+| `leak:libdyld`, `leak:_dyld_shared_cache_iterate_text` | dyld's thread-local storage, allocated the first time any `thread_local` is used |
+| `leak:snprintf`, `leak:_vfprintf` | the buffer that Apple's libc uses to format a floating-point number |
+
+Each entry matches only the leaks whose allocation stack passes through that platform frame, so a
+leak in our own code is still reported: a deliberate 1234 byte leak is still reported with this
+file in place.
+
+The `gcc16-asan` preset runs with `detect_leaks=0`: GCC 16.2's LeakSanitizer deadlocks on macOS.
+At exit it stops the world, and its helper thread then blocks on ASan's own allocator semaphore
+while the main thread waits for that helper, so the process hangs - in a two-line program as well,
+not only in ours. No option avoids it (`use_stacks=0`, an early explicit leak check, pre-warming
+dyld's shared-cache walk), and GCC's and LLVM's Darwin stop-the-world sources are identical, so
+there is no upstream fix to wait for.
+
+The full analysis, the stack traces and the measurements behind this are in
+[`docs/asan-leak-check/`](docs/asan-leak-check/README.md).
 
 ## Requirements
 
@@ -230,6 +256,7 @@ The reflection demo needs `<meta>`, which is not part of Homebrew's libc++ yet.
 - **`cmake/toolchains/cpp-core.cmake`** is one toolchain for every compiler. It picks the compiler from `CPP_CORE_COMPILER` by its bare name on PATH and sets the flags for C++26, reflection, libc++, hardening and sanitizers.
 - **`cmake/cpp-core-check.cmake`** runs after `project()`. It stops the configure if the compiler found is not the one the preset names (Apple clang for `p2996`, for example, is an error). It then adds the reflection flags to this project's C++ compiles only. They are kept out of `CMAKE_CXX_FLAGS` because GCC 16 rejects `-freflection` below C++26, which would break vcpkg's port builds and CMake's compiler checks in nested projects.
 - **`CMakePresets.json` + `cmake/presets/cpp-core.json`**: hidden base presets compose `compiler x config`; the public presets (`gcc16-debug`, `p2996-asan`, ...) inherit from them.
+- **`cmake/lsan.supp`** suppresses the leaks that macOS itself causes, for the presets that run the leak check (see [Leak checking](#leak-checking)).
 - **vcpkg** runs in manifest mode:
   - `vcpkg.json` pins `builtin-baseline`; add dependencies here (as features, if they are optional).
   - `vcpkg-configuration.json` adds only the overlays. It has no default registry, because one would silently replace the manifest's baseline.
