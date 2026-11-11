@@ -306,6 +306,20 @@ The first line of that block is the important one: the preset passes *with the l
 and the same binary without the suppressions fails with the 316 B report, so the leak check is
 really running.
 
+One consequence of putting the options in the test presets: they apply only when the tests are run
+through a preset. Verified by injecting a deliberate 4096 B leak into `tests/logging_test.cpp` and
+running the same binary three ways:
+
+| invocation | result with the leak present |
+| --- | --- |
+| `ctest --preset p2996-asan` | Failed: `SUMMARY: AddressSanitizer: 4096 byte(s) leaked in 1 allocation(s)` |
+| `cd build/p2996-asan && ctest` | Passed - the leak check never ran |
+| `./build/p2996-asan/tests/cpp-core-tests` | exit 0 - the leak check never ran |
+
+So the tests have to be run through `ctest --preset <name>` (from the repository root, because CMake
+reads `CMakePresets.json` from the current directory) or `cmake --workflow --preset <name>`. The
+README says so.
+
 ## 7. Follow-up
 
 Option C (a `clang23-asan` preset) is the planned next step, because Homebrew clang 23.1.5 has a

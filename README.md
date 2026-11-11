@@ -80,6 +80,19 @@ not only in ours. No option avoids it (`use_stacks=0`, an early explicit leak ch
 dyld's shared-cache walk), and GCC's and LLVM's Darwin stop-the-world sources are identical, so
 there is no upstream fix to wait for.
 
+Run the tests through the presets, from the repository root:
+
+```sh
+ctest --preset p2996-asan               # the tests, with the options above
+cmake --workflow --preset p2996-asan    # configure + build + test
+```
+
+The sanitizer options live in the test presets, so they apply only when the tests are run through
+one. A bare `ctest` in the build directory, or the test binary run directly, does not get them: the
+leak check then falls back to the platform default, which is off on macOS, so a leak would not be
+reported. `ctest --preset` has to be run from the repository root, because CMake reads
+`CMakePresets.json` from the current directory.
+
 The full analysis, the stack traces and the measurements behind this are in
 [`docs/asan-leak-check/`](docs/asan-leak-check/README.md).
 
