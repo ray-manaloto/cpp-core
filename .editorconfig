@@ -9,5 +9,11 @@ end_of_line = lf
 insert_final_newline = true
 charset = utf-8
 indent_style = space
-indent_size = 3
+indent_size = 2
 trim_trailing_whitespace = true
+
+# The C++ is formatted by clang-format; the indentation width has to agree with
+# .clang-format, or the editor and the formatter will undo each other's work.
+[*.{c,cc,cpp,cxx,h,hh,hpp,hxx,cppm}]
+indent_size = 2
+max_line_length = 100
