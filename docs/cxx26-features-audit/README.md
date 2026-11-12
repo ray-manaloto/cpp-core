@@ -241,6 +241,7 @@ empty.
 **They are all in one place now: [open-items.md](open-items.md)** - part 10. It has every open
 question, every known defect and every to-do, grouped and numbered (`DEF-`, `FMT-`, `QUIL-`,
 `TOOL-`, `MOD-`, `REFL-`, `MAC-`, `COV-`, `BUILD-`, `VCPKG-`, `ENV-`), each with what settles it.
+**81 in all** - 13 need an owner decision and 68 need a compile, a run or a preprocessor pass.
 
 In summary, and all of it needs a compile, a run, or an owner decision:
 
@@ -255,7 +256,7 @@ In summary, and all of it needs a compile, a run, or an owner decision:
 | **The macros** | 3 | `MAC-1`: does `std::source_location::current()` in a default argument return the *caller's* location through the `logging::log<Env>` template? It may be why the CIB macro cannot be dropped |
 | **Coverage to-dos** | 10 | the uncovered set, branch by branch - and the `constexpr` change removes half of it from the runtime problem |
 | **The build system** | 7 | `BUILD-1`: there are no compiler warning flags at all - not `-Wall`, not `-Wextra`. That is an owner decision, because adding them is a behavioural change. (`BUILD-6`, the catalog IDs, is answered - part 15) |
-| **The dependency tree** | 2 | `VCPKG-2`: do the five overlay ports shadow builtin vcpkg ports? `ut` is the likely one, and a shadowed port stops following the pinned baseline |
+| **The dependency tree** | 0 | `VCPKG-1` and `VCPKG-2` were answered by part 18, section 2 - the registry at the pinned baseline is readable over HTTP, without a checkout. Neither the upstream `quill` port nor quill itself offers an external-fmt feature, and none of the five overlay ports shadows a builtin vcpkg port |
 | **The environment** | 3 | `ENV-1`: the two copies of fmt, and the rule that custom formatters are written for `fmt` only |
 
 Two more that were answered in the first draft and are recorded in part 10, section 10: GCC throws

@@ -197,9 +197,9 @@ When the build lane reopens:
 **[docs/cxx26-features-audit/open-items.md](docs/cxx26-features-audit/open-items.md)** has all of
 them: 6 defects, 14 fmt/`constexpr` questions, 9 quill questions, 16 tooling questions, 9
 `import std;` questions, 4 reflection questions, 3 macro questions, 10 coverage to-dos, 7 build
-questions, 2 dependency-tree questions and 3 environment questions - **83 in all** - each with what
+questions and 3 environment questions - **81 in all** - each with what
 settles it, plus a table of the questions that are **not** open because they have already been
-answered.
+answered. (It was 83 until part 18 answered the two dependency-tree questions; see below.)
 
 ## What parts 11 and 12 changed
 
@@ -406,7 +406,8 @@ no-compile research: what remains is the implementation (parked) and the owner d
 
 ## What part 17 changed
 
-**Part 17 - the decisions, collected.** The audit has **83 open items**. Seventy of them are
+**Part 17 - the decisions, collected.** The audit has **81 open items** (83 when part 17 was
+written; part 18 then answered two of them). Sixty-eight are
 settled by a compile, a run or a preprocessor pass - they are *questions*, and they unblock the
 moment the build lane reopens. **Thirteen are decisions**, because the answer is a judgement about
 what the project should be rather than a fact about the world. They were scattered across
@@ -438,9 +439,17 @@ blocked, and steps 1-6 and 8-10 proceed without it.
 
 **One correction to a list that was circulating:** **VCPKG-2** (do the overlay ports shadow builtin
 vcpkg ports?) is **not** an owner decision - it is a research step, answered by reading the vcpkg
-registry at the pinned baseline `245d37306671ea67d8f313081a81aae8079f8916`, and it is blocked only
-because `$VCPKG_ROOT` here is the vcpkg *tool*, with no `ports` tree and no `.git`. The same read
-answers **VCPKG-1**. Neither needs the owner: they need a checkout of the registry.
+registry at the pinned baseline `245d37306671ea67d8f313081a81aae8079f8916`.
+
+**It was believed to be blocked** only because `$VCPKG_ROOT` here is the vcpkg *tool*, with no
+`ports` tree and no `.git`. That is true of the local install and false of the registry: the
+registry is a git repository and the baseline is a commit in it, so the reading is done over HTTP
+against that commit, without a checkout. The same read answers **VCPKG-1**.
+
+**Both are now answered** (part 18, section 2, and `open-items.md` section 12): the upstream
+`quill` port has no external-fmt feature and quill 13.1.0 offers no fmt switch at all, so the two
+copies of fmt are structural; and **none** of the five overlay ports shadows a builtin vcpkg port
+at the pinned baseline - so all five track upstream rather than the pinned baseline.
 
 ## State of the working tree
 

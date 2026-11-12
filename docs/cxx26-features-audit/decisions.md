@@ -3,12 +3,16 @@
 **Date:** 2026-11-12
 **Status:** research. Nothing here is applied to the build.
 
-The audit has **83 open items**. Seventy of them are settled by a compile, a run or a preprocessor
-pass - they are questions, not decisions, and they unblock the moment the build lane reopens.
+The audit has **81 open items**. Sixty-eight of them are settled by a compile, a run or a
+preprocessor pass - they are questions, not decisions, and they unblock the moment the build lane
+reopens.
 
 **Thirteen are decisions**, because the answer is a judgement about what the project should be, not
 a fact about the world. They are scattered across `open-items.md`; this file gathers them into one
 sheet, with a recommendation for each.
+
+(Two further items - `VCPKG-1` and `VCPKG-2` - were answered by part 18, section 2, and are now in
+`open-items.md` section 12 rather than in the open list. The count was 83 until then.)
 
 ## The short version
 
@@ -263,16 +267,18 @@ would have to be added.
 because it is one of the thirteen. **The recommendation: `opencode service set env`** - it is one
 command, and the restart is a background service, not a session.
 
-## One that is *not* a decision
+## One that is *not* a decision - and is no longer open
 
-**VCPKG-2** - "do the five overlay ports shadow builtin vcpkg ports?" - is in the list, but it is
+**VCPKG-2** - "do the five overlay ports shadow builtin vcpkg ports?" - was in the list, but it is
 **a research step, not a decision**: it is answered by reading the vcpkg registry at the pinned
-baseline `245d37306671ea67d8f313081a81aae8079f8916`, and it is **blocked** because `$VCPKG_ROOT`
-here is the vcpkg *tool*, with no `ports` tree and no `.git`.
+baseline `245d37306671ea67d8f313081a81aae8079f8916`.
 
-The same read answers **VCPKG-1** (does the upstream `quill` port have an opt-in external-fmt
-feature?). Neither needs the owner: they need a checkout of the registry, which is a network fetch
-and a `git show` away.
+**It was believed to be blocked** because `$VCPKG_ROOT` here is the vcpkg *tool*, with no `ports`
+tree and no `.git`. That is true of the local install and false of the registry: the registry is a
+git repository and the baseline is a commit in it, so the reading is done over HTTP against that
+commit, without a checkout. The same read answers **VCPKG-1** (does the upstream `quill` port
+have an opt-in external-fmt feature?). **Both are now answered** - part 18, section 2, and
+`open-items.md` section 12.
 
 ## The cheapest path
 

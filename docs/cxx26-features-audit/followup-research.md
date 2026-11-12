@@ -14,14 +14,17 @@ answers a different question: **what did the audit leave unasked?**
 
 ## The state this starts from
 
-The audit has **83 open items**, and they decompose exactly (verified by parsing the "settled by"
+The audit has **81 open items**, and they decompose exactly (verified by parsing the "settled by"
 column of every row, plus the six defect headings):
 
 | Kind | Count | What resolves it |
 |---|---|---|
 | Owner decisions | **13** | the owner's answer. Four of them gate the plan: `FMT-14`, `TOOL-13`, `TOOL-14`, `BUILD-7` |
 | Compile / run / preprocessor | **68** | the build lane reopening - mechanical, not research |
-| Registry read | **2** | `VCPKG-1` and `VCPKG-2`, blocked on a vcpkg registry checkout this machine does not have |
+| Registry read | **0** | `VCPKG-1` and `VCPKG-2` were answered by section 2 below - the registry at the pinned baseline turned out to be readable after all |
+
+(It was 83 when this part opened; section 2 answered the two registry items and moved them to
+`open-items.md` section 12.)
 
 **The audit's own research is complete.** Seventeen parts, the upstream sources all vendored
 (`upstream/`), the root README checked line by line (part 16), the owner decisions collected into
@@ -29,12 +32,12 @@ one sheet (part 17). Nothing is pending on the research lane except two items th
 people: the registry checkout, and the commit identity (which waits on dotfiles-lead's fnox
 profile).
 
-So the 83 are **not** the backlog this part addresses. They are the existing plan's backlog.
+So the 81 are **not** the backlog this part addresses. They are the existing plan's backlog.
 
 ## What the audit never asked
 
 Reading the plan against the build files surfaced one defect and seven gaps. None of them is in
-the 83, because the 83 are the audit's *questions about the code it was written to understand* -
+the 81, because the 81 are the audit's *questions about the code it was written to understand* -
 and these are questions about the **code, the build and the claims** the audit did not examine.
 
 Three of them touch the project's central claims:
@@ -56,7 +59,7 @@ which is exactly what a research lane is for.
 | # | Item | Status | Finding |
 |---|---|---|---|
 | 1 | The `static_assert` formatter tests cannot reach the code they test | ☑ **done** | **Route B** - a private `format_tests.hpp` included by the module, so the asserts test the module's own copy. The plan's `tests/format_static_asserts.cpp` would compile a second copy and inflate the coverage union |
-| 2 | Build reproducibility and upstream drift | ☐ **not started** | — |
+| 2 | Build reproducibility and upstream drift | ☑ **done** | The pin inventory, what each compiler bump breaks, and a three-layer drift mechanism. **And a correction:** the two "registry read" items were never blocked - the registry at the pinned baseline is readable over HTTP, and it answers both |
 | 3 | The public API has no contract | ☐ **not started** | — |
 | 4 | A benchmark harness | ☐ **not started** | — |
 | 5 | A differential test between the two logging paths | ☐ **not started** | — |
@@ -247,6 +250,195 @@ what would detect a drift?
 **What is needed.** A pin inventory, an assessment of what a compiler bump breaks, and a drift
 detection mechanism. To be worked through in this section.
 
+### The pin inventory
+
+Every input the build depends on, and whether it is pinned:
+
+| What | Pinned to | Where | Pinned how well |
+|---|---|---|---|
+| the `gcc16` compiler | GCC 16.x | `cpp-core-check.cmake:17-19` | **a version range** (16 ≤ v < 17), not a build |
+| the `clang23` compiler | Clang 23.x | `:22-25` | **a version range** (23 ≤ v < 24), and explicitly *not* a p2996 path |
+| the `p2996` compiler | **nothing** | `:27-30` | **not pinned at all** - the path only has to contain the string `p2996` |
+| the p2996 *snapshot* | a commit | the install tool | **not in the repo** - the repo never names a commit |
+| the vcpkg registry | `245d37306671ea67d8f313081a81aae8079f8916` | `vcpkg.json:7` | **exactly** - a registry commit, which is the strongest form vcpkg offers |
+| the vcpkg *tool* | a build | the install tool | **not in the repo** - no file records the tool version |
+| the five overlay ports | a `REF` + a `SHA512` | `ports/*/portfile.cmake` | **exactly** - the archive hash is checked on download |
+| the overlay ports' *upstream* | `HEAD_REF main` | the same | **not pinned** - `HEAD_REF` is what `--head` would use, not what a normal build uses |
+| the four Intel ports' version | `version-date` | `ports/*/vcpkg.json` | **a date, not a version** |
+| `ut`'s version | `1.2.1` | `ports/ut/vcpkg.json` | exactly, and its `REF` **is** the `v1.2.1` tag |
+| CMake | `cmake_minimum_required(VERSION 3.31)` | `CMakeLists.txt:1` | a floor, not a version |
+| the `import std` gate | `f35a9ac6-8463-4d38-8eec-5d6008153e7d` | not in the project | **not set at all** - the project never uses `import std;` |
+| the standard libraries | the compiler's own | - | follow the compiler |
+| the tooling | the machine's installs | not in the repo | **not pinned** - clang-format 23.1.5, cmakelang 0.6.13, gcov-16 16.2.0 are all machine state |
+
+**The pattern.** Everything vcpkg touches is pinned by hash; everything the *toolchain* touches is
+pinned by a version range or not at all. The reproducibility of this build rests on the vcpkg
+graph, which is strong, and on the machine's toolchain state, which is not recorded anywhere in
+the repository.
+
+### What a compiler bump actually breaks
+
+The three compilers are not interchangeable, and a bump to each breaks something different.
+
+**A GCC bump (17.x) breaks the reflection flag.** The toolchain sets `-freflection` for `gcc16`
+(`cpp-core.cmake:39`) and `-freflection -fexpansion-statements -fannotation-attributes` for
+`p2996` (`:48`). GCC 16 refuses `-freflection` below `-std=c++26`, which is why the flags live in
+`CPP_CORE_REFLECTION_FLAGS` and are applied only to this project's C++ compiles
+(`cpp-core-check.cmake:40-42`). A GCC 17 that renames or gates that flag differently would fail
+the *first* compile of the module, not a configure.
+
+**A p2996 bump breaks three things at once, and the check will not catch any of them.** The
+`p2996` branch of `bloomberg/clang-p2996` is what the project builds with; upstream's default
+branch is `purpose`, which is a different line of development (its tip is from June 2025, while
+the `p2996` branch's tip is from November 2026). A new snapshot on the `p2996` branch can change:
+
+1. **the reflection dialect.** `-fexpansion-statements` and `-fannotation-attributes` are
+   Bloomberg's own flags, defined in the fork's `Options.td` (`:3609`, `:3614`), not upstream
+   clang's. They can be renamed or removed without notice, and the toolchain hard-codes them.
+2. **the module binary format.** llvm#63939: a BMI is locked to the clang that built it. A new
+   snapshot invalidates every cached BMI, so a stale build tree fails in a way that reads like a
+   project bug rather than a toolchain change. This is also why the project's clang-tidy is
+   Homebrew's clang 23.1.5 and not the p2996 compiler - the two cannot read each other's BMIs
+   (`tooling-design.md`, blocker (b)).
+3. **the standard library's shape.** The p2996 snapshot ships its own libc++ - and the installed
+   one has `<meta>` with `std::meta::nonstatic_data_members_of` (`<meta>:74`), which Homebrew's
+   libc++ does not have at all. `src/reflection_demo.cpp` depends on it.
+
+**A CMake bump breaks the `import std` gate UUID - but only if the project ever uses it.** The
+UUID is version-specific (`f35a9ac6-...` for CMake 4.4+, `451f2fe2-...` for 4.3.x) and became
+non-gated in 4.5. The project sets **no** gate today - `grep` for
+`CMAKE_EXPERIMENTAL_CXX_IMPORT_STD` finds it only in the vendored `upstream/ut/CMakeLists.txt`.
+So this is a constraint on option (c) in part 4, not on the build as it stands.
+
+**A libc++ bump breaks the hardening default.** The toolchain sets `_LIBCPP_HARDENING_MODE`
+explicitly (`cpp-core.cmake:117-129`), so the mode names matter, not the default. The installed
+libc++ 21 defines all four (`__config:123-126`): `NONE` (1 << 1), `FAST` (1 << 2),
+`EXTENSIVE` (1 << 4) and `DEBUG` (1 << 3) - and `__config_site:43` sets
+`_LIBCPP_HARDENING_MODE_DEFAULT 16`, which is `EXTENSIVE`. A future libc++ that renames or
+reorders a mode breaks the configure with a hard `#error` (`__config:139-147`), which is at least
+an honest failure.
+
+### The correction: the two "registry read" items were never blocked
+
+The audit recorded `VCPKG-1` and `VCPKG-2` as settled by "reading the registry at the pinned
+baseline", and said that read could not be done because `$VCPKG_ROOT` is the vcpkg *tool* with no
+`ports` tree and no `.git`.
+
+**That is true of the local install and false of the registry.** The registry is a git
+repository, and the pinned baseline is a commit in it. Reading a file *at that commit* does not
+require a checkout - the GitHub raw endpoint serves it. The read was done, and it answers both
+items.
+
+**`VCPKG-2` - do the five overlay ports shadow builtin vcpkg ports? No.** The baseline's tree
+was enumerated in full (17,869 paths, `truncated: false`) and searched:
+
+| Overlay port | in `ports/` at the baseline | in `versions/` at the baseline |
+|---|---|---|
+| `ut` | **no** | **no** |
+| `intel-cib` | **no** | **no** |
+| `intel-cpp-std-extensions` | **no** | **no** |
+| `intel-baremetal-concurrency` | **no** | **no** |
+| `intel-baremetal-senders-and-receivers` | **no** | **no** |
+
+The nearest names the registry *does* ship are `utf8-range`, `utf8h`, `utf8proc` (not `ut`) and
+`intel-ipsec`, `intel-mkl`, `intelrdfpmathlib` (not the four Intel ports). So `ports/README.md`'s
+warning does not apply today: **none of the five shadows a builtin port, and all five therefore
+track the upstream rather than the pinned baseline** - which is the *opposite* of the failure
+`ports/README.md` warns about, and is worth knowing before someone adds a builtin port with one
+of these names.
+
+**`VCPKG-1` - does the upstream vcpkg `quill` port have an opt-in feature for an external fmt?
+No.** The upstream `quill` port at the baseline has **no `features` key at all** and depends only
+on `vcpkg-cmake` and `vcpkg-cmake-config`; its portfile passes no fmt-related option. And quill
+13.1.0's own CMakeLists has no fmt switch either - there is no `QUILL_*FMT*` option among its 26
+`option()` calls, and it installs `include/quill/bundled/fmt/*` unconditionally, exposing it as
+the `fmtquill` interface target. So **the two copies of fmt are structural**, exactly as part 12
+recorded, and the answer to VCPKG-1's question is that no such feature exists to be opted into.
+
+**What this changes about the drift.** The two registry ports that *are* in the graph - `quill`
+13.1.0 and `fmt` 12.2.1 - are **registry** ports, so they are pinned by the manifest's
+`builtin-baseline` and a baseline bump is what moves them. The five **overlay** ports are not in
+the registry's version database at all, so `vcpkg upgrade` cannot see them and the baseline
+cannot move them. The two mechanisms are disjoint, and the project's README describes only the
+overlay half.
+
+### The drift detection mechanism
+
+Three layers, cheapest first. **None of this is applied** - the build lane is parked - but the
+shapes are known and each is a small script or a one-line change.
+
+**Layer 1 - a version bound for `p2996`.** The check at `cpp-core-check.cmake:27-30` accepts any
+Clang whose path contains `p2996`. A bound is easy and catches gross changes:
+
+```cmake
+elseif(CPP_CORE_COMPILER STREQUAL "p2996")
+  if(_id STREQUAL "Clang" AND _path MATCHES "p2996" AND _ver VERSION_GREATER_EQUAL 21)
+    set(_ok TRUE)
+  endif()
+```
+
+That is a floor, not a pin - it catches a p2996 that becomes clang 24, and nothing else. A true
+pin would compare the snapshot's commit against a recorded one, which means the project would have
+to name a commit in a tracked file. **That is a new tracked artefact and therefore an owner
+decision**, in the same family as `BUILD-7` (the committed stable-catalog file). The
+recommendation is to record it, because the alternative - an unpinned compiler whose BMI format
+and reflection flags can change under the project - is the weakest link in the whole chain.
+
+**Layer 2 - a drift check for the overlay ports.** The `REF` in each portfile is a commit, and
+`git ls-remote` can report the upstream's current tip without cloning. The check is one command
+per port and it works today:
+
+```
+git ls-remote https://github.com/intel/compile-time-init-build.git HEAD
+```
+
+Run on 2026-11-12, all five overlay ports' `REF`s **still match** their upstream's `HEAD`:
+
+| Port | pinned `REF` | upstream `HEAD` | state |
+|---|---|---|---|
+| `intel-baremetal-concurrency` | `77be79110fd8...` | `77be79110fd8...` | current |
+| `intel-baremetal-senders-and-receivers` | `5629659b781b...` | `5629659b781b...` | current |
+| `intel-cib` | `b5c68e65801f...` | `b5c68e65801f...` | current |
+| `intel-cpp-std-extensions` | `94546c5a9122...` | `94546c5a9122...` | current |
+| `ut` | `dc65567be78f...` | `dc65567be78f...` | current |
+
+So the README's claim "are pinned to the latest upstream commit" is **true today**. The defect is
+not that it is false; it is that **nothing checks it**, so it becomes false silently. The
+mechanism is a script that does the five `git ls-remote` calls and fails when a tip differs from
+the pinned `REF`. It has no build dependency, runs in under a second, and can be run by hand or
+by CI (which does not exist - `BUILD-5`).
+
+**Layer 3 - `version-date` is the wrong field for a port that pins a commit.** `version-date` is
+vcpkg's documented scheme for *"[live at HEAD](https://learn.microsoft.com/en-us/vcpkg/users/versioning)"
+libraries* - a library with no release versioning. Three of the four Intel ports have **no tags
+at all** upstream, so `version-date` is the *correct* scheme for them. But `intel-cib` **does**
+have tags (`v1.7.0`, `v1.0.0`, `v0.2.2`, ...), and its port pins a `main` commit from 2026-11-09
+that is **not** any tag - it is a dependabot merge commit. A port that tracks `main` should say
+so; a port that could track a release should.
+
+The one concrete improvement available: **`ut`'s port is already correct** - `version: 1.2.1`
+with `REF dc65567be78febd265ca36c324e1c504512d4d74`, and that `REF` **is** upstream's `v1.2.1`
+tag exactly. It is the model the other four could follow if they gained tags.
+
+### What a compiler bump would have broken here, specifically
+
+A concrete walk through of the "what breaks" list, with this project as the subject:
+
+| A bump to | breaks | where it would show | how loudly |
+|---|---|---|---|
+| GCC 16 → 17 | the reflection flag's spelling or gating | the first module compile | loud - a compiler error naming the flag |
+| p2996 → a new snapshot | the BMI cache | any stale build tree | **confusing** - reads like a project bug |
+| p2996 → a new snapshot | `-fexpansion-statements`, `-fannotation-attributes` | the first module compile | loud - "unknown argument" |
+| p2996 → a new snapshot | `<meta>` in libc++ | `src/reflection_demo.cpp` | loud |
+| CMake 4.4 → 4.5 | the `import std` gate | nothing today | **silent** - the project does not use it |
+| libc++ 21 → 22 | a hardening mode's name | the configure | loud - libc++'s own `#error` |
+| a registry baseline bump | `quill`, `fmt` | the vcpkg install | loud |
+| an overlay `REF` bump | the library's behaviour | anywhere | **silent** - that is the whole point |
+
+The last row is why the drift check matters more than the version bound. A compiler bump breaks
+the build; a library bump breaks the *program*, and the program is the thing the project exists
+to provide.
+
 ---
 
 ## 3. The public API has no contract
@@ -384,9 +576,10 @@ decay, and what is their state now?
 
 ## What was checked
 
-- The **state table** (83 items, 13 / 2 / 68): parsed from the "settled by" column of every row of
+- The **state table** (81 items, 13 / 0 / 68): parsed from the "settled by" column of every row of
   [open-items.md](open-items.md) plus its six defect headings. The 13 owner decisions match the
-  thirteen headings in [decisions.md](decisions.md) exactly - none missing, none extra.
+  thirteen headings in [decisions.md](decisions.md) exactly - none missing, none extra. The two
+  registry items were removed from the open list when section 2 answered them.
 - The **evidence quoted in each section** was read from the files it names.
 - **Nothing was built, configured, run or regenerated.** Every claim is a restatement of a
   finding recorded in an earlier part, or a reading recorded here.

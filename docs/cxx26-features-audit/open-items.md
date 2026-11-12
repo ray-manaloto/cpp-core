@@ -312,10 +312,11 @@ never treated the build as a subject. **BUILD-6 is answered - see section 12.**
 
 From [build-and-dependencies.md](build-and-dependencies.md).
 
-| # | Question | Settled by |
-|---|---|---|
-| VCPKG-1 | Does the **upstream** vcpkg `quill` port have an opt-in feature for an external fmt? The *installed* port installs only `quill/bundled/fmt/`, so the two copies of fmt are structural - but the port's `vcpkg.json` at the pinned baseline cannot be read on this machine, because `$VCPKG_ROOT` is the vcpkg *tool* with no `ports` tree and no `.git` | reading the registry at the pinned baseline `245d37306671ea67d8f313081a81aae8079f8916` |
-| VCPKG-2 | Do the five overlay ports **shadow builtin vcpkg ports**? `ports/README.md` warns that a shadowed library stops following the pinned baseline. `ut` is the likely one - it is a popular header-only test library that vcpkg ships - and the overlay pins version 1.2.1 (REF `dc65567be78febd265ca36c324e1c504512d4d74`). The four Intel ports use `version-date`, so they pin a snapshot of a moving target rather than a release | the same registry read |
+**Both items below are now answered - see section 12.** They were recorded as needing "a reading
+of the registry at the pinned baseline", which was believed to be impossible because
+`$VCPKG_ROOT` is the vcpkg *tool* with no `ports` tree and no `.git`. The registry is a git
+repository and the baseline is a commit in it, so the reading is done over HTTP against that
+commit, without a checkout. Part 18, section 2.
 
 ## 11. The environment (ENV)
 
@@ -361,3 +362,5 @@ These were asked, answered and are recorded so nobody re-derives them.
 | Where does the module path format its message? | **On the calling thread**, and then it is copied into a `std::string` - so each module-path message costs one heap allocation on the calling thread (`logging.cppm:112-114`, `quill_logger.cpp:118`). The catalog path queues the arguments and formats on the backend thread. The root README's "What the two paths share → Threading" said only the second | part 13; part 14 |
 | Are the catalog IDs stable across compilers? | **Yes - and structurally, not by luck.** The ID is a function of the **message text** (the rank among the messages, in text order), and the text is carried in the message's *type* (`sc::string<char...>`), which both compilers spell the same way. All nine catalogs on disk - two compilers, four configurations, two build times - are byte-identical. The *link* is the backstop: a message that the tool dropped or misread leaves an undefined `catalog<...>` symbol | part 15 |
 | Are the catalog IDs stable across *releases*? | **No** - and that is **DEF-6**. The ID is the rank in text order, so adding a message that sorts first renumbers every later one, and the build does not use the tool's `STABLE_JSON` mechanism that would prevent it. The XML is MIPI Sys-T deployment collateral, and the IDs are its wire identifiers | part 15 |
+| Does the upstream vcpkg `quill` port have an opt-in feature for an external fmt? | **No.** At the pinned baseline the upstream `quill` port has **no `features` key at all** and depends only on `vcpkg-cmake` and `vcpkg-cmake-config`; its portfile passes no fmt option. quill 13.1.0's own CMakeLists has no fmt switch either - none of its 26 `option()` calls mentions fmt - and it installs `include/quill/bundled/fmt/*` unconditionally, exposing it as the `fmtquill` interface target. So **the two copies of fmt are structural**, and there is no such feature to opt into | part 18, section 2 |
+| Do the five overlay ports shadow builtin vcpkg ports? | **No.** The baseline's tree was enumerated in full (17,869 paths, not truncated): none of `ut`, `intel-cib`, `intel-cpp-std-extensions`, `intel-baremetal-concurrency` or `intel-baremetal-senders-and-receivers` appears in `ports/` or in `versions/`. The nearest names the registry ships are `utf8-range`/`utf8h`/`utf8proc` and `intel-ipsec`/`intel-mkl`/`intelrdfpmathlib`. So all five **track upstream rather than the pinned baseline** - the opposite of the shadowing failure `ports/README.md` warns about | part 18, section 2 |
