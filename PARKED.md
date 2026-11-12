@@ -195,11 +195,12 @@ When the build lane reopens:
 ## The open items, in one place
 
 **[docs/cxx26-features-audit/open-items.md](docs/cxx26-features-audit/open-items.md)** has all of
-them: 6 defects, 14 fmt/`constexpr` questions, 9 quill questions, 16 tooling questions, 9
+them: 6 defects, 14 fmt/`constexpr` questions, 8 quill questions, 16 tooling questions, 9
 `import std;` questions, 4 reflection questions, 3 macro questions, 10 coverage to-dos, 7 build
-questions and 3 environment questions - **81 in all** - each with what
+questions and 3 environment questions - **80 in all** - each with what
 settles it, plus a table of the questions that are **not** open because they have already been
-answered. (It was 83 until part 18 answered the two dependency-tree questions; see below.)
+answered. (It was 83 until part 18 answered the two dependency-tree questions and the
+immediate-flush question; see below.)
 
 ## What parts 11 and 12 changed
 
@@ -406,8 +407,8 @@ no-compile research: what remains is the implementation (parked) and the owner d
 
 ## What part 17 changed
 
-**Part 17 - the decisions, collected.** The audit has **81 open items** (83 when part 17 was
-written; part 18 then answered two of them). Sixty-eight are
+**Part 17 - the decisions, collected.** The audit has **80 open items** (83 when part 17 was
+written; part 18 then answered three of them). Sixty-seven are
 settled by a compile, a run or a preprocessor pass - they are *questions*, and they unblock the
 moment the build lane reopens. **Thirteen are decisions**, because the answer is a judgement about
 what the project should be rather than a fact about the world. They were scattered across

@@ -125,7 +125,9 @@ installed quill 13.1.0 headers.
 **Hazard 2 - the two paths format in different places, and only one of them is documented as such.**
 Part 13's last section has the detail: the module path formats on the **calling** thread
 (`logging.cppm:112-114`) and then copies the message into a `std::string`
-(`quill_logger.cpp:118`), so each message costs one heap allocation on the calling thread; the
+(`quill_logger.cpp:118`), so each message costs one copy of its bytes on the calling thread - plus
+a heap allocation for any message longer than the small-string threshold, which is 22 characters on
+libc++ and 15 on libstdc++ (part 18, section 4); the
 catalog path queues the arguments and lets the backend format them. The root README's "What the two
 paths share → Threading" says only the second.
 

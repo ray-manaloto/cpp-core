@@ -3,7 +3,7 @@
 **Date:** 2026-11-12
 **Status:** research. Nothing here is applied to the build.
 
-The audit has **81 open items**. Sixty-eight of them are settled by a compile, a run or a
+The audit has **80 open items**. Sixty-seven of them are settled by a compile, a run or a
 preprocessor pass - they are questions, not decisions, and they unblock the moment the build lane
 reopens.
 
@@ -11,8 +11,9 @@ reopens.
 a fact about the world. They are scattered across `open-items.md`; this file gathers them into one
 sheet, with a recommendation for each.
 
-(Two further items - `VCPKG-1` and `VCPKG-2` - were answered by part 18, section 2, and are now in
-`open-items.md` section 12 rather than in the open list. The count was 83 until then.)
+(Three further items - `VCPKG-1`, `VCPKG-2` and `QUIL-8` - were answered by part 18, sections 2
+and 4, and are now in `open-items.md` section 12 rather than in the open list. The count was 83
+until then.)
 
 ## The short version
 

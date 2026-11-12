@@ -241,7 +241,7 @@ empty.
 **They are all in one place now: [open-items.md](open-items.md)** - part 10. It has every open
 question, every known defect and every to-do, grouped and numbered (`DEF-`, `FMT-`, `QUIL-`,
 `TOOL-`, `MOD-`, `REFL-`, `MAC-`, `COV-`, `BUILD-`, `VCPKG-`, `ENV-`), each with what settles it.
-**81 in all** - 13 need an owner decision and 68 need a compile, a run or a preprocessor pass.
+**80 in all** - 13 need an owner decision and 67 need a compile, a run or a preprocessor pass.
 
 In summary, and all of it needs a compile, a run, or an owner decision:
 
@@ -249,7 +249,7 @@ In summary, and all of it needs a compile, a run, or an owner decision:
 |---|---|---|
 | **The defects** | 6 | `DEF-1`: `set_level()` filters nothing on the module path - a bug, three lines at each of two call sites |
 | **fmt and `constexpr`** | 14 | `FMT-4` / `FMT-5`: can `format.hpp` be made `constexpr` wholesale, and does the `static_assert` pattern work? The compiler is the test |
-| **quill's runtime formatting** | 9 | `QUIL-1`: can a `quill::Codec` push three arguments from one pack element? It decides whether the 607-line formatter can shrink |
+| **quill's runtime formatting** | 8 | `QUIL-1`: can a `quill::Codec` push three arguments from one pack element? It decides whether the 607-line formatter can shrink. (`QUIL-8` was answered by part 18, section 4 - the module path does **not** flush on every message, and already matches quill's own default) |
 | **The tooling** | 16 | `TOOL-6`: does GCC 16 emit arcs for uninstantiated templates and `consteval` bodies? It decides whether the coverage numbers can be trusted at all |
 | **`import std;`** | 9 | `MOD-6`: is the GCC 16 failure an artefact of CMake not building header units, or a merge deficiency? |
 | **Static reflection** | 4 | `REFL-1`: do the two compilers' `members_of` forms compile the same source? |
@@ -365,7 +365,9 @@ share" section lists *call site fidelity*, *levels*, *modules*, *threading* and 
 That is true of the **catalog path** and false of the **module path**. The module path formats the
 message on the **calling** thread (`logging.cppm:112-114` builds it in a stack buffer) and then
 copies it into a `std::string` (`quill_logger.cpp:118`), so **each module-path message costs one
-heap allocation on the calling thread**. The catalog path queues the *arguments* and lets the
+copy of its bytes on the calling thread, plus a heap allocation for any message longer than the
+small-string threshold** - 22 characters on libc++ 21, 15 on libstdc++ 16 (part 18, section 4).
+The catalog path queues the *arguments* and lets the
 backend format them. The two paths have different performance profiles as well as different
 format-string dialects. Part 13; the README was corrected.
 

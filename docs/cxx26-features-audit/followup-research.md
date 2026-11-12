@@ -14,17 +14,17 @@ answers a different question: **what did the audit leave unasked?**
 
 ## The state this starts from
 
-The audit has **81 open items**, and they decompose exactly (verified by parsing the "settled by"
+The audit has **80 open items**, and they decompose exactly (verified by parsing the "settled by"
 column of every row, plus the six defect headings):
 
 | Kind | Count | What resolves it |
 |---|---|---|
 | Owner decisions | **13** | the owner's answer. Four of them gate the plan: `FMT-14`, `TOOL-13`, `TOOL-14`, `BUILD-7` |
-| Compile / run / preprocessor | **68** | the build lane reopening - mechanical, not research |
+| Compile / run / preprocessor | **67** | the build lane reopening - mechanical, not research |
 | Registry read | **0** | `VCPKG-1` and `VCPKG-2` were answered by section 2 below - the registry at the pinned baseline turned out to be readable after all |
 
 (It was 83 when this part opened; section 2 answered the two registry items and moved them to
-`open-items.md` section 12.)
+`open-items.md` section 12, and section 4 answered `QUIL-8` the same way.)
 
 **The audit's own research is complete.** Seventeen parts, the upstream sources all vendored
 (`upstream/`), the root README checked line by line (part 16), the owner decisions collected into
@@ -61,7 +61,7 @@ which is exactly what a research lane is for.
 | 1 | The `static_assert` formatter tests cannot reach the code they test | ☑ **done** | **Route B** - a private `format_tests.hpp` included by the module, so the asserts test the module's own copy. The plan's `tests/format_static_asserts.cpp` would compile a second copy and inflate the coverage union |
 | 2 | Build reproducibility and upstream drift | ☑ **done** | The pin inventory, what each compiler bump breaks, and a three-layer drift mechanism. **And a correction:** the two "registry read" items were never blocked - the registry at the pinned baseline is readable over HTTP, and it answers both |
 | 3 | The public API has no contract | ☑ **done** | The contract, derived from the implementation: threading, start-up, flushing, levels, message handling and the error model - written out as prose for the module's header comment and the README. **The headline:** the level threshold is not consulted on the module path (DEF-1), so the contract cannot promise the filtering until the fix lands |
-| 4 | A benchmark harness | ☐ **not started** | — |
+| 4 | A benchmark harness | ☑ **done** | Six metrics (M1-M6), a five-step baseline ladder (B0-B5), the variables, and three traps the harness has to avoid - `high_resolution_clock` is the wall clock on libstdc++, the per-message allocation is 0 or 1 depending on the small-string threshold, and the clock reads are as expensive as the measurement. **And a correction:** `QUIL-8`'s premise is wrong - `<true>` means "honour the flush threshold", the threshold is 0 by default, and quill's own default is the same value |
 | 5 | A differential test between the two logging paths | ☐ **not started** | — |
 | 6 | Costing the `import std;` option | ☐ **not started** | — |
 | 7 | Four smaller questions | ☐ **not started** | — |
@@ -546,8 +546,10 @@ promised the filtering would be a contract the implementation does not keep.
 
 - **`log()` formats on the calling thread**, into a **fixed 2,048-byte stack buffer**
   (`logging.cppm:112-114`, `format.hpp:154-156`), then copies the result into a `std::string`
-  (`quill_logger.cpp:118`). So **each module-path message costs one heap allocation on the calling
-  thread**, and a message longer than 2,047 bytes is **silently truncated** at the buffer's
+  (`quill_logger.cpp:118`). So **each module-path message costs one copy of its bytes on the
+  calling thread**, plus a heap allocation for any message longer than the small-string threshold
+  (22 characters on libc++ 21, 15 on libstdc++ 16 - see section 4), and a message longer than
+  2,047 bytes is **silently truncated** at the buffer's
   capacity (`format.hpp:163-165`).
 - **`log_raw()` takes an already-formatted message** and a length, and passes them through
   unchanged (`logging.cppm:101-105`). It does **not** copy into the 2,048-byte buffer - it goes
@@ -606,7 +608,8 @@ there):
 > the module path, so every message is emitted.*
 >
 > **Messages.** The module path formats on the calling thread into a fixed 2,048-byte buffer, so
-> a longer message is silently truncated, and each message costs one heap allocation. The format
+> a longer message is silently truncated. Each message costs one copy of its bytes on the calling
+> thread, plus a heap allocation for any message longer than the small-string threshold. The format
 > string is checked at compile time for the *number* of arguments only, not for the type of each
 > argument against the format specification.
 >
@@ -643,12 +646,241 @@ audit's own answer is *"a measurement, not a guess"*. There is nothing to measur
 
 - The repository contains **no benchmark files at all** - no `bench*`, no harness, no baseline.
 - The module path formats on the calling thread and copies the result into a `std::string`
-  (documented in parts 13 and 14), so **every module-path message costs one heap allocation on
-  the calling thread**.
+  (documented in parts 13 and 14), so **every module-path message costs a copy of its bytes on the
+  calling thread** - and, as the research below shows, a heap allocation only for messages longer
+  than the small-string threshold, which is 22 characters on libc++ and 15 on libstdc++, so the
+  earlier "one heap allocation per message" claim was wrong for short messages.
 - The catalog path queues the arguments and formats on the backend thread. The two paths have
   different performance profiles, and neither has been measured.
 
 **What is needed.** A specification of what to measure, how, and against what baseline.
+
+### First: the question behind `QUIL-8` is wrong
+
+`QUIL-8` reads: *"`emit()` hard-codes `<true>` for the immediate-flush template parameter
+(`quill_logger.cpp:117`). Should the module path flush on every message, or match quill's macro-free
+default?"*
+
+**It does not flush on every message, and it already matches quill's default.** Reading quill
+13.1.0's headers settles it without a measurement:
+
+- **`<true>` does not mean "flush every message".** It means *"honour the per-logger immediate-flush
+  threshold"* (`quill/Logger.h:945-952`). `_flush_after_log_statement_if_needed` loads the
+  threshold and **returns immediately if it is 0** (`Logger.h:995-999`).
+- **The threshold is 0 by default** - `std::atomic<uint32_t> _message_flush_threshold{0}`
+  (`quill/core/LoggerBase.h:221`) - and it is only set by `set_immediate_flush()`
+  (`LoggerBase.h:168-171`), which the project **never calls** (no `set_immediate_flush`,
+  `flush_every_n_messages` or `set_flush_interval` anywhere in `src/`, `include/` or `modules/`).
+- **Quill's own default is the same value.** `LogMacros.h:129-132` defines
+  `QUILL_ENABLE_IMMEDIATE_FLUSH 1`, and the macro path passes exactly that
+  (`LogMacros.h:407`, `:1040`).
+
+So the module path's `<true>` is **one relaxed atomic load and a predictable branch** - the same
+branch quill's own macros take. **There is no decision to make here.** `QUIL-8` should be reworded
+from *"a measurement, not a guess"* to *"already settled by reading the headers"*, and the benchmark
+below is not for it.
+
+**But the same reading turns up something the audit missed, and it is a performance defect.**
+Quill's macro path calls `should_log_statement<log_level>()` **before** queueing
+(`LogMacros.h:404`). The project's runtime-metadata path does **not** - `emit()` calls
+`log_statement_runtime_metadata` directly (`quill_logger.cpp:117`), and that function never
+consults the level (`Logger.h:427-476`). So the module path **queues every message, including the
+ones the level would filter out.** That is DEF-1 again, but seen as a cost: **the module path's
+producer cost is independent of the configured level**, while quill's own path gets cheaper as the
+level rises. A benchmark that measures both at two levels would put a number on that.
+
+### The metrics
+
+Six metrics, each with a definition. A benchmark that does not state what it measures produces
+numbers nobody can compare.
+
+| # | Metric | Definition | Why it is here |
+|---|---|---|---|
+| M1 | **producer ns/message** | wall-clock time the *calling thread* spends inside the log call, divided by the message count | what the application's thread pays - the number the module path actually changes |
+| M2 | **producer p50 / p99** | the per-message distribution of that time, not the mean | a mean hides the tail, and the tail is what a user notices |
+| M3 | **allocations/message** | heap-allocation calls attributable to the producer thread, per message | the module path's `std::string` copy is the project's only per-message allocation |
+| M4 | **end-to-end p50 / p99** | enqueue → written to the sink | the user-visible latency of a log line |
+| M5 | **drain time** | after the producer stops, the time until the last message is in the sink | the backlog the producer built |
+| M6 | **throughput** | messages/second, producer-limited | the ceiling |
+
+**M1-M3 are the producer's; M4-M5 are the logger's.** They have to be reported separately, because
+they move in opposite directions when the work moves between the threads - and that is exactly
+what the module path does.
+
+### The baseline ladder
+
+Five baselines, each isolating one layer. **Without the ladder a single number says nothing about
+where the time goes.**
+
+| # | Baseline | What it isolates |
+|---|---|---|
+| **B0** | the empty loop, with the same clock reads | **the harness's own overhead** - the noise floor every other number sits on |
+| **B1** | `format_message` into the 2,048-byte buffer, **no** `emit()` | the module's formatter cost, with nothing queued |
+| **B2** | the module path's `log()`, end to end | the module path's producer cost |
+| **B3** | `log_raw()` with a pre-formatted string | the queueing cost **without** formatting |
+| **B4** | the catalog path's `CIB_INFO(...)` | the catalog path's producer cost |
+| **B5** | quill's own `LOG_INFO(...)` macro | the reference implementation - the number to beat |
+
+The differences are the findings:
+
+- **B2 − B1** = what the queueing costs.
+- **B2 − B3** = what the formatting costs (B3 also skips the `std::string` copy, so this is the
+  formatter **plus** the copy).
+- **B4 − B1** = what the module path adds over the catalog path, which is the decision `FMT-14`
+  turns on.
+- **B5 − B4** = what the catalog path costs over a plain quill user - the price of the catalog's
+  compile-time identification.
+- **B5 − B2** = the module path's total premium over quill's own path.
+
+**B0 is not optional.** Without it, a "42 ns/message" number is uninterpretable.
+
+### The variables
+
+| Variable | Values | Why |
+|---|---|---|
+| compiler | `gcc16-release`, `p2996-release` | the two supported toolchains, and they differ (see the clock trap below) |
+| level | `info` (primary), `trace` (secondary) | at `trace`, quill's macro path filters nothing either, so B5's cost rises; at `info` the difference appears |
+| message length | 8 bytes, 64 bytes, 2,048 bytes | **8 bytes is below the small-string threshold on both libraries** (see below), 64 is above both, 2,048 is the formatter's truncation boundary |
+| message count | 100,000 per repetition | enough to amortise the warm-up and to make the p99 meaningful |
+| repetitions | 20 | enough for a stable tail; the harness reports the distribution across repetitions, not just one run |
+| warm-up | 1,000 messages before measuring | lets the SPSC queue reach its steady-state size (128 KiB initially, `FrontendOptions.h:58`) and the thread-local context settle |
+| sink | console redirected to `/dev/null` (default); `NullSink` if the seam is added | see "the sink" below |
+| build | `CMAKE_BUILD_TYPE=Release`, `CPP_CORE_HARDENING=none`, **no sanitizer** | a sanitizer changes the cost by an order of magnitude and the numbers stop describing the shipped binary |
+
+### The harness has three traps, and all three are real
+
+**Trap 1 - `high_resolution_clock` is not the same clock on the two compilers.** This is the one
+that would silently corrupt half the results.
+
+| Library | `high_resolution_clock` | monotonic? |
+|---|---|---|
+| libc++ 21 | `typedef steady_clock high_resolution_clock` (`<chrono>:435`) | **yes** |
+| libstdc++ 16 | `using high_resolution_clock = system_clock` (`bits/chrono.h:1294`) | **no** - it is the wall clock |
+
+A harness written against `high_resolution_clock` would produce monotonic numbers on `p2996` and
+wall-clock numbers on `gcc16`, and the wall-clock ones would show occasional negative or absurd
+durations whenever the system clock is adjusted. **The harness must use `std::chrono::steady_clock`
+on both.** (`steady_clock::is_steady` is `true` in libc++, `:430`.)
+
+**Trap 2 - the per-message allocation is not one, and the threshold differs between the
+libraries.** The audit says the module path "costs one heap allocation on the calling thread"
+(`README.md:277`), and that is only true for messages **longer than the small-string threshold**:
+
+| Library | small-string capacity | a message of *n* characters |
+|---|---|---|
+| libc++ 21 | **22** (`__min_cap = (sizeof(__long) - 1)`, `string:834`, `:896`) | ≤ 22 → the `std::string` lives on the stack → **0** heap allocations |
+| libstdc++ 16 | **15** (`_S_local_capacity`, `bits/basic_string.h:217`) | ≤ 15 → **0** heap allocations |
+
+`emit()` constructs `std::string{message, length}` (`quill_logger.cpp:118`), so a short message
+never touches the heap - the bytes still get copied, into the small-string buffer, and then again
+into the queue. So:
+
+- **the allocation count is 0 or 1 per message depending on the message length**, and the crossover
+  is at a *different* length on each compiler;
+- the audit's README claim is **wrong for short messages**, and the benchmark is what would have
+  found it.
+
+**This means the benchmark's message length is not a cosmetic variable - it is the variable that
+flips the allocation count**, and a single-length benchmark would report either "0 allocations" or
+"1 allocation" and be true only for that length.
+
+**Trap 3 - the producer's clock reads are not free.** Two `steady_clock::now()` calls per message
+cost a `mach_absolute_time` each on macOS - tens of nanoseconds, which is the same order as the
+thing being measured. So:
+
+- the per-message timing must be **batched** (time a block of *N* messages, divide) and the
+  per-message distribution must come from **many small batches**, not from one call per message;
+- **B0 measures exactly this cost** and is subtracted from the reported numbers.
+
+### The allocation counter
+
+M3 needs a count of heap allocations on the producer thread. Three ways, and only one is
+trustworthy:
+
+| Way | Verdict |
+|---|---|
+| **`operator new` replacement, scoped to the producer thread** | **the recommendation.** Replacing the global `operator new`/`operator delete` in the benchmark TU is legal, needs no dependency, and the counter can check `std::this_thread::get_id()` so it only counts the *producer's* allocations - quill's backend thread allocates too, and those must not be counted |
+| `malloc_zone_statistics` (macOS) | counts the whole process, not a thread, and is not portable to the other platform the project might use |
+| ASan's `__sanitizer_get_allocated_bytes()` | exact, but only under ASan - and ASan changes the timings, so it would have to be a **second, separate run** |
+
+The counter must be **enabled only during the measured region**, and the harness must subtract the
+count taken over the equivalent idle region, because quill's own setup allocates outside the
+producer's control.
+
+### The sink: the one structural blocker
+
+**The project's sink is hard-wired.** `quill_logger()` creates a `quill::ConsoleSink` and a logger
+named `"cpp-core"` (`quill_logger.cpp:83-91`), once, in a function-local static. `create_or_get_logger`
+**returns the existing logger** for a duplicate name, so a benchmark cannot create a second logger
+with a different sink - and `setup()` takes no arguments, so the module path cannot be pointed
+elsewhere.
+
+A benchmark that logs to the console measures **the terminal**, not the logger: the write to a tty
+costs microseconds and varies with whether stdout is a tty at all. Two ways out:
+
+| Shape | What it needs | What it measures |
+|---|---|---|
+| **S1 - redirect stdout** | **nothing.** `dup2` fd 1 onto `/dev/null` before the first log call - the pattern `tests/logging_test.cpp:26-43` already uses | producer cost **plus** the backend's real work (formatting the pattern, the `fwrite`) minus the terminal's cost |
+| **S2 - a `NullSink`** | **a source change**: a seam so the benchmark's logger gets a `quill::NullSink` (`quill/sinks/NullSink.h`, header-only, its `write_log` is an inline no-op) | the producer cost **alone** |
+
+**The recommendation is S1 for the first benchmark**, because it needs no source change and the
+backend's work is part of what the user asked about. S2 is the better instrument for isolating the
+producer, and it is a small change - but it is a source change, so it waits for the build lane.
+
+Note that S1 has a subtlety: quill's `StreamSink` writes with `fwrite` to the `stdout` `FILE*`
+(`quill/sinks/StreamSink.h:131`), so redirecting the *file descriptor* works, and the existing test
+proves it does.
+
+### Two more things the harness needs, and one it must not do
+
+- **The catalog path needs the catalog.** `CIB_INFO(...)` goes through `catalog<Message>()`
+  (`cib_quill.hpp:139`), so the benchmark target must link `cpp-core-catalog`, exactly as
+  `cpp-core-tests` does (`tests/CMakeLists.txt:12`).
+- **The module path must be imported, not included.** `import com.rsm.logging;` at the top of the
+  benchmark TU, and the target links `cpp-core::logging` - the same shape as
+  `tests/logging_test.cpp:9`. `log()` is a template, so it is instantiated in the benchmark TU and
+  measured as the consumer sees it.
+- **The harness must not use `ut`.** `ut` is a test framework; it has no timing, no repetition and
+  no percentile support. It would be a harness written from scratch on top of a test framework.
+- **The harness must not be part of the test suite.** It is a separate target, excluded from
+  `ctest`, and run through its own preset.
+
+### The framework choice
+
+Both candidates are **already in the vcpkg registry at the pinned baseline**, so neither needs an
+overlay port:
+
+| Candidate | Version at the baseline | What it gives | What it costs |
+|---|---|---|---|
+| **`benchmark`** (google) | **1.9.5** | `->Percentile(0.99)` out of the box; `benchmark::MemoryManager` for allocations-per-iteration; ns/op and items/s; a documented warm-up and repetition model | a real dependency in `vcpkg.json`; a heavier build |
+| **`nanobench`** | **4.6.0** | single header; fast; ns/op with a median | its library API has no first-class percentile reporting and no allocation counter |
+
+**The recommendation is `benchmark`.** The two things the specification demands that a hand-rolled
+harness gets wrong are the **percentiles** and the **warm-up/repetition model** - and
+re-implementing those correctly is exactly the kind of work that produces numbers that look
+plausible and are not comparable. Adding a dependency to `vcpkg.json` is a small decision for the
+owner; the recommendation is to make it.
+
+### What the numbers would decide
+
+| The number | settles |
+|---|---|
+| B2 − B4 | the module path's premium over the catalog path - the strongest input to **`FMT-14`** |
+| M3 at 8 / 64 / 2,048 bytes | how often the module path touches the heap, and **that the README's "one heap allocation per message" is wrong for short messages** |
+| B2 at `trace` vs `info` | the cost that **DEF-1** leaves on the table, since the module path queues messages that quill's own path would filter |
+| B5 − B2 | the module path's total premium over a plain quill user - the number a consumer would compare against |
+| M4 / M5 | whether the producer and the backend are balanced, and whether the `UnboundedBlocking` queue is hiding a backlog |
+| B2 − B1 vs B2 − B3 | whether the cost is in the formatter or in the queueing - which decides whether `FMT-14`'s answer (c) is worth the Codec experiment |
+
+### And the one thing the benchmark cannot settle
+
+**The end-to-end latency (M4) needs the sink's write to be observable**, which means the sink has
+to timestamp each message - and the project's pattern has no timestamp field
+(`quill_logger.cpp:33-35` has `%(time)`, but that is the *logger's* timestamp, taken when the
+backend processes the message, not when the producer called `log()`). So M4 is only measurable with
+a **custom sink** that records the enqueue time alongside the write - a third source change, and a
+bigger one than S2. **The recommendation is to defer M4 and M5** until the producer cost (M1-M3) is
+measured; they are the second-order question, and the first-order one does not need them.
 
 ---
 
@@ -737,10 +969,11 @@ decay, and what is their state now?
 
 ## What was checked
 
-- The **state table** (81 items, 13 / 0 / 68): parsed from the "settled by" column of every row of
+- The **state table** (80 items, 13 / 0 / 67): parsed from the "settled by" column of every row of
   [open-items.md](open-items.md) plus its six defect headings. The 13 owner decisions match the
   thirteen headings in [decisions.md](decisions.md) exactly - none missing, none extra. The two
-  registry items were removed from the open list when section 2 answered them.
+  registry items were removed from the open list when section 2 answered them, and `QUIL-8` when
+  section 4 did.
 - The **evidence quoted in each section** was read from the files it names.
 - **Nothing was built, configured, run or regenerated.** Every claim is a restatement of a
   finding recorded in an earlier part, or a reading recorded here.

@@ -275,7 +275,8 @@ to refer to.
 - **Threading:** the two paths differ here. The catalog path queues the runtime arguments, and
   quill formats them on its backend thread. The module path formats the message on the calling
   thread — into a fixed 2,048-byte buffer — and then copies it into the queue, so each module-path
-  message costs one heap allocation on the calling thread.
+  message costs one copy of its bytes on the calling thread, plus a heap allocation for any
+  message longer than the small-string threshold (22 characters on libc++, 15 on libstdc++).
 - **Format strings:** the two paths **do not** share a dialect. The catalog path formats with
   quill's bundled fmt, which implements the C++26 format-spec grammar and checks it against the
   argument's type; the module path formats with the module's own scanner, which implements the

@@ -204,8 +204,10 @@ The root README also claims, under "What the two paths share":
 That is true of the **catalog path** and false of the **module path**. The module path formats the
 message *on the calling thread* - `logging.cppm:112-114` builds the message in a stack buffer
 before `emit()` is called - and then `emit()` copies it into a `std::string`
-(`quill_logger.cpp:118`), so **each module-path message costs one heap allocation on the calling
-thread**. The catalog path queues the *arguments* and lets the backend format them. The two paths
+(`quill_logger.cpp:118`), so **each module-path message costs one copy of its bytes on the calling
+thread, plus a heap allocation for any message longer than the small-string threshold** - 22
+characters on libc++ 21, 15 on libstdc++ 16 (part 18, section 4). The catalog path queues the
+*arguments* and lets the backend format them. The two paths
 have different performance profiles as well as different dialects.
 
 (The README was corrected when this part was written.)
