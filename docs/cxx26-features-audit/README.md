@@ -33,6 +33,24 @@ recommendations for the three questions the owner asked:
 | 18 | [followup-research.md](followup-research.md) | **the eight things the audit never asked** - and the answers |
 | - | [upstream/](upstream/) | the upstream sources these parts quote, vendored so the review can be done offline |
 
+**The audit has a machine-readable side.** `open-items.md` is the source of truth for the items;
+`scripts/audit_index.py` parses it into `audit-index.json`, and `scripts/audit_summary.py` prints
+a slice of it - so a question about the audit is answered without reading 750 lines of Markdown:
+
+```console
+$ mise run audit:summary -- --prefix MOD
+11 item(s)
+
+  MOD-1     [compile             ] How large is the GCC migration in option (c), exactly? ...
+  MOD-10    [compile             ] Does a translation unit that **imports** `com.rsm.logging` ...
+  ...
+```
+
+`mise run audit:verify` runs every check that does not need a compiler: the counts, duplicate and
+dangling IDs, the decisions sheet against the open list, the counts this prose claims, table
+shape, fence balance, relative links, the parts tables, the privacy scan, and the vendored
+upstream copies.
+
 ## The defects this audit found
 
 There are six now. The first is the important one.

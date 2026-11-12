@@ -17,6 +17,13 @@ vcpkg_manual_installs.txt
 # macOS
 .DS_Store
 
+# Local-only audit configuration (private values for the privacy scan). Never tracked.
+.audit/
+
+# Python
+__pycache__/
+*.pyc
+
 # IDE
 .idea/
 .vs/

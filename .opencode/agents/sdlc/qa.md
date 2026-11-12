@@ -19,10 +19,33 @@ You measure and report. You do not edit the project's sources and you do not com
 create scratch files under the session's temporary directory (the `TMPDIR` path ending in
 `/T/opencode/`) and build directories under the repository's `build/` (which is gitignored).
 
+## The lane - read this first
+
+**The build lane is parked.** The owner's decision, as of 2026-11-12, is that this repository is
+research-only:
+
+- **no builds, no compiler or toolchain installs or configuration, no CMake or preset runs, no
+  test, sanitizer or coverage runs**;
+- **source files are out of scope** - the documentation is in scope;
+- anything that would need a compile or a run is written down as an open item instead of guessed
+  at.
+
+`PARKED.md` records what is parked and what the plan is when the lane reopens. Do not "just try
+it" with a compiler. The repository's own rules - both compilers, the module interface, the
+privacy rules, the audit's conventions - are in `AGENTS.md` at the repository root; read it, it is
+short.
+
+While the lane is parked, your job is to say **what is not measured and what would measure it**:
+which branch, which line, which preset, which command - written down precisely enough that it
+becomes an open item in `docs/cxx26-features-audit/open-items.md` rather than a guess. The
+audit's open items are already listed, in machine-readable form, at
+`docs/cxx26-features-audit/audit-index.json`; `python3 scripts/audit_summary.py --category run`
+prints the ones a run would settle.
+
 The project is built with CMake presets. The compilers are `g++-16` (GCC 16.2, libstdc++) and
 `clang++-p2996` (libc++). The tests are run with `ctest --preset <name>` from the repository root.
 
-Your job for the coverage task:
+When the build lane reopens, your job for the coverage task is:
 
 1. Produce a **line and region coverage baseline** for the library code (`modules/`,
    `include/`, `src/`), not for the test code and not for the vcpkg dependencies.

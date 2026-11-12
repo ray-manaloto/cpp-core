@@ -1,6 +1,6 @@
 # The open items and known issues
 
-**Date:** 2026-11-11
+**Date:** 2026-11-11, updated 2026-11-12
 **Status:** the single list of everything the audit could not settle, plus every defect and to-do it
 found. Each item says what settles it and where it came from.
 
@@ -14,7 +14,12 @@ Two kinds of item are mixed here on purpose:
 - **open questions** - something is not known yet and needs a measurement (sections 2 to 11).
 
 Section 12 is the other way round: the questions that have **already** been answered, recorded so
-that nobody re-derives them.
+that nobody re-derives them. Section 13 holds the ones that **carry an ID** and are answered or
+contingent, so that a reference to `VCPKG-1` resolves to something.
+
+**This file is the source of the machine-readable registry.** `scripts/audit_index.py` parses it
+into `audit-index.json`, and `scripts/verify_audit.py` checks that the committed registry is up to
+date. Never edit the JSON by hand - run `mise run audit:index`.
 
 ## 1. The issues - known defects, to fix
 
@@ -172,13 +177,15 @@ From [constexpr-and-fmt.md](constexpr-and-fmt.md) section 4.
 | FMT-6 | What does fmt produce for the project's float cases? The switch from `%g` (six significant digits) to fmt's shortest round-trip changes the output for `0.1`, `1.0/3.0`, `1e-7`, `1e20` and the infinities | a run |
 | FMT-7 | Does fmt's `format_to_n` behave the same as `snprintf` for the truncation contract? The module truncates at 2,047 bytes silently; `format_to_n` returns `format_to_n_result{count, error_code}` and the error code has to be checked | a compile |
 | FMT-8 | Can a custom `fmt::formatter<T>` be written for a project type, and does it interoperate with quill's `fmtquill`-based runtime formatter? If not, the two-copies problem needs a project rule about which namespace custom formatters use | a compile |
-| FMT-9 | Does the vcpkg `quill` port have an external-fmt feature? The installed headers say no; the upstream port might. If it does, the two-copies problem disappears | reading the vcpkg port |
 | FMT-10 | Does `std::source_location::current()` in a default argument on `quill_config::logger::log` return the **caller's** location, given that the call goes through the `logging::log<Env>` template? It may be the reason the CIB macro cannot be dropped | a compile - **also MAC-1** |
 | FMT-11 | Does the catalog tooling's `nm` scan still find the same undefined `catalog<>` / `module<>` symbols if the cib tag string is built with `fmt::format`? The tags are runtime data, not types, so it should not matter | a run - **also MAC-2** |
 | FMT-12 | Does `fmt::runtime` exist in fmt 12.2.1's public API under that name, and is it the right way to format a runtime-built specification in `format_double`? | reading the header, plus a compile |
 | FMT-13 | What are the **authoritative** feature-test macro values on each toolchain? Part 11 reports *declaration* and the set of values each macro is declared with, because both libraries define their macros inside per-standard-version branches and a text scan cannot pick the right one. The authoritative answer needs the preprocessor - one `#include <version>` and a `static_assert` per macro | a compile |
 | FMT-14 | **The module path's format-string dialect: document it, validate it, or move it?** Part 13 shows the module path and the catalog path do not share a dialect, and that the difference is structural - fmt cannot enter the module interface, so the module's own dialect stays as long as the module formats inside its own interface. Option (a): document the differences (D1-D15) and stop. Option (b): validate the specification against the argument's type, the way `std::format` and fmt do - the check moves into `format_string`'s constructor, which knows the types (`logging.cppm:66-76`). Option (c): move the formatting out of the module interface - the plan's last step, which needs QUIL-1. **This is an owner decision.** **Part 18, section 6 adds a constraint the audit did not have: option (b) is only coherent if the module's *renderer* comes from the same library as the validator.** `std::basic_format_string` validates against the **standard's** grammar, so a module that validates with it and renders with its own scanner would accept `{:>06}` - which the standard means as right-align and the module renders as zero-pad (`"    42"` against `"000042"`). **A check that is present and wrong is worse than no check at all**, so (b) without the renderer changing is not an option; and (b) with `std::format_to` is not `constexpr` in either implementation, so it costs the `constexpr` formatter and the `static_assert` formatter tests | an owner decision |
 | FMT-15 | **How are the four asymmetric divergences tested?** D1, D8, D9 and D14 are *compile-time rejections on one side only* - fmt rejects `{:s}` on an `int` and `{:d.3}` on an `int`, and the module rejects `"{:{}}"` and `"{0} {0}"`. A runtime differential test cannot compare two programs when one of them does not compile, so **these four need a "must not compile" mechanism**, and the project has none. CMake's `try_compile` returns a boolean but cannot `import com.rsm.logging;` (the module has to be built first, and the import path is CMake-internal). The workable route is a ctest fixture that reads the compile command out of `compile_commands.json` (already generated), substitutes the source and asserts that the compiler **fails**. These four are the most important cases - D1 is the difference between a checked and an unchecked format string - so a design that dropped them would drop the point | a build-system change, then a run |
+
+**FMT-9 has moved to [section 13](#13-the-items-that-are-answered-or-contingent)** - part 18,
+section 2 answered it by reading the upstream vcpkg port.
 
 ## 3. quill's runtime formatting (QUIL)
 
@@ -217,7 +224,9 @@ coverage run; the rest are clang-tidy, cmake-format and the CI.
 | TOOL-13 | `.cmake-format.yaml` versus `.cmake-format.json`: if the YAML route is kept, the pipx install must gain pyyaml (`mise use pipx:cmakelang[yaml]` or a project `.mise.toml`). **Owner decision**: who pins it, or do we commit JSON? The YAML config crashes on this machine without PyYAML | an owner decision |
 | TOOL-14 | Is a one-shot `cmake-format -i` sweep acceptable? 9 of the 12 CMake files change. Do we keep hand-wrapping via `.cmake-format.yaml` and `always_wrap` (never collapse `add_custom_target`), or accept cmake-format's canonical layout? Measure the post-conformance diff in review | an owner decision |
 | TOOL-15 | Does `.clang-format` and `.cmake-format.yaml` agree on anything besides `line_width = 100`? (`tab_size`, `line_ending`, markup-off / reflow-off.) Cosmetic, but worth editing together | a run |
-| TOOL-16 | Does CI (a GitHub Actions runner) provide `gcov-16` at a known path, or via `ubuntu-latest`'s GCC? If not, the gate must either install GCC 16 in CI or stay a local/preset gate for now | a run |
+**TOOL-16 has moved to [section 13](#13-the-items-that-are-answered-or-contingent)** - it is not
+a measurement. It asks what CI image would provide `gcov-16`, and the project has no CI at all
+(`BUILD-5`), so the question is **contingent on `BUILD-5`'s answer**, not a run.
 
 **Resolved since the design note was written:** the `.editorconfig` question (`indent_size = 3` should
 become 2) - done in `2ef42de`.
@@ -314,8 +323,9 @@ never treated the build as a subject. **BUILD-6 is answered - see section 12.**
 
 From [build-and-dependencies.md](build-and-dependencies.md).
 
-**Both items below are now answered - see section 12.** They were recorded as needing "a reading
-of the registry at the pinned baseline", which was believed to be impossible because
+**Both items below have moved to
+[section 13](#13-the-items-that-are-answered-or-contingent)** - they were recorded as needing "a
+reading of the registry at the pinned baseline", which was believed to be impossible because
 `$VCPKG_ROOT` is the vcpkg *tool* with no `ports` tree and no `.git`. The registry is a git
 repository and the baseline is a commit in it, so the reading is done over HTTP against that
 commit, without a checkout. Part 18, section 2.
@@ -375,3 +385,19 @@ These were asked, answered and are recorded so nobody re-derives them.
 | Is `import std;` still behind an experimental CMake gate? | **No - as of CMake 4.5.0 (released 2026-11-12) it is a supported feature.** The `CMAKE_EXPERIMENTAL_CXX_IMPORT_STD` UUID gate is gone from `Help/dev/experimental.rst` and from the cxxmodules manual; the section is marked `.. versionadded:: 4.5`; and the release notes say *"``import std`` is now available for all C++ 20 and later code with `CXX_SCAN_FOR_MODULES` enabled"*. The switch is the `CXX_SCAN_FOR_MODULES` target property, already on for this project. CMake 4.5.0's toolchain matrix also adds **"GCC 16 and newer on MacOS"** - this project's configuration, which 4.4.5 did not list. **The project is on 4.4.5**, so it has to move before it can use it. `MOD-11` is **not** retired: CMake's matrix is not a measurement of this project's configuration | part 18, section 8.4 |
 | Does the installed libstdc++ have a `constexpr` `std::format`? | **No** - libstdc++ 16 has `__cpp_lib_constexpr_exceptions 202502L` but **no** `__glibcxx_constexpr_format`, **no** `__cpp_lib_constexpr_format`, and `_GLIBCXX_CONSTEXPR_FORMAT` does not exist in its `<format>` at all. libc++ 21 and libc++ `main` have no `__cpp_lib_constexpr_format` either. **But GCC 17's libstdc++ does**: `__cpp_lib_constexpr_format 202511L` and a `constexpr` `std::format` family (`include/bits/version.def`, `include/bits/version.h`, `include/std/format:67-71`). GCC 17 is **not released** - the horizon is 2027. When it lands, the fmt-over-`std::format` argument weakens from *"neither library"* to *"libc++"*, and the hand-rolled formatter still cannot be retired until libc++ catches up | part 18, section 8.5 |
 | Are the five overlay ports still pinned to their upstreams' latest commits? | **Yes - all five are at their upstream's `HEAD` today** (checked 2026-11-12). So the root README's claim is true; the defect is that **nothing detects it**. The four Intel ports are pinned to **`main` branch tips** (their repos publish no tags for these headers), while `ut` is pinned to the immutable **`v1.2.1` tag** - the right shape, and the model the other four should follow | part 18, section 8.1 |
+
+## 13. The items that are answered or contingent
+
+These are the items that **carry an ID** and are no longer open. Section 12 holds the answers to
+questions that never had an ID; this section holds the ones that did, so that a reference to
+`VCPKG-1` resolves to something. `scripts/audit_index.py` parses this table, and
+`scripts/verify_audit.py` fails if an ID appears both here and in an open section.
+
+| # | Question | State | Answer | Evidence |
+|---|---|---|---|---|
+| VCPKG-1 | Does the upstream vcpkg `quill` port have an opt-in feature for an external fmt? | answered | **No.** At the pinned baseline the upstream `quill` port has **no `features` key at all** and depends only on `vcpkg-cmake` and `vcpkg-cmake-config`; its portfile passes no fmt option. quill 13.1.0's own CMakeLists has no fmt switch either - none of its 26 `option()` calls mentions fmt - and it installs `include/quill/bundled/fmt/*` unconditionally, exposing it as the `fmtquill` interface target. So **the two copies of fmt are structural** | part 18, section 2 |
+| VCPKG-2 | Do the five overlay ports shadow builtin vcpkg ports at the pinned baseline? | answered | **No.** The baseline's tree was enumerated in full (17,869 paths, not truncated): none of `ut`, `intel-cib`, `intel-cpp-std-extensions`, `intel-baremetal-concurrency` or `intel-baremetal-senders-and-receivers` appears in `ports/` or in `versions/`. So all five **track upstream rather than the pinned baseline** | part 18, section 2 |
+| QUIL-8 | Does the module path flush on every message? | answered | **No, and it never did.** `<true>` means *"honour the per-logger immediate-flush threshold"*, and the check returns immediately when the threshold is 0. The threshold **is** 0 - it defaults to 0 and the project never calls `set_immediate_flush()`. Quill's own default is the same value, so the module path already matches quill's macro-free default | part 18, section 4 |
+| BUILD-6 | Are the catalog IDs the same under both compilers? | answered | **Yes - and structurally, not by luck.** The ID is a function of the message text, carried in the message's type, which both compilers spell the same way. All nine catalogs on disk are byte-identical. The *release-to-release* instability is a separate defect - **DEF-6** | part 15 |
+| FMT-9 | Does the vcpkg `quill` port have an external-fmt feature? | answered | **No** - the same reading as `VCPKG-1`, which was the same question asked from the installed headers and from the upstream port. The two copies of fmt are structural | part 18, section 2 |
+| TOOL-16 | What CI image would provide `gcov-16`? | contingent on `BUILD-5` | **Not a measurement.** The project has no `.github/` directory and no git remote, so the coverage gate, the format check and the clang-tidy check have no home until CI exists. `BUILD-5` ("should there be CI?") is an owner decision and is still open; this question is answered by it, not by a run | part 12 |

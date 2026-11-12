@@ -1,0 +1,32 @@
+# The task runner's configuration for this repository.
+#
+# The tasks here are the project's verbs. The build lane is parked - there is deliberately no
+# build, test or coverage task - so every task below runs without a compiler.
+
+[tasks."audit:verify"]
+description = "Run every check that does not need a compiler"
+run = "python3 scripts/verify_audit.py"
+
+[tasks."audit:index"]
+description = "Regenerate the audit's item registry from the Markdown"
+run = "python3 scripts/audit_index.py --write"
+
+[tasks."audit:summary"]
+description = "The audit's items, sliced: --prefix MOD, --owner, --category, --state, --id, --counts"
+run = "python3 scripts/audit_summary.py"
+
+[tasks."audit:upstream"]
+description = "Check the vendored upstream copies against the manifest"
+run = "python3 scripts/verify_upstream.py"
+
+[tasks."audit:drift"]
+description = "Compare the overlay ports' pins with their upstreams' current tips"
+run = "python3 scripts/check_overlay_drift.py --network"
+
+[tasks."audit"]
+description = "Regenerate the registry, then run every check"
+run = """
+python3 scripts/audit_index.py --write
+python3 scripts/audit_summary.py --counts
+python3 scripts/verify_audit.py
+"""

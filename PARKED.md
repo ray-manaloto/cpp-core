@@ -196,12 +196,21 @@ When the build lane reopens:
 ## The open items, in one place
 
 **[docs/cxx26-features-audit/open-items.md](docs/cxx26-features-audit/open-items.md)** has all of
-them: 6 defects, 15 fmt/`constexpr` questions, 8 quill questions, 16 tooling questions, 11
+them: 6 defects, 14 fmt/`constexpr` questions, 8 quill questions, 15 tooling questions, 11
 `import std;` questions, 4 reflection questions, 3 macro questions, 10 coverage to-dos, 7 build
-questions and 3 environment questions - **83 in all** - each with what
+questions and 3 environment questions - **81 in all** - each with what
 settles it, plus a table of the questions that are **not** open because they have already been
-answered. (It was 83 until part 18 answered the two dependency-tree questions and the
-immediate-flush question, and added three of its own; see below.)
+answered, and a table of the items that **carry an ID** and are answered or contingent
+(section 13).
+
+The count is derived, not typed: `scripts/audit_index.py` parses that file into
+`docs/cxx26-features-audit/audit-index.json`, and `scripts/verify_audit.py` fails if the number
+above and the number in the JSON disagree. The same registry answers questions without reading
+the Markdown at all - `mise run audit:summary -- --prefix MOD` prints one slice.
+
+(It was 83 until part 18 answered the two dependency-tree questions and the
+immediate-flush question, and added three of its own; `FMT-9` and `TOOL-16` have since been
+answered too, which is where the two came off. See below.)
 
 ## What parts 11 and 12 changed
 
@@ -409,12 +418,13 @@ no-compile research: what remains is the implementation (parked) and the owner d
 
 ## What part 17 changed
 
-**Part 17 - the decisions, collected.** The audit has **83 open items** (83 when part 17 was
-written; part 18 then answered three of them and added three of its own). Seventy are
-settled by a compile, a run or a preprocessor pass - they are *questions*, and they unblock the
-moment the build lane reopens. **Thirteen are decisions**, because the answer is a judgement about
-what the project should be rather than a fact about the world. They were scattered across
-`open-items.md`; part 17 gathers them into one sheet, with a recommendation for each.
+**Part 17 - the decisions, collected.** The audit had **83 open items** when part 17 was written;
+part 18 then answered three of them and added three of its own, and two more have since been
+answered, so there are **81 open items** now. Seventy of them are settled by a compile, a run or
+a preprocessor pass - they are *questions*, and they unblock the moment the build lane reopens.
+**Thirteen are decisions**, because the answer is a judgement about what the project should be
+rather than a fact about the world. They were scattered across `open-items.md`; part 17 gathers
+them into one sheet, with a recommendation for each.
 
 **Four of them gate the implementation:**
 
@@ -508,23 +518,62 @@ things that moved, and neither of them existed when the watch list was written. 
 watch rows are **unchanged**, and three of the seven *cited* clang-tidy issues are now recorded
 with their states (all three closed; the two that matter are still open).
 
-**The counts did not move.** The audit still has **83 open items**: 13 owner decisions, 0 registry
-reads, 70 settled by a compile, a run or a preprocessor pass. Part 18 answered **three** of them
-by reading - **`VCPKG-1`** and **`VCPKG-2`** (section 2) and **`QUIL-8`** (section 4) - and added
-**three** of its own (`FMT-15`, `MOD-10`, `MOD-11`), so the total is unchanged from the 83 that
-part 17 recorded. Part 18 also added **seven** new rows to `open-items.md` section 12 for
-questions that were **never** open-list items - MemorySanitizer, module consumption, `ut`'s
-supply chain, quill, CMake 4.5.0, GCC 17's constexpr format, and the overlay pins - so that
-nobody re-derives them.
+**The counts did not move** during part 18 itself: the audit still had **83 open items** when it
+finished - 13 owner decisions, 0 registry reads, 70 settled by a compile, a run or a preprocessor
+pass. Part 18 answered **three** of them by reading - **`VCPKG-1`** and **`VCPKG-2`** (section 2)
+and **`QUIL-8`** (section 4) - and added **three** of its own (`FMT-15`, `MOD-10`, `MOD-11`), so
+the total was unchanged from the 83 that part 17 recorded. Part 18 also added **seven** new rows
+to `open-items.md` section 12 for questions that were **never** open-list items -
+MemorySanitizer, module consumption, `ut`'s supply chain, quill, CMake 4.5.0, GCC 17's constexpr
+format, and the overlay pins - so that nobody re-derives them.
+
+**Since then, two more have been answered** and the audit has **81 open items**: 13 owner
+decisions, 0 registry reads, 68 settled by a compile, a run or a preprocessor pass. `FMT-9` - the
+question whether the vcpkg `quill` port has an external-fmt feature - was answered by part 18,
+section 2, and was still sitting in the open table; and `TOOL-16` - what CI image would provide
+`gcov-16` - is not a measurement at all, because the project has no CI (`BUILD-5`), so it is
+**contingent on `BUILD-5`'s answer**. Both now live in `open-items.md` section 13, which holds
+the items that carry an ID and are answered or contingent, so that a reference to `VCPKG-1`
+resolves to something.
+
+## The automation and the rules
+
+The audit had grown to 18 parts, 8,300 lines of Markdown, 83 items with hand-maintained counts in
+four places, and a verification sweep that was **re-typed by hand eight times** - once after each
+part 18 item. That is now machinery, not memory.
+
+| what | where | what it replaces |
+|---|---|---|
+| **the registry** | `docs/cxx26-features-audit/audit-index.json` | reading `open-items.md` (400 lines) and `decisions.md` (350) to answer a question about the audit. `mise run audit:summary -- --prefix MOD` prints one slice |
+| **the generator** | `scripts/audit_index.py` | the JSON is **derived** from `open-items.md`, never authored. `mise run audit:index` regenerates it; `verify_audit.py` fails when the committed copy is stale |
+| **the sweep** | `scripts/verify_audit.py` | the eight hand-typed sweeps: counts, duplicate IDs, dangling references, the decisions sheet against the open list, the counts the prose claims, table shape, fence balance, relative links, the parts tables, the privacy scan, the vendored copies. One command: `mise run audit:verify` |
+| **the privacy scan** | inside `verify_audit.py` | a scan whose patterns were typed into every run. The patterns are now **derived at run time** - from this machine's git identity, from this repository's own history, from the machine name - so no private value is stored in the repository. An untracked `.audit/privacy-patterns.txt` can add more |
+| **the upstream manifest** | `docs/cxx26-features-audit/upstream/manifest.json` and `scripts/verify_upstream.py` | `upstream/README.md` is the human-readable provenance record; the manifest is its machine-readable half, with a sha256 per vendored file |
+| **the drift check** | `scripts/check_overlay_drift.py` | nothing - there was nothing. The README claims the overlay ports are pinned to their upstream's latest commit, and **nothing checked it**. `mise run audit:drift` compares each `REF` against its branch's tip |
+| **the rules** | `AGENTS.md` | the re-derivation, every session, of the lane state, both compilers, the module interface, the privacy rulings and the audit's conventions |
+| **the subagents** | `.opencode/agents/sdlc/*.md` | `qa.md` was told to build, and `research.md` was told to prefer running the compiler - both directly against the parked lane. All five now carry the lane, the privacy rules and the audit's conventions |
+
+**Two defects were found and fixed while building it.** `FMT-9` - the question whether the vcpkg
+`quill` port has an external-fmt feature - had been **answered by part 18, section 2, and was
+still sitting in the open table**; and `TOOL-16` - what CI image would provide `gcov-16` - is not
+a measurement at all, because the project has no CI (`BUILD-5`), so it is **contingent on
+`BUILD-5`'s answer**. Both now live in `open-items.md` section 13, which holds the items that
+carry an ID and are answered or contingent, so that a reference to `VCPKG-1` resolves to
+something. The count went from 83 to 81 for that reason.
+
+**Nothing here builds.** Every script is stdlib-only Python, and none of them invokes a compiler,
+CMake or a test. The build lane stays parked.
 
 ## State of the working tree
 
 - Committed and clean.
 - `build/coverage-clang/` - an abandoned experiment (clang source-based coverage); the raw-profile
   version mismatch makes it unusable, it can be deleted.
-- **No source file was changed by part 18.** Every one of the eighteen parts is documentation, and
-  the build lane stays parked: no builds, no compiler or toolchain installs or configuration, no
-  CMake or preset build runs, no test or ASan runs.
+- **No source file was changed by part 18, or by the automation that followed it.** Every one of
+  the eighteen parts is documentation, and the build lane stays parked: no builds, no compiler or
+  toolchain installs or configuration, no CMake or preset build runs, no test or ASan runs. The
+  automation is `scripts/`, `AGENTS.md`, `.mise.toml` and the registry - no library source, no
+  CMake file and no preset was touched.
 
 ## Open question for the owner (answered, not acted on)
 

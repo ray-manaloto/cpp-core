@@ -1,0 +1,108 @@
+{
+  "files": [
+    {
+      "byte_identical_to_upstream": true,
+      "bytes": 6556,
+      "licence": "Boost Software License 1.0",
+      "origin": "https://github.com/stephenberry/ut",
+      "path": "docs/cxx26-features-audit/upstream/ut/CMakeLists.txt",
+      "ref": "dc65567be78febd265ca36c324e1c504512d4d74",
+      "sha256": "bd631a84e2660f147a9f3466a864ef2b1db34a6ee9e4af61cf68df94845cb811",
+      "upstream_path": "CMakeLists.txt"
+    },
+    {
+      "byte_identical_to_upstream": true,
+      "bytes": 12880,
+      "licence": "Boost Software License 1.0",
+      "origin": "https://github.com/stephenberry/ut",
+      "path": "docs/cxx26-features-audit/upstream/ut/modules/ut.ixx",
+      "ref": "dc65567be78febd265ca36c324e1c504512d4d74",
+      "sha256": "1e6f3d40c1ae71767128fe80355e53cc8aadc2f927b085a00537b8ea231f9efb",
+      "upstream_path": "modules/ut.ixx"
+    },
+    {
+      "byte_identical_to_upstream": null,
+      "bytes": 15731,
+      "licence": "Boost Software License 1.0",
+      "origin": "https://github.com/intel/cpp-std-extensions",
+      "path": "docs/cxx26-features-audit/upstream/stdx/ct_format.hpp",
+      "ref": "94546c5a9122b99dc671cbefd7cfec168108febe",
+      "sha256": "0e12218e1b31d6f1fa839186a5fc0eb722fb3fb46465576354216d05b1f6307b",
+      "upstream_path": "include/stdx/ct_format.hpp"
+    },
+    {
+      "byte_identical_to_upstream": null,
+      "bytes": 3862,
+      "licence": "Boost Software License 1.0",
+      "origin": "https://github.com/intel/cpp-std-extensions",
+      "path": "docs/cxx26-features-audit/upstream/stdx/detail/fmt.hpp",
+      "ref": "94546c5a9122b99dc671cbefd7cfec168108febe",
+      "sha256": "07754632bc1891b7d860e83e68307fc5487ea858b4ad0717215c4d22f8e957d6",
+      "upstream_path": "include/stdx/detail/fmt.hpp"
+    },
+    {
+      "byte_identical_to_upstream": null,
+      "bytes": 1337,
+      "licence": "Boost Software License 1.0",
+      "origin": "https://github.com/intel/cpp-std-extensions",
+      "path": "docs/cxx26-features-audit/upstream/stdx/COPYRIGHT",
+      "ref": "94546c5a9122b99dc671cbefd7cfec168108febe",
+      "sha256": "8d8291caf1cee26d23acf3eb67c9f9a2d58f1c681b16a4fbe8cbfb9e3c0b5a9b",
+      "upstream_path": "share/intel-cpp-std-extensions/copyright"
+    },
+    {
+      "byte_identical_to_upstream": true,
+      "bytes": 102347,
+      "licence": "MIT",
+      "origin": "https://github.com/fmtlib/fmt",
+      "path": "docs/cxx26-features-audit/upstream/fmt/base.h",
+      "ref": "208219daff58f2a7438f6931cc2ddc358acf33ef",
+      "sha256": "69af049b3bdb13b1c233970398660a149f2792f17e3d436f36a5d1cc4315345b",
+      "upstream_path": "include/fmt/base.h"
+    },
+    {
+      "byte_identical_to_upstream": true,
+      "bytes": 21096,
+      "licence": "MIT",
+      "origin": "https://github.com/fmtlib/fmt",
+      "path": "docs/cxx26-features-audit/upstream/fmt/compile.h",
+      "ref": "208219daff58f2a7438f6931cc2ddc358acf33ef",
+      "sha256": "e078563fc110d8e582a568ac70a0006b18cb39b54ac949df2750225b9a981103",
+      "upstream_path": "include/fmt/compile.h"
+    },
+    {
+      "byte_identical_to_upstream": false,
+      "bytes": 163344,
+      "licence": "MIT",
+      "note": "vcpkg's backport of upstream PR #4813 is applied; see upstream/README.md and upstream/fmt/backport-4813.patch",
+      "origin": "https://github.com/fmtlib/fmt",
+      "path": "docs/cxx26-features-audit/upstream/fmt/format.h",
+      "ref": "208219daff58f2a7438f6931cc2ddc358acf33ef",
+      "sha256": "152c8863dd89777c8c3f0d7eb0aa8ed832c872a4330e24669f3922b46fc58580",
+      "upstream_path": "include/fmt/format.h"
+    },
+    {
+      "byte_identical_to_upstream": true,
+      "bytes": 1094,
+      "licence": "MIT",
+      "origin": "https://github.com/fmtlib/fmt",
+      "path": "docs/cxx26-features-audit/upstream/fmt/LICENSE",
+      "ref": "208219daff58f2a7438f6931cc2ddc358acf33ef",
+      "sha256": "a65fcc5a1095fc33cc37e4fff69366e49d7e92f613558a2b95ed1b70e33758b4",
+      "upstream_path": "LICENSE"
+    },
+    {
+      "byte_identical_to_upstream": null,
+      "bytes": 1390,
+      "licence": "MIT",
+      "origin": "vcpkg",
+      "path": "docs/cxx26-features-audit/upstream/fmt/backport-4813.patch",
+      "ref": "245d37306671ea67d8f313081a81aae8079f8916",
+      "sha256": "699f3188774bc40f040715a5ae33e21e052c7b104fb997dff3ccf6f758ede02c",
+      "upstream_path": "downloads/fmt-backport-4813.patch"
+    }
+  ],
+  "generated_by": "scripts/verify_upstream.py",
+  "provenance": "docs/cxx26-features-audit/upstream/README.md",
+  "schema": 1
+}

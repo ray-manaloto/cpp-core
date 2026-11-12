@@ -1,0 +1,1097 @@
+{
+  "answered_items": [
+    {
+      "category": "answered",
+      "doc": "docs/cxx26-features-audit/open-items.md#13-the-items-that-are-answered-or-contingent",
+      "evidence": "part 15",
+      "id": "BUILD-6",
+      "kind": "question",
+      "section": 13,
+      "section_title": "The items that are answered or contingent",
+      "settled_by": "**Yes - and structurally, not by luck.** The ID is a function of the message text, carried in the message's type, which both compilers spell the same way. All nine catalogs on disk are byte-identical. The *release-to-release* instability is a separate defect - **DEF-6**",
+      "state": "answered",
+      "title": "Are the catalog IDs the same under both compilers?"
+    },
+    {
+      "category": "answered",
+      "doc": "docs/cxx26-features-audit/open-items.md#13-the-items-that-are-answered-or-contingent",
+      "evidence": "part 18, section 2",
+      "id": "FMT-9",
+      "kind": "question",
+      "section": 13,
+      "section_title": "The items that are answered or contingent",
+      "settled_by": "**No** - the same reading as `VCPKG-1`, which was the same question asked from the installed headers and from the upstream port. The two copies of fmt are structural",
+      "state": "answered",
+      "title": "Does the vcpkg `quill` port have an external-fmt feature?"
+    },
+    {
+      "category": "answered",
+      "doc": "docs/cxx26-features-audit/open-items.md#13-the-items-that-are-answered-or-contingent",
+      "evidence": "part 18, section 4",
+      "id": "QUIL-8",
+      "kind": "question",
+      "section": 13,
+      "section_title": "The items that are answered or contingent",
+      "settled_by": "**No, and it never did.** `<true>` means *\"honour the per-logger immediate-flush threshold\"*, and the check returns immediately when the threshold is 0. The threshold **is** 0 - it defaults to 0 and the project never calls `set_immediate_flush()`. Quill's own default is the same value, so the module path already matches quill's macro-free default",
+      "state": "answered",
+      "title": "Does the module path flush on every message?"
+    },
+    {
+      "category": "answered",
+      "doc": "docs/cxx26-features-audit/open-items.md#13-the-items-that-are-answered-or-contingent",
+      "evidence": "part 12",
+      "id": "TOOL-16",
+      "kind": "question",
+      "section": 13,
+      "section_title": "The items that are answered or contingent",
+      "settled_by": "**Not a measurement.** The project has no `.github/` directory and no git remote, so the coverage gate, the format check and the clang-tidy check have no home until CI exists. `BUILD-5` (\"should there be CI?\") is an owner decision and is still open; this question is answered by it, not by a run",
+      "state": "contingent",
+      "title": "What CI image would provide `gcov-16`?"
+    },
+    {
+      "category": "answered",
+      "doc": "docs/cxx26-features-audit/open-items.md#13-the-items-that-are-answered-or-contingent",
+      "evidence": "part 18, section 2",
+      "id": "VCPKG-1",
+      "kind": "question",
+      "section": 13,
+      "section_title": "The items that are answered or contingent",
+      "settled_by": "**No.** At the pinned baseline the upstream `quill` port has **no `features` key at all** and depends only on `vcpkg-cmake` and `vcpkg-cmake-config`; its portfile passes no fmt option. quill 13.1.0's own CMakeLists has no fmt switch either - none of its 26 `option()` calls mentions fmt - and it installs `include/quill/bundled/fmt/*` unconditionally, exposing it as the `fmtquill` interface target. So **the two copies of fmt are structural**",
+      "state": "answered",
+      "title": "Does the upstream vcpkg `quill` port have an opt-in feature for an external fmt?"
+    },
+    {
+      "category": "answered",
+      "doc": "docs/cxx26-features-audit/open-items.md#13-the-items-that-are-answered-or-contingent",
+      "evidence": "part 18, section 2",
+      "id": "VCPKG-2",
+      "kind": "question",
+      "section": 13,
+      "section_title": "The items that are answered or contingent",
+      "settled_by": "**No.** The baseline's tree was enumerated in full (17,869 paths, not truncated): none of `ut`, `intel-cib`, `intel-cpp-std-extensions`, `intel-baremetal-concurrency` or `intel-baremetal-senders-and-receivers` appears in `ports/` or in `versions/`. So all five **track upstream rather than the pinned baseline**",
+      "state": "answered",
+      "title": "Do the five overlay ports shadow builtin vcpkg ports at the pinned baseline?"
+    }
+  ],
+  "counts": {
+    "answered": 5,
+    "by_category": {
+      "build-system-change": 1,
+      "compile": 30,
+      "decided": 1,
+      "fix-and-test": 6,
+      "owner-decision": 13,
+      "reading": 1,
+      "run": 19,
+      "test": 10
+    },
+    "by_kind": {
+      "defect": 6,
+      "question": 65,
+      "work-item": 10
+    },
+    "by_prefix": {
+      "BUILD": 7,
+      "COV": 10,
+      "DEF": 6,
+      "ENV": 3,
+      "FMT": 14,
+      "MAC": 3,
+      "MOD": 11,
+      "QUIL": 8,
+      "REFL": 4,
+      "TOOL": 15
+    },
+    "contingent": 1,
+    "open": 81
+  },
+  "generated_by": "scripts/audit_index.py",
+  "items": [
+    {
+      "category": "owner-decision",
+      "doc": "docs/cxx26-features-audit/open-items.md#9-the-build-system-build",
+      "id": "BUILD-1",
+      "kind": "question",
+      "section": 9,
+      "section_title": "The build system (BUILD)",
+      "settled_by": "an owner decision",
+      "state": "open",
+      "title": "**What warning flags should the project use?** There are none today - not `-Wall`, not `-Wextra`, not `-Wpedantic`, not `-Wconversion`, not..."
+    },
+    {
+      "category": "owner-decision",
+      "doc": "docs/cxx26-features-audit/open-items.md#9-the-build-system-build",
+      "id": "BUILD-2",
+      "kind": "question",
+      "section": 9,
+      "section_title": "The build system (BUILD)",
+      "settled_by": "an owner decision",
+      "state": "open",
+      "title": "**Should cpp-core be consumable outside this repository?** There is not one `install()` call and no `export()` set in any of the **four**..."
+    },
+    {
+      "category": "owner-decision",
+      "doc": "docs/cxx26-features-audit/open-items.md#9-the-build-system-build",
+      "id": "BUILD-3",
+      "kind": "question",
+      "section": 9,
+      "section_title": "The build system (BUILD)",
+      "settled_by": "an owner decision, then an implementation",
+      "state": "open",
+      "title": "**What is the public header surface?** All three headers in `include/cpp-core/logging/` are published by `target_include_directories(......"
+    },
+    {
+      "category": "owner-decision",
+      "doc": "docs/cxx26-features-audit/open-items.md#9-the-build-system-build",
+      "id": "BUILD-4",
+      "kind": "question",
+      "section": 9,
+      "section_title": "The build system (BUILD)",
+      "settled_by": "an owner decision",
+      "state": "open",
+      "title": "**Is `clang23` kept?** The toolchain and `cmake/cpp-core-check.cmake` both accept it, with a full validation branch, but there is **no..."
+    },
+    {
+      "category": "owner-decision",
+      "doc": "docs/cxx26-features-audit/open-items.md#9-the-build-system-build",
+      "id": "BUILD-5",
+      "kind": "question",
+      "section": 9,
+      "section_title": "The build system (BUILD)",
+      "settled_by": "an owner decision",
+      "state": "open",
+      "title": "**Should there be CI?** There is no `.github/` directory and no git remote. The coverage gate, the format check and the clang-tidy check..."
+    },
+    {
+      "category": "owner-decision",
+      "doc": "docs/cxx26-features-audit/open-items.md#9-the-build-system-build",
+      "id": "BUILD-7",
+      "kind": "question",
+      "section": 9,
+      "section_title": "The build system (BUILD)",
+      "settled_by": "an owner decision",
+      "state": "open",
+      "title": "**Where does the stable catalog live?** This is the decision **DEF-6** needs. Option (a): a committed file (for example..."
+    },
+    {
+      "category": "owner-decision",
+      "doc": "docs/cxx26-features-audit/open-items.md#9-the-build-system-build",
+      "id": "BUILD-8",
+      "kind": "question",
+      "section": 9,
+      "section_title": "The build system (BUILD)",
+      "settled_by": "an owner decision, then a script",
+      "state": "open",
+      "title": "**Should the build check the catalog's message set against the call sites?** The catalog tooling's input regex (`gen_str_catalog.py:342`)..."
+    },
+    {
+      "category": "test",
+      "doc": "docs/cxx26-features-audit/open-items.md#8-the-coverage-to-dos-cov",
+      "id": "COV-1",
+      "kind": "work-item",
+      "section": 8,
+      "section_title": "The coverage to-dos (COV)",
+      "settled_by": "a test",
+      "state": "open",
+      "title": "`trace`, `debug` and `critical` - none of the three is called by any test"
+    },
+    {
+      "category": "test",
+      "doc": "docs/cxx26-features-audit/open-items.md#8-the-coverage-to-dos-cov",
+      "id": "COV-10",
+      "kind": "work-item",
+      "section": 8,
+      "section_title": "The coverage to-dos (COV)",
+      "settled_by": "a test",
+      "state": "open",
+      "title": "`log_raw`'s length path is only partially exercised"
+    },
+    {
+      "category": "test",
+      "doc": "docs/cxx26-features-audit/open-items.md#8-the-coverage-to-dos-cov",
+      "id": "COV-2",
+      "kind": "work-item",
+      "section": 8,
+      "section_title": "The coverage to-dos (COV)",
+      "settled_by": "a test",
+      "state": "open",
+      "title": "The level-filtering branches, and the assertion that a message below the threshold is suppressed - **this is DEF-1's test**"
+    },
+    {
+      "category": "test",
+      "doc": "docs/cxx26-features-audit/open-items.md#8-the-coverage-to-dos-cov",
+      "id": "COV-3",
+      "kind": "work-item",
+      "section": 8,
+      "section_title": "The coverage to-dos (COV)",
+      "settled_by": "a test",
+      "state": "open",
+      "title": "Almost every format specification: alignment and fill, sign, `#`, zero padding, precision, `x`/`X`/`o`/`b`, uppercase digits, `^` centring"
+    },
+    {
+      "category": "test",
+      "doc": "docs/cxx26-features-audit/open-items.md#8-the-coverage-to-dos-cov",
+      "id": "COV-4",
+      "kind": "work-item",
+      "section": 8,
+      "section_title": "The coverage to-dos (COV)",
+      "settled_by": "a test",
+      "state": "open",
+      "title": "The 2,048-byte buffer truncation"
+    },
+    {
+      "category": "test",
+      "doc": "docs/cxx26-features-audit/open-items.md#8-the-coverage-to-dos-cov",
+      "id": "COV-5",
+      "kind": "work-item",
+      "section": 8,
+      "section_title": "The coverage to-dos (COV)",
+      "settled_by": "a test",
+      "state": "open",
+      "title": "The `self_formatting` path - no `self_formatting` type exists in the codebase today"
+    },
+    {
+      "category": "test",
+      "doc": "docs/cxx26-features-audit/open-items.md#8-the-coverage-to-dos-cov",
+      "id": "COV-6",
+      "kind": "work-item",
+      "section": 8,
+      "section_title": "The coverage to-dos (COV)",
+      "settled_by": "a test",
+      "state": "open",
+      "title": "The `is_array` and `string_like` branches"
+    },
+    {
+      "category": "test",
+      "doc": "docs/cxx26-features-audit/open-items.md#8-the-coverage-to-dos-cov",
+      "id": "COV-7",
+      "kind": "work-item",
+      "section": 8,
+      "section_title": "The coverage to-dos (COV)",
+      "settled_by": "a test",
+      "state": "open",
+      "title": "The cib/catalog path - `demo::run()` in `src/app.cpp` is never called by any test; the catalog IDs are produced but never executed"
+    },
+    {
+      "category": "test",
+      "doc": "docs/cxx26-features-audit/open-items.md#8-the-coverage-to-dos-cov",
+      "id": "COV-8",
+      "kind": "work-item",
+      "section": 8,
+      "section_title": "The coverage to-dos (COV)",
+      "settled_by": "a test",
+      "state": "open",
+      "title": "The internals of `quill_logger.cpp`: logger-creation races, the `current_level` getter's edge cases"
+    },
+    {
+      "category": "test",
+      "doc": "docs/cxx26-features-audit/open-items.md#8-the-coverage-to-dos-cov",
+      "id": "COV-9",
+      "kind": "work-item",
+      "section": 8,
+      "section_title": "The coverage to-dos (COV)",
+      "settled_by": "a test",
+      "state": "open",
+      "title": "`src/reflection_demo.cpp` is compiled, but its runtime line only runs if reflection works at runtime (it does) - and nothing calls it in..."
+    },
+    {
+      "category": "fix-and-test",
+      "doc": "docs/cxx26-features-audit/open-items.md#1-the-issues---known-defects-to-fix",
+      "id": "DEF-1",
+      "kind": "defect",
+      "section": 1,
+      "section_title": "The issues - known defects, to fix",
+      "settled_by": "a fix and a test",
+      "state": "open",
+      "title": "`set_level()` filters nothing on the module path"
+    },
+    {
+      "category": "fix-and-test",
+      "doc": "docs/cxx26-features-audit/open-items.md#1-the-issues---known-defects-to-fix",
+      "id": "DEF-2",
+      "kind": "defect",
+      "section": 1,
+      "section_title": "The issues - known defects, to fix",
+      "settled_by": "a fix and a test",
+      "state": "open",
+      "title": "the `{:f}` divergence"
+    },
+    {
+      "category": "fix-and-test",
+      "doc": "docs/cxx26-features-audit/open-items.md#1-the-issues---known-defects-to-fix",
+      "id": "DEF-3",
+      "kind": "defect",
+      "section": 1,
+      "section_title": "The issues - known defects, to fix",
+      "settled_by": "a fix and a test",
+      "state": "open",
+      "title": "the repository's comment overstates the standard"
+    },
+    {
+      "category": "fix-and-test",
+      "doc": "docs/cxx26-features-audit/open-items.md#1-the-issues---known-defects-to-fix",
+      "id": "DEF-4",
+      "kind": "defect",
+      "section": 1,
+      "section_title": "The issues - known defects, to fix",
+      "settled_by": "a fix and a test",
+      "state": "open",
+      "title": "the two logging paths do not share a format-string dialect"
+    },
+    {
+      "category": "fix-and-test",
+      "doc": "docs/cxx26-features-audit/open-items.md#1-the-issues---known-defects-to-fix",
+      "id": "DEF-5",
+      "kind": "defect",
+      "section": 1,
+      "section_title": "The issues - known defects, to fix",
+      "settled_by": "a fix and a test",
+      "state": "open",
+      "title": "the module never validates the format specification"
+    },
+    {
+      "category": "fix-and-test",
+      "doc": "docs/cxx26-features-audit/open-items.md#1-the-issues---known-defects-to-fix",
+      "id": "DEF-6",
+      "kind": "defect",
+      "section": 1,
+      "section_title": "The issues - known defects, to fix",
+      "settled_by": "a fix and a test",
+      "state": "open",
+      "title": "the catalog IDs are renumbered on every regeneration"
+    },
+    {
+      "category": "decided",
+      "doc": "docs/cxx26-features-audit/open-items.md#11-the-environment-env",
+      "id": "ENV-1",
+      "kind": "question",
+      "section": 11,
+      "section_title": "The environment (ENV)",
+      "settled_by": "a decision now, revisited at FMT-9",
+      "state": "open",
+      "title": "The two copies of fmt: the standalone `fmt` 12.2.1 (namespace `fmt`) and quill's bundled `fmtquill` 12.2.0. **The project rule is that..."
+    },
+    {
+      "category": "owner-decision",
+      "doc": "docs/cxx26-features-audit/open-items.md#11-the-environment-env",
+      "id": "ENV-2",
+      "kind": "question",
+      "section": 11,
+      "section_title": "The environment (ENV)",
+      "settled_by": "an owner decision",
+      "state": "open",
+      "title": "`build/coverage-clang/` - an abandoned experiment. The raw-profile version mismatch (clang v10 against `llvm-profdata` 23.1.5's v11) makes..."
+    },
+    {
+      "category": "owner-decision",
+      "doc": "docs/cxx26-features-audit/open-items.md#11-the-environment-env",
+      "id": "ENV-3",
+      "kind": "question",
+      "section": 11,
+      "section_title": "The environment (ENV)",
+      "settled_by": "an owner decision",
+      "state": "open",
+      "title": "`ZAI_API_KEY` for the `zai-coding-plan` provider: the two saved `Z.AI` accounts in `opencode auth list` belong to the `zai` integration,..."
+    },
+    {
+      "category": "compile",
+      "doc": "docs/cxx26-features-audit/open-items.md#2-fmt-and-constexpr-fmt",
+      "id": "FMT-1",
+      "kind": "question",
+      "section": 2,
+      "section_title": "fmt and `constexpr` (FMT)",
+      "settled_by": "a compile on `gcc16` and `p2996`",
+      "state": "open",
+      "title": "Does `FMT_STATIC_FORMAT` compile on both toolchains? It needs `FMT_USE_NONTYPE_TEMPLATE_ARGS` and a `constexpr` `format_to`; both are C++20..."
+    },
+    {
+      "category": "compile",
+      "doc": "docs/cxx26-features-audit/open-items.md#2-fmt-and-constexpr-fmt",
+      "id": "FMT-10",
+      "kind": "question",
+      "section": 2,
+      "section_title": "fmt and `constexpr` (FMT)",
+      "settled_by": "a compile - **also MAC-1**",
+      "state": "open",
+      "title": "Does `std::source_location::current()` in a default argument on `quill_config::logger::log` return the **caller's** location, given that..."
+    },
+    {
+      "category": "run",
+      "doc": "docs/cxx26-features-audit/open-items.md#2-fmt-and-constexpr-fmt",
+      "id": "FMT-11",
+      "kind": "question",
+      "section": 2,
+      "section_title": "fmt and `constexpr` (FMT)",
+      "settled_by": "a run - **also MAC-2**",
+      "state": "open",
+      "title": "Does the catalog tooling's `nm` scan still find the same undefined `catalog<>` / `module<>` symbols if the cib tag string is built with..."
+    },
+    {
+      "category": "compile",
+      "doc": "docs/cxx26-features-audit/open-items.md#2-fmt-and-constexpr-fmt",
+      "id": "FMT-12",
+      "kind": "question",
+      "section": 2,
+      "section_title": "fmt and `constexpr` (FMT)",
+      "settled_by": "reading the header, plus a compile",
+      "state": "open",
+      "title": "Does `fmt::runtime` exist in fmt 12.2.1's public API under that name, and is it the right way to format a runtime-built specification in..."
+    },
+    {
+      "category": "compile",
+      "doc": "docs/cxx26-features-audit/open-items.md#2-fmt-and-constexpr-fmt",
+      "id": "FMT-13",
+      "kind": "question",
+      "section": 2,
+      "section_title": "fmt and `constexpr` (FMT)",
+      "settled_by": "a compile",
+      "state": "open",
+      "title": "What are the **authoritative** feature-test macro values on each toolchain? Part 11 reports *declaration* and the set of values each macro..."
+    },
+    {
+      "category": "owner-decision",
+      "doc": "docs/cxx26-features-audit/open-items.md#2-fmt-and-constexpr-fmt",
+      "id": "FMT-14",
+      "kind": "question",
+      "section": 2,
+      "section_title": "fmt and `constexpr` (FMT)",
+      "settled_by": "an owner decision",
+      "state": "open",
+      "title": "**The module path's format-string dialect: document it, validate it, or move it?** Part 13 shows the module path and the catalog path do..."
+    },
+    {
+      "category": "build-system-change",
+      "doc": "docs/cxx26-features-audit/open-items.md#2-fmt-and-constexpr-fmt",
+      "id": "FMT-15",
+      "kind": "question",
+      "section": 2,
+      "section_title": "fmt and `constexpr` (FMT)",
+      "settled_by": "a build-system change, then a run",
+      "state": "open",
+      "title": "**How are the four asymmetric divergences tested?** D1, D8, D9 and D14 are *compile-time rejections on one side only* - fmt rejects `{:s}`..."
+    },
+    {
+      "category": "compile",
+      "doc": "docs/cxx26-features-audit/open-items.md#2-fmt-and-constexpr-fmt",
+      "id": "FMT-2",
+      "kind": "question",
+      "section": 2,
+      "section_title": "fmt and `constexpr` (FMT)",
+      "settled_by": "a compile",
+      "state": "open",
+      "title": "Does fmt's compile-time formatting really handle **floating point** on both toolchains? P3391R2 §2.4 says fmt's implementation does; the..."
+    },
+    {
+      "category": "compile",
+      "doc": "docs/cxx26-features-audit/open-items.md#2-fmt-and-constexpr-fmt",
+      "id": "FMT-3",
+      "kind": "question",
+      "section": 2,
+      "section_title": "fmt and `constexpr` (FMT)",
+      "settled_by": "reading `fmt/compile.h:565-578` (done) plus a compile",
+      "state": "open",
+      "title": "Does `FMT_STATIC_FORMAT` need a constexpr `std::string`? The source says no - it returns a `char[N]`-backed `static_format_result` - but..."
+    },
+    {
+      "category": "compile",
+      "doc": "docs/cxx26-features-audit/open-items.md#2-fmt-and-constexpr-fmt",
+      "id": "FMT-4",
+      "kind": "question",
+      "section": 2,
+      "section_title": "fmt and `constexpr` (FMT)",
+      "settled_by": "a compile - **the compiler is the test**",
+      "state": "open",
+      "title": "Can `format.hpp` be made `constexpr` wholesale, and does the compiler accept it? `message_buffer` is a 2,048-byte object and..."
+    },
+    {
+      "category": "compile",
+      "doc": "docs/cxx26-features-audit/open-items.md#2-fmt-and-constexpr-fmt",
+      "id": "FMT-5",
+      "kind": "question",
+      "section": 2,
+      "section_title": "fmt and `constexpr` (FMT)",
+      "settled_by": "a compile",
+      "state": "open",
+      "title": "Does the `static_assert` test pattern work? Specifically: does `format_message` constant-evaluate when its arguments are `constexpr`..."
+    },
+    {
+      "category": "run",
+      "doc": "docs/cxx26-features-audit/open-items.md#2-fmt-and-constexpr-fmt",
+      "id": "FMT-6",
+      "kind": "question",
+      "section": 2,
+      "section_title": "fmt and `constexpr` (FMT)",
+      "settled_by": "a run",
+      "state": "open",
+      "title": "What does fmt produce for the project's float cases? The switch from `%g` (six significant digits) to fmt's shortest round-trip changes the..."
+    },
+    {
+      "category": "compile",
+      "doc": "docs/cxx26-features-audit/open-items.md#2-fmt-and-constexpr-fmt",
+      "id": "FMT-7",
+      "kind": "question",
+      "section": 2,
+      "section_title": "fmt and `constexpr` (FMT)",
+      "settled_by": "a compile",
+      "state": "open",
+      "title": "Does fmt's `format_to_n` behave the same as `snprintf` for the truncation contract? The module truncates at 2,047 bytes silently;..."
+    },
+    {
+      "category": "compile",
+      "doc": "docs/cxx26-features-audit/open-items.md#2-fmt-and-constexpr-fmt",
+      "id": "FMT-8",
+      "kind": "question",
+      "section": 2,
+      "section_title": "fmt and `constexpr` (FMT)",
+      "settled_by": "a compile",
+      "state": "open",
+      "title": "Can a custom `fmt::formatter<T>` be written for a project type, and does it interoperate with quill's `fmtquill`-based runtime formatter?..."
+    },
+    {
+      "category": "compile",
+      "doc": "docs/cxx26-features-audit/open-items.md#7-the-macros-mac",
+      "id": "MAC-1",
+      "kind": "question",
+      "section": 7,
+      "section_title": "The macros (MAC)",
+      "settled_by": "a compile - **the same as FMT-10**",
+      "state": "open",
+      "title": "Does `std::source_location::current()` in a default argument on `quill_config::logger::log` return the **caller's** location? It should -..."
+    },
+    {
+      "category": "run",
+      "doc": "docs/cxx26-features-audit/open-items.md#7-the-macros-mac",
+      "id": "MAC-2",
+      "kind": "question",
+      "section": 7,
+      "section_title": "The macros (MAC)",
+      "settled_by": "a run - **the same as FMT-11**",
+      "state": "open",
+      "title": "Does the catalog tooling's `nm` scan still find the same undefined `catalog<>` / `module<>` symbols if the calls are written macro-free?..."
+    },
+    {
+      "category": "compile",
+      "doc": "docs/cxx26-features-audit/open-items.md#7-the-macros-mac",
+      "id": "MAC-3",
+      "kind": "question",
+      "section": 7,
+      "section_title": "The macros (MAC)",
+      "settled_by": "a compile - **the same as REFL-4**",
+      "state": "open",
+      "title": "Would `std::format_string<Args...>` accept the format strings the project uses today? The module's scanner rejects named arguments and a..."
+    },
+    {
+      "category": "compile",
+      "doc": "docs/cxx26-features-audit/open-items.md#5-import-std-and-the-module-boundary-mod",
+      "id": "MOD-1",
+      "kind": "question",
+      "section": 5,
+      "section_title": "`import std;` and the module boundary (MOD)",
+      "settled_by": "a compile",
+      "state": "open",
+      "title": "How large is the GCC migration in option (c), exactly? Which of the importers' headers would have to become `import std;`, and does the..."
+    },
+    {
+      "category": "compile",
+      "doc": "docs/cxx26-features-audit/open-items.md#5-import-std-and-the-module-boundary-mod",
+      "id": "MOD-10",
+      "kind": "question",
+      "section": 5,
+      "section_title": "`import std;` and the module boundary (MOD)",
+      "settled_by": "a compile",
+      "state": "open",
+      "title": "Does a translation unit that **imports** `com.rsm.logging` *and* **includes** `cpp-core/logging/cib_quill.hpp` compile on both compilers?..."
+    },
+    {
+      "category": "compile",
+      "doc": "docs/cxx26-features-audit/open-items.md#5-import-std-and-the-module-boundary-mod",
+      "id": "MOD-11",
+      "kind": "question",
+      "section": 5,
+      "section_title": "`import std;` and the module boundary (MOD)",
+      "settled_by": "a compile",
+      "state": "open",
+      "title": "**Does the GCC 16 matrix's failure reproduce in the project's actual configuration?** The audit's matrix was measured with **`-fmodules`**..."
+    },
+    {
+      "category": "compile",
+      "doc": "docs/cxx26-features-audit/open-items.md#5-import-std-and-the-module-boundary-mod",
+      "id": "MOD-2",
+      "kind": "question",
+      "section": 5,
+      "section_title": "`import std;` and the module boundary (MOD)",
+      "settled_by": "a compile",
+      "state": "open",
+      "title": "Can the type-erasure boundary of option (b) be made to work with a small, fixed-size representation - a function pointer table, a variant..."
+    },
+    {
+      "category": "compile",
+      "doc": "docs/cxx26-features-audit/open-items.md#5-import-std-and-the-module-boundary-mod",
+      "id": "MOD-3",
+      "kind": "question",
+      "section": 5,
+      "section_title": "`import std;` and the module boundary (MOD)",
+      "settled_by": "a compile",
+      "state": "open",
+      "title": "Does GCC 16.2 translate an `#include` of an importable header **inside a module unit** (global module fragment or purview), and does it..."
+    },
+    {
+      "category": "compile",
+      "doc": "docs/cxx26-features-audit/open-items.md#5-import-std-and-the-module-boundary-mod",
+      "id": "MOD-4",
+      "kind": "question",
+      "section": 5,
+      "section_title": "`import std;` and the module boundary (MOD)",
+      "settled_by": "a compile",
+      "state": "open",
+      "title": "Does GCC 16.2 reject an importing translation unit that includes **only** `<unistd.h>` (no C++ standard headers)? The measurement covers..."
+    },
+    {
+      "category": "compile",
+      "doc": "docs/cxx26-features-audit/open-items.md#5-import-std-and-the-module-boundary-mod",
+      "id": "MOD-5",
+      "kind": "question",
+      "section": 5,
+      "section_title": "`import std;` and the module boundary (MOD)",
+      "settled_by": "a compile",
+      "state": "open",
+      "title": "Is `<unistd.h>` in GCC 16's importable-header set, so that [cpp.include]/10 translation could ever apply to it?"
+    },
+    {
+      "category": "compile",
+      "doc": "docs/cxx26-features-audit/open-items.md#5-import-std-and-the-module-boundary-mod",
+      "id": "MOD-6",
+      "kind": "question",
+      "section": 5,
+      "section_title": "`import std;` and the module boundary (MOD)",
+      "settled_by": "a compile",
+      "state": "open",
+      "title": "Does the GCC 16.2 failure persist when `--compile-std-module` has actually built the `<bits/stdc++.h>` header unit - that is, is the..."
+    },
+    {
+      "category": "run",
+      "doc": "docs/cxx26-features-audit/open-items.md#5-import-std-and-the-module-boundary-mod",
+      "id": "MOD-7",
+      "kind": "question",
+      "section": 5,
+      "section_title": "`import std;` and the module boundary (MOD)",
+      "settled_by": "a run",
+      "state": "open",
+      "title": "Does CMake's dependency scanning handle `#if` around `import std;` in `logging.cppm`?"
+    },
+    {
+      "category": "compile",
+      "doc": "docs/cxx26-features-audit/open-items.md#5-import-std-and-the-module-boundary-mod",
+      "id": "MOD-8",
+      "kind": "question",
+      "section": 5,
+      "section_title": "`import std;` and the module boundary (MOD)",
+      "settled_by": "a compile",
+      "state": "open",
+      "title": "Do quill's, cib's and ut's headers compile in a translation unit that imports `std` on clang-p2996? libc++ documents include-after-import..."
+    },
+    {
+      "category": "run",
+      "doc": "docs/cxx26-features-audit/open-items.md#5-import-std-and-the-module-boundary-mod",
+      "id": "MOD-9",
+      "kind": "question",
+      "section": 5,
+      "section_title": "`import std;` and the module boundary (MOD)",
+      "settled_by": "a run",
+      "state": "open",
+      "title": "Does the catalog's `nm` scan still find the same undefined `catalog<>` / `module<>` symbols when the importers use `import std;`?"
+    },
+    {
+      "category": "compile",
+      "doc": "docs/cxx26-features-audit/open-items.md#3-quills-runtime-formatting-quil",
+      "id": "QUIL-1",
+      "kind": "question",
+      "section": 3,
+      "section_title": "quill's runtime formatting (QUIL)",
+      "settled_by": "one scratch translation unit",
+      "state": "open",
+      "title": "Does a `Codec` that pushes three arguments from one pack element satisfy a `\"{} {} {}\"` statement? **This is the load-bearing unknown for..."
+    },
+    {
+      "category": "compile",
+      "doc": "docs/cxx26-features-audit/open-items.md#3-quills-runtime-formatting-quil",
+      "id": "QUIL-2",
+      "kind": "question",
+      "section": 3,
+      "section_title": "quill's runtime formatting (QUIL)",
+      "settled_by": "a compile",
+      "state": "open",
+      "title": "Which types can be pushed into `DynamicFormatArgStore` without a formatter - `bool`, `char`, the signed and unsigned 8/16/32/64-bit..."
+    },
+    {
+      "category": "run",
+      "doc": "docs/cxx26-features-audit/open-items.md#3-quills-runtime-formatting-quil",
+      "id": "QUIL-3",
+      "kind": "question",
+      "section": 3,
+      "section_title": "quill's runtime formatting (QUIL)",
+      "settled_by": "a run - **overlaps FMT-6**",
+      "state": "open",
+      "title": "Exactly which default-specification outputs change between the module's `snprintf(\"%g\")` and fmt's shortest round-trip?"
+    },
+    {
+      "category": "compile",
+      "doc": "docs/cxx26-features-audit/open-items.md#3-quills-runtime-formatting-quil",
+      "id": "QUIL-4",
+      "kind": "question",
+      "section": 3,
+      "section_title": "quill's runtime formatting (QUIL)",
+      "settled_by": "a compile and a differential test",
+      "state": "open",
+      "title": "Does fmt render the whole specification cross-product identically to the module's `parse_spec` - in particular `#` with `b`/`x`/`o`, `0`..."
+    },
+    {
+      "category": "compile",
+      "doc": "docs/cxx26-features-audit/open-items.md#3-quills-runtime-formatting-quil",
+      "id": "QUIL-5",
+      "kind": "question",
+      "section": 3,
+      "section_title": "quill's runtime formatting (QUIL)",
+      "settled_by": "a compile",
+      "state": "open",
+      "title": "Can the module's `format_string` hold a compile-time-rewritten template - a struct with a `char[N]` member and no standard-library types -..."
+    },
+    {
+      "category": "compile",
+      "doc": "docs/cxx26-features-audit/open-items.md#3-quills-runtime-formatting-quil",
+      "id": "QUIL-6",
+      "kind": "question",
+      "section": 3,
+      "section_title": "quill's runtime formatting (QUIL)",
+      "settled_by": "a compile",
+      "state": "open",
+      "title": "Will the compiler accept a `char const[N]` with no terminator at the `consteval format_string` boundary (`logging.cppm:67`)? If it will,..."
+    },
+    {
+      "category": "run",
+      "doc": "docs/cxx26-features-audit/open-items.md#3-quills-runtime-formatting-quil",
+      "id": "QUIL-7",
+      "kind": "question",
+      "section": 3,
+      "section_title": "quill's runtime formatting (QUIL)",
+      "settled_by": "a run",
+      "state": "open",
+      "title": "Does a message over 2047 bytes behave acceptably on the default `UnboundedBlocking` queue, and would a bounded queue throw `QuillError`..."
+    },
+    {
+      "category": "owner-decision",
+      "doc": "docs/cxx26-features-audit/open-items.md#3-quills-runtime-formatting-quil",
+      "id": "QUIL-9",
+      "kind": "question",
+      "section": 3,
+      "section_title": "quill's runtime formatting (QUIL)",
+      "settled_by": "an owner decision, then an edit",
+      "state": "open",
+      "title": "**The public `flush()` needs quill's static-destructor caveat, or a safe implementation.** `flush_log()` \"blocks the calling thread until..."
+    },
+    {
+      "category": "compile",
+      "doc": "docs/cxx26-features-audit/open-items.md#6-static-reflection-refl",
+      "id": "REFL-1",
+      "kind": "question",
+      "section": 6,
+      "section_title": "Static reflection (REFL)",
+      "settled_by": "a compile",
+      "state": "open",
+      "title": "Do clang-p2996's 1-argument `members_of` form and GCC's 2-argument form compile the **same** source, or is the incompatibility only in the..."
+    },
+    {
+      "category": "compile",
+      "doc": "docs/cxx26-features-audit/open-items.md#6-static-reflection-refl",
+      "id": "REFL-2",
+      "kind": "question",
+      "section": 6,
+      "section_title": "Static reflection (REFL)",
+      "settled_by": "a compile",
+      "state": "open",
+      "title": "Are `std::meta::access::unprivileged()` (P1306R5) and `std::meta::access_context::unchecked()` (P2996R13, what the project uses) the same..."
+    },
+    {
+      "category": "compile",
+      "doc": "docs/cxx26-features-audit/open-items.md#6-static-reflection-refl",
+      "id": "REFL-3",
+      "kind": "question",
+      "section": 6,
+      "section_title": "Static reflection (REFL)",
+      "settled_by": "a compile",
+      "state": "open",
+      "title": "Does `std::meta::exception` throwing work reliably inside `consteval` reflection calls in both compilers, for diagnostics like cpp-core's..."
+    },
+    {
+      "category": "compile",
+      "doc": "docs/cxx26-features-audit/open-items.md#6-static-reflection-refl",
+      "id": "REFL-4",
+      "kind": "question",
+      "section": 6,
+      "section_title": "Static reflection (REFL)",
+      "settled_by": "a compile, once the libraries implement it",
+      "state": "open",
+      "title": "When libstdc++ and libc++ implement P3391R2, does `std::format_string<Args...>` accept every format string the project's own scanner..."
+    },
+    {
+      "category": "run",
+      "doc": "docs/cxx26-features-audit/open-items.md#4-the-tooling-tool",
+      "id": "TOOL-1",
+      "kind": "question",
+      "section": 4,
+      "section_title": "The tooling (TOOL)",
+      "settled_by": "a run",
+      "state": "open",
+      "title": "Does the proposed `.clang-tidy` pass `clang-tidy --verify-config` on Homebrew 23.1.5, and does `clang-tidy -p <build>..."
+    },
+    {
+      "category": "run",
+      "doc": "docs/cxx26-features-audit/open-items.md#4-the-tooling-tool",
+      "id": "TOOL-10",
+      "kind": "question",
+      "section": 4,
+      "section_title": "The tooling (TOOL)",
+      "settled_by": "a run",
+      "state": "open",
+      "title": "Does the catalog-generated file (`cpp-core-catalog.cpp`, in the build dir) need excluding explicitly, or does the build-dir exclusion..."
+    },
+    {
+      "category": "reading",
+      "doc": "docs/cxx26-features-audit/open-items.md#4-the-tooling-tool",
+      "id": "TOOL-11",
+      "kind": "question",
+      "section": 4,
+      "section_title": "The tooling (TOOL)",
+      "settled_by": "reading the gate script",
+      "state": "open",
+      "title": "Confirm that for lines instrumented in multiple translation units, \"any count > 0 means covered\" yields the same result as summing, and..."
+    },
+    {
+      "category": "run",
+      "doc": "docs/cxx26-features-audit/open-items.md#4-the-tooling-tool",
+      "id": "TOOL-12",
+      "kind": "question",
+      "section": 4,
+      "section_title": "The tooling (TOOL)",
+      "settled_by": "a run",
+      "state": "open",
+      "title": "Does branch coverage work: does `-b` produce usable `branches[]` in gcov-16's JSON for these TUs, and is the `-fcondition-coverage` bitset..."
+    },
+    {
+      "category": "owner-decision",
+      "doc": "docs/cxx26-features-audit/open-items.md#4-the-tooling-tool",
+      "id": "TOOL-13",
+      "kind": "question",
+      "section": 4,
+      "section_title": "The tooling (TOOL)",
+      "settled_by": "an owner decision",
+      "state": "open",
+      "title": "`.cmake-format.yaml` versus `.cmake-format.json`: if the YAML route is kept, the pipx install must gain pyyaml (`mise use..."
+    },
+    {
+      "category": "owner-decision",
+      "doc": "docs/cxx26-features-audit/open-items.md#4-the-tooling-tool",
+      "id": "TOOL-14",
+      "kind": "question",
+      "section": 4,
+      "section_title": "The tooling (TOOL)",
+      "settled_by": "an owner decision",
+      "state": "open",
+      "title": "Is a one-shot `cmake-format -i` sweep acceptable? 9 of the 12 CMake files change. Do we keep hand-wrapping via `.cmake-format.yaml` and..."
+    },
+    {
+      "category": "run",
+      "doc": "docs/cxx26-features-audit/open-items.md#4-the-tooling-tool",
+      "id": "TOOL-15",
+      "kind": "question",
+      "section": 4,
+      "section_title": "The tooling (TOOL)",
+      "settled_by": "a run",
+      "state": "open",
+      "title": "Does `.clang-format` and `.cmake-format.yaml` agree on anything besides `line_width = 100`? (`tab_size`, `line_ending`, markup-off /..."
+    },
+    {
+      "category": "run",
+      "doc": "docs/cxx26-features-audit/open-items.md#4-the-tooling-tool",
+      "id": "TOOL-2",
+      "kind": "question",
+      "section": 4,
+      "section_title": "The tooling (TOOL)",
+      "settled_by": "a run",
+      "state": "open",
+      "title": "Can clang-tidy parse `modules/logging/logging.cppm` at all, standalone with `-x c++-module`? If yes, is the diagnostic output usable (do..."
+    },
+    {
+      "category": "run",
+      "doc": "docs/cxx26-features-audit/open-items.md#4-the-tooling-tool",
+      "id": "TOOL-3",
+      "kind": "question",
+      "section": 4,
+      "section_title": "The tooling (TOOL)",
+      "settled_by": "a run",
+      "state": "open",
+      "title": "Can a BMI for `com.rsm.logging` produced by **Homebrew clang 23** be fed to clang-tidy via `-fmodule-file` / `-fprebuilt-module-path` for..."
+    },
+    {
+      "category": "run",
+      "doc": "docs/cxx26-features-audit/open-items.md#4-the-tooling-tool",
+      "id": "TOOL-4",
+      "kind": "question",
+      "section": 4,
+      "section_title": "The tooling (TOOL)",
+      "settled_by": "a run",
+      "state": "open",
+      "title": "Does `clang-tidy` on `src/app.cpp` parse cleanly with Homebrew clang 23 (`-std=c++26` + the removed reflection flags), or do the cib..."
+    },
+    {
+      "category": "run",
+      "doc": "docs/cxx26-features-audit/open-items.md#4-the-tooling-tool",
+      "id": "TOOL-5",
+      "kind": "question",
+      "section": 4,
+      "section_title": "The tooling (TOOL)",
+      "settled_by": "a run",
+      "state": "open",
+      "title": "What is the exact on-disk layout after `cmake --build --preset gcc16-coverage` - where do the `.gcno` / `.gcda` files of a `CXX_MODULES`..."
+    },
+    {
+      "category": "run",
+      "doc": "docs/cxx26-features-audit/open-items.md#4-the-tooling-tool",
+      "id": "TOOL-6",
+      "kind": "question",
+      "section": 4,
+      "section_title": "The tooling (TOOL)",
+      "settled_by": "a run",
+      "state": "open",
+      "title": "Does GCC 16 emit instrumentation arcs - and zero-count arcs - for (a) uninstantiated templates in `logging.cppm` / `format.hpp`, (b)..."
+    },
+    {
+      "category": "run",
+      "doc": "docs/cxx26-features-audit/open-items.md#4-the-tooling-tool",
+      "id": "TOOL-7",
+      "kind": "question",
+      "section": 4,
+      "section_title": "The tooling (TOOL)",
+      "settled_by": "a run",
+      "state": "open",
+      "title": "Is `unexecuted_block` set on lines counted as covered (count > 0 with some unexecuted blocks), and do we gate on it (strict) or not..."
+    },
+    {
+      "category": "run",
+      "doc": "docs/cxx26-features-audit/open-items.md#4-the-tooling-tool",
+      "id": "TOOL-8",
+      "kind": "question",
+      "section": 4,
+      "section_title": "The tooling (TOOL)",
+      "settled_by": "a run",
+      "state": "open",
+      "title": "What is the **actual** uncovered-line list today? [coverage-gaps.md](coverage-gaps.md) and PARKED's list are a hypothesis to be confirmed..."
+    },
+    {
+      "category": "run",
+      "doc": "docs/cxx26-features-audit/open-items.md#4-the-tooling-tool",
+      "id": "TOOL-9",
+      "kind": "question",
+      "section": 4,
+      "section_title": "The tooling (TOOL)",
+      "settled_by": "a run",
+      "state": "open",
+      "title": "Does `ctest --preset gcc16-coverage` return non-zero on test failure, and does the workflow preset propagate it to the `coverage` target?..."
+    }
+  ],
+  "parts": [
+    {
+      "file": "this file",
+      "part": 1,
+      "subject": "the verdict and the keep / replace / defer table"
+    },
+    {
+      "file": "intel-libraries.md",
+      "part": 2,
+      "subject": "what the Intel libraries in the dependency tree actually provide, header by header"
+    },
+    {
+      "file": "tooling-design.md",
+      "part": 3,
+      "subject": "clang-tidy, cmake-format/cmake-lint and the coverage gate: a design note"
+    },
+    {
+      "file": "import-std.md",
+      "part": 4,
+      "subject": "`import std;` and the standard-library-free module rule, against the C++26 text"
+    },
+    {
+      "file": "reflection.md",
+      "part": 5,
+      "subject": "C++26 static reflection (P2996) against the C++26 text"
+    },
+    {
+      "file": "macro-reduction.md",
+      "part": 6,
+      "subject": "what each macro does and whether a template can do it"
+    },
+    {
+      "file": "coverage-gaps.md",
+      "part": 7,
+      "subject": "what the tests do not reach today, branch by branch"
+    },
+    {
+      "file": "quill-runtime-formatting.md",
+      "part": 8,
+      "subject": "whether quill can format from a runtime format string, the type-erasure boundary, and a live defect"
+    },
+    {
+      "file": "constexpr-and-fmt.md",
+      "part": 9,
+      "subject": "fmt over `std::format`, and the per-function `constexpr` / `consteval` inventory"
+    },
+    {
+      "file": "open-items.md",
+      "part": 10,
+      "subject": "**every open question, defect and to-do, in one list**"
+    },
+    {
+      "file": "cxx26-library-availability.md",
+      "part": 11,
+      "subject": "the verified C++26 library sweep against both toolchains' headers"
+    },
+    {
+      "file": "build-and-dependencies.md",
+      "part": 12,
+      "subject": "the vcpkg overlays, the triplets and the CMake - the build as a subject"
+    },
+    {
+      "file": "format-dialect.md",
+      "part": 13,
+      "subject": "the module path's format strings against the C++26 grammar and fmt's - and the two paths' disagreement"
+    },
+    {
+      "file": "remaining-research.md",
+      "part": 14,
+      "subject": "the four questions that needed no compile: Intel's `stdx`, the logger's lifetime, `ut`'s module, the upstream watch"
+    },
+    {
+      "file": "catalog-ids.md",
+      "part": 15,
+      "subject": "are the catalog IDs the same under both compilers? - and why they are not the same between releases"
+    },
+    {
+      "file": "readme-check.md",
+      "part": 16,
+      "subject": "the root `README.md`, checked line by line - and the proof that the committed tree is the tree that built"
+    },
+    {
+      "file": "decisions.md",
+      "part": 17,
+      "subject": "the thirteen decisions the owner has to make, with a recommendation for each"
+    },
+    {
+      "file": "followup-research.md",
+      "part": 18,
+      "subject": "**the eight things the audit never asked** - and the answers"
+    }
+  ],
+  "schema": 1,
+  "source": "docs/cxx26-features-audit/open-items.md",
+  "source_date": "2026-11-11, updated 2026-11-12"
+}

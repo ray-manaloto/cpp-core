@@ -15,6 +15,8 @@ ports), and the code uses C++26 static reflection (P2996).
 | `cmake/` | The toolchain, the presets, the catalog and the include-what-you-use integration. |
 | `ports/` | The vcpkg overlay ports. |
 | `docs/` | The research: the [C++26 and third-party features audit](docs/cxx26-features-audit/README.md), the ASan leak-check analysis and the module source-location study. |
+| `scripts/` | The checks that do not need a compiler: `mise run audit:verify` runs them all. |
+| `AGENTS.md` | The repository's rules, for an agent or a contributor working here. |
 
 A new library is a new directory under `modules/`, with a `<name>.cppm` interface unit and a
 `CMakeLists.txt` that declares it as a `CXX_MODULES` file set:
