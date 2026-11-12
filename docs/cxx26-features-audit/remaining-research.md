@@ -217,7 +217,8 @@ GCC's deficiency first (MOD-6), not changing the test framework.
 
 ## 4. The upstream watch
 
-Checked on **2026-11-12**.
+Checked on **2026-11-12**. **Re-checked on 2026-11-12 by part 18, section 8 - see the note at the
+end of this table.**
 
 | Blocker | State | What it means for the project |
 |---|---|---|
@@ -227,6 +228,23 @@ Checked on **2026-11-12**.
 | [llvm#62258](https://github.com/llvm/llvm-project/issues/62258) - "`clang-tidy` fails on CXX modules" | **open**; updated 2026-08-25, 8 comments - unchanged | as above |
 | [fmt#3403](https://github.com/fmtlib/fmt/issues/3403) - "Enable constexpr support on `format`" | **closed as completed** on 2023-06-17, by `vitaut`; Zverovich's comment of 2025-09-07: "This is supported via the compile-time API as of #4456 and only requires C++20" | **The fmt side of the watch list is resolved.** fmt's constexpr support is not a pending question - it shipped in 2023 and the installed 12.2.1 has it |
 | GCC 16's `import std;` mixing deficiency | **no upstream issue is cited**; MOD-6 is still open | The project's constraint is "until GCC fixes it", and MOD-6 is what would tell the project whether it is a header-unit artefact or a merge deficiency |
+
+**Two more rows, added by part 18, section 8.2** - the three *secondary* clang-tidy/modules
+issues that `tooling-design.md:468` cites without giving their states:
+
+| Issue | State | What it means |
+|---|---|---|
+| [llvm#145628](https://github.com/llvm/llvm-project/issues/145628) - "Avoid duplicated checkings" | **closed, completed** 2026-03-19 | - |
+| [llvm#145630](https://github.com/llvm/llvm-project/issues/145630) - "Skip checking decls in clang-tidy" | **closed** 2026-03-19 | **`TOOL-2`'s parenthetical is answered: yes, `SkipDeclsInModules` is in LLVM 23.1.5** - the change shipped before the 23.1 series was cut |
+| [llvm#178471](https://github.com/llvm/llvm-project/issues/178471) - "Fix `performance-trivially-destructible` with C++20 modules" | **closed** 2026-04-07 | - |
+
+**And two new watch rows, added by part 18, section 8** - neither was on this list, because
+neither existed when it was written:
+
+| Watch | State | What it means |
+|---|---|---|
+| **CMake 4.5.0** | **released 2026-11-12** | `import std;` became a **supported** feature: the `CMAKE_EXPERIMENTAL_CXX_IMPORT_STD` UUID gate is gone from `Help/dev/experimental.rst` and from the cxxmodules manual, the section is marked `.. versionadded:: 4.5`, and the switch is the `CXX_SCAN_FOR_MODULES` target property. The toolchain matrix now names **"GCC 16 and newer on MacOS"** - this project's configuration, which 4.4.5 did not list. `MOD-11` is still open: CMake's matrix is not a measurement of this project's configuration |
+| **GCC 17's libstdc++** | **in development; not released** (`gcc.gnu.org/gcc-17/changes.html`: *"GCC 17 has not been released yet"*; the mirror has no `releases/gcc-17` branch) | it has **`__cpp_lib_constexpr_format 202511L`** and a `constexpr` `std::format` family (`include/bits/version.def`, `include/bits/version.h`, `include/std/format:67-71`). When it ships, the fmt-over-`std::format` argument weakens from *"neither library"* to *"libc++"*, and the hand-rolled formatter still cannot be retired until libc++ catches up |
 
 The one change from what the audit recorded: **fmt#3403 is not a live blocker.** Part 9 cited it for
 the *content* of Zverovich's comment, which is right; this part adds the *state*, so that nobody

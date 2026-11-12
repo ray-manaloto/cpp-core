@@ -167,13 +167,20 @@ directory, CMake 4.4.5 + Ninja 1.13.2, `g++-16` = Homebrew GCC 16.2.0 with libst
 
 ### The gate
 
-`import std;` needs CMake's experimental support, which is off by default:
+> **Correction, added by part 18, section 8.4.** The two lines below are **CMake 4.4's** shape.
+> **CMake 4.5.0 - released 2026-11-12 - removed the gate entirely**: `import std;` is a
+> **supported** feature there, `CMAKE_EXPERIMENTAL_CXX_IMPORT_STD` is gone from
+> `Help/dev/experimental.rst` and from the cxxmodules manual, the section is marked
+> `.. versionadded:: 4.5`, and the release notes say *"``import std`` is now available for all
+> C++ 20 and later code with `CXX_SCAN_FOR_MODULES` enabled"*. The documented switch is the
+> **`CXX_SCAN_FOR_MODULES` target property**, not `CMAKE_CXX_MODULE_STD` - **that variable does
+> not exist in CMake at all**, and the line below is wrong about it.
+
+`import std;` needs CMake's experimental support on 4.4, which is off by default:
 
 ```cmake
 # before project()
 set(CMAKE_EXPERIMENTAL_CXX_IMPORT_STD "f35a9ac6-8463-4d38-8eec-5d6008153e7d")
-# per target, or globally
-set(CMAKE_CXX_MODULE_STD ON)
 ```
 
 The UUID is version-specific and has to be looked up for the CMake in use:
@@ -183,6 +190,11 @@ The UUID is version-specific and has to be looked up for the CMake in use:
 | 4.4.0 and later | `f35a9ac6-8463-4d38-8eec-5d6008153e7d` |
 | 4.3.x | `451f2fe2-...` |
 | 3.30 - 3.31.7 | `0e5b6991-...` |
+
+**On CMake 4.5.0 and later, none of this applies**: no UUID, no gate. The only requirement is
+the `CXX_SCAN_FOR_MODULES` target property (on by default for C++20 and later), plus Ninja 1.11
+or later and a toolchain CMake supports - and CMake 4.5.0's matrix now names **"GCC 16 and
+newer on MacOS"**, which is this project's configuration.
 
 Other requirements: Ninja 1.11 or later (header units are not supported by CMake), and
 `-fmodules` for GCC (not implied by `-std=c++26`; GCC 16 still defaults to `gnu++20`).
@@ -289,6 +301,8 @@ The 607-line `modules/logging/format.hpp` stays, and `std::source_location` stay
   translation unit - but then the arguments have to cross the boundary, which is a type-erasure
   problem (see [quill-runtime-formatting.md](quill-runtime-formatting.md)).
 - **Con:** it depends on an experimental CMake gate with a version-specific UUID, until CMake 4.5.
+  **That condition is now met: CMake 4.5.0 was released on 2026-11-12 and removed the gate.**
+  See "The gate" above and part 18, section 8.4.
 - **Con:** libc++ itself warns that "Including headers after importing the `std` module **may
   fail**" - so the importers' own `#include`s are not guaranteed to survive on the clang path
   either.
@@ -303,7 +317,9 @@ The 607-line `modules/logging/format.hpp` stays, and `std::source_location` stay
   the tests would have to mix `import std;` with a textual POSIX include. The catalog tooling
   (`gen_str_catalog`) scans the object files for undefined symbols, and the module's object layout
   would change.
-- **Con:** it turns on an experimental CMake feature for the whole project.
+- **Con:** it turns on an experimental CMake feature for the whole project. **No longer true as of
+  CMake 4.5.0** (released 2026-11-12): `import std;` is supported there, with no experimental gate.
+  The project would still have to **move to CMake 4.5** first - the installed one is 4.4.5.
 - **Con:** it is **blocked on GCC 16 today** - any standard or system-header include in an importing
   translation unit fails. **Corrected by part 18, section 6: the block is unverified in the
   project's configuration** - the project compiles with `-fmodules-ts`, the matrix above was
@@ -334,6 +350,16 @@ and accepted as non-production, the GCC path stays standard-library-free and gre
 `format.hpp` remains the **single** formatter on both paths - the divergence buys
 `std::source_location` and internal conveniences, not a second formatter whose output could
 diverge from the one the tests assert on.
+
+**Update, 2026-11-12 (part 18, section 8.4): the first condition is now met.** CMake 4.5.0 was
+released today and **removed the experimental gate** - no UUID, no `CMAKE_EXPERIMENTAL_CXX_IMPORT_STD`,
+and the switch is the `CXX_SCAN_FOR_MODULES` target property, which is already on for this
+project. CMake 4.5.0's toolchain matrix also adds **"GCC 16 and newer on MacOS"** - this
+project's exact configuration - which 4.4.5 did not list. The other three conditions are
+unchanged, and the **recommendation is unchanged**: keep (a), design so (b) is cheap, and do not
+adopt (c). What changed is the **price**: option (c)'s cost line loses the experimental-feature
+objection entirely, so `MOD-11` - the one measurement that decides (c)'s remaining price - is now
+the **only** thing standing between the audit and a decision on (c).
 
 ## Open questions
 

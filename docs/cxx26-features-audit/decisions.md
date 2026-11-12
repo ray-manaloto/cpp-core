@@ -70,12 +70,29 @@ with the standard, format with the module" is not one of the options - it is a n
 - **(b) with `std::format_to`** would fix DEF-5 and make the two paths agree - but
   `std::format_to` is **not `constexpr`** in libstdc++ 16 or libc++ 21, so it costs the
   `constexpr` formatter (plan step 3) **and** the `static_assert` formatter tests.
+  **Part 18, section 8.5 qualifies this: it is a *today* statement, not a durable one.**
+  GCC 17's libstdc++ has `__cpp_lib_constexpr_format 202511L` and marks `std::format`,
+  `std::vformat`, `std::format_to` and `std::formatted_size` `constexpr` - so the cost of (b)
+  **disappears on the GCC side** when GCC 17 lands (horizon: 2027; GCC 17 is not released). It
+  does **not** disappear on the libc++ side: libc++ 21 and libc++ `main` have no
+  `__cpp_lib_constexpr_format`, and llvm#171292 is still open with 0 comments. And because the
+  project must keep **both** compilers working, the hand-rolled `constexpr` formatter **cannot be
+  retired until libc++ catches up** - which is the same rule the rest of the project follows.
 - **(b) with fmt** keeps the `constexpr` formatter - fmt's compile-time API is constexpr - and
   fixes DEF-5 - but **fmt cannot enter the module interface** (a textual `#include` in a module
   unit yields global-module declarations), so this needs fmt's *module*, which the pinned vcpkg
   port does not build. It needs an overlay port with `FMT_MODULE=ON`.
 - **(c)** gets the same result through the implementation side, where `std::format` is available
   today with no modules work at all - which is why the recommendation has not changed.
+
+**The fmt-over-`std::format` case weakens, but the recommendation does not.** The audit's case
+for fmt was *"neither standard library implements P3391R2, so fmt is the only constexpr formatter
+available"*. When libstdc++ 17 ships, that becomes *"libc++ does not"* - a **different and
+weaker** argument, and one that leaves the project's two compilers **disagreeing** about whether
+the standard's formatter is constexpr. That disagreement is itself a portability problem, and it
+is the kind the project's two-compiler rule exists to avoid. **fmt remains the right answer for
+this project; the *reason* changes** from "the standard is not there" to "the standard is not
+there **on both compilers**".
 
 **The recommendation: (a) now, (b) if the API is public, (c) only if the Codec experiment
 works.** The reasoning is in part 13: (c) is the only option that makes the two paths *agree*, and

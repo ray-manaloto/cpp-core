@@ -296,7 +296,8 @@ formatting.
   collides with the standard headers `tests/logging_test.cpp` needs.
 - **The upstream watch:** fmt#3403 is **closed as completed** (2023-06-17) - the fmt side of the
   watch list is resolved; llvm#171292 is still open, and LWG4531 (WP, Brno June 2026) has settled
-  the macro values; llvm#63939 and #62258 have not moved.
+  the macro values; llvm#63939 and #62258 have not moved. **Part 18, section 8 re-checked all five
+  on 2026-11-12: none moved**, and added two rows - CMake 4.5.0 and GCC 17's libstdc++.
 
 **The root README was corrected** in the same commit: the global-module-fragment rationale (the
 observed failure mode, not the standard's rule), the "the two paths share the same threading"

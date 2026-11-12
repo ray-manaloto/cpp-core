@@ -66,7 +66,7 @@ which is exactly what a research lane is for.
 | 5 | A differential test between the two logging paths | ☑ **done** | The case list, classified: **11 of the 15 divergences are testable** as a runtime differential comparison; the other four are asymmetric compile-time rejections and need a "must not compile" mechanism the project does not have. The oracle is three columns - the standard, the catalog path, the module path - with the rule that the expectations come from the standard, not from the implementation. Two modes, switched by `FMT-14`. And the test would **trigger DEF-6**, so it needs its own catalog |
 | 6 | Costing the `import std;` option | ☑ **done** | The row-by-row flip analysis of the twenty-row table: **five rows flip cleanly, one partly, three lossily, one only in combination, nine not at all.** Two results the audit did not have: **rows 19 and 7-9 are a package** (validating with the standard's grammar while formatting with the module's own is *worse* than not validating), and **the GCC 16 blocker is unverified in the project's configuration** - the project compiles with `-fmodules-ts`, the matrix was measured with `-fmodules`, and the project's own GCC 16 build does the shape the matrix says fails |
 | 7 | Four smaller questions | ☑ **done** | **7.1** consuming the module from another project: CMake's `install(EXPORT ... CXX_MODULES_DIRECTORY ...)` is the load-bearing piece, and the project's own obstacles are named - `format.hpp` is a `PRIVATE` source but a **public build-time dependency** of the installed module, `internal.hpp` is in the global module fragment, and the export publishes quill's and cib's whole closure. **7.2 MemorySanitizer: no** - two independent blockers (GCC 16 has no `memory` sanitizer; clang's MSan supports only Linux/NetBSD/FreeBSD) and the installed libc++ has no MSan support at all. **7.3 `ut`'s supply chain:** good and unchanged - an immutable released tag, a SHA512, a byte-identical installed tree, 419 lines, two contributors, and **no vcpkg registry port**, so the baseline gives it no protection. **7.4 quill:** keep it - current (13.1.0, 2026-10-17), MIT, and `quill::Codec<Arg>` is the *supported* extension point `QUIL-1` depends on |
-| 8 | Re-validating the audit's time-sensitive claims | ☐ **not started** | — |
+| 8 | Re-validating the audit's time-sensitive claims | ☑ **done** | The five overlay `REF`s are **all still at upstream `HEAD`**, so the README's claim holds today and the defect (nothing detects it) is unchanged. The upstream watch is **unchanged** - all five blockers where they were - and three of the seven *cited* clang-tidy issues are now recorded as closed, which answers `TOOL-2`'s parenthetical. Every tool is at its current release **except CMake, which released 4.5.0 today and graduated `import std;` to a supported feature**: the experimental UUID gate is gone, the switch is `CXX_SCAN_FOR_MODULES`, and CMake's matrix now names **GCC 16 on macOS** - the project's exact configuration. And **GCC 17's libstdc++ has implemented P3391R2**: `__cpp_lib_constexpr_format 202511L` and a `constexpr` `std::format` family, so section 6's "rows 7-9 flip lossily" is a *today* statement, and the fmt-over-`std::format` argument weakens from "neither library" to "libc++" |
 
 ---
 
@@ -1366,7 +1366,7 @@ Nothing here can be built or measured - the build lane is parked - so this is an
 | # | The work | Files | Shape | Decided by |
 |---|---|---|---|---|
 | 1 | **settle the GCC dialect question** | 0 | one compile | the build lane (**MOD-11**) |
-| 2 | the CMake `import std;` gate | `cmake/toolchains/cpp-core.cmake` | ~5 lines: the experimental UUID (or CMake >= 4.5) and `CMAKE_CXX_MODULE_STD ON` | nothing - but it is **version-specific** and the UUID has to be looked up per CMake |
+| 2 | the CMake `import std;` gate | `cmake/toolchains/cpp-core.cmake` | ~2 lines: `set_target_properties(... CXX_SCAN_FOR_MODULES ON)` - **and nothing at all on CMake 4.5.0**, where `import std;` stopped being experimental (section 8.4) | nothing - but the **project must move to CMake 4.5** first, and the switch is a **target property**, not a variable |
 | 3 | the module's purview | `modules/logging/logging.cppm` | ~3 lines: `import std;` after `export module` (it must sit there - [module.import]/1) | work 1 |
 | 4 | **the importer migration** | `src/app.cpp`, `src/main.cpp`, `src/reflection_demo.cpp`, `tests/logging_test.cpp` | **every `#include` in four files reviewed.** They include quill's headers, cib's headers, `<unistd.h>` and the standard headers | work 1; and whether `<unistd.h>` survives the mix (**MOD-4**) |
 | 5 | the formatter's replacement | `modules/logging/format.hpp` | 603 -> ~400 (Outcome A) or ~120-150 (Outcome B) | the outcome chosen |
@@ -1662,6 +1662,350 @@ decay, and what is their state now?
 | the feature-test macro values | `FMT-13` | **needs the preprocessor** - parked |
 
 **What is needed.** A re-validation pass, with anything that needs a compile left as a question.
+
+### The verdict
+
+**Three things decayed, and two of them matter.**
+
+| | What | Verdict |
+|---|---|---|
+| 1 | the five overlay ports' `REF`s | **unchanged** - all five are still their upstream's `HEAD` |
+| 2 | the upstream watch | **unchanged** - all five blockers are exactly where they were |
+| 3 | the tool versions | **one moved** - **CMake 4.5.0 was released today**, and it changed `import std;` |
+| 4 | the standard-library sweep | **unchanged for the installed trees**, but **GCC 17's libstdc++ has implemented constexpr `std::format`** |
+| 5 | the feature-test macro values | **parked** - still needs the preprocessor (`FMT-13`) |
+
+The two that matter are **CMake 4.5.0** and **GCC 17**, and they are the two the audit's watch
+list did **not** carry - because neither existed when the watch list was written.
+
+### 8.1 The five overlay ports: all five are still at upstream `HEAD`
+
+Checked on 2026-11-12, against each repository's default branch.
+
+| Port | The pinned `REF` | The pinned commit's date | Upstream `HEAD` | |
+|---|---|---|---|---|
+| `intel-cib` (`intel/compile-time-init-build`) | `b5c68e65801f` | 2026-11-09 | `b5c68e65801f` | **same** |
+| `intel-cpp-std-extensions` (`intel/cpp-std-extensions`) | `94546c5a9122` | 2026-11-09 | `94546c5a9122` | **same** |
+| `intel-baremetal-concurrency` | `77be79110fd8` | 2026-10-28 | `77be79110fd8` | **same** |
+| `intel-baremetal-senders-and-receivers` | `5629659b781b` | 2026-11-11 | `5629659b781b` | **same** |
+| `ut` (`stephenberry/ut`) | `dc65567be78f` | 2026-07-31 | `dc65567be78f` | **same** |
+
+**So the root README's claim is true today**: *"They are pinned to the latest upstream commit"*
+(`README.md:367-368`). The defect is unchanged - **nothing detects it**. The last three ports
+were re-pinned within the last fortnight, so the pins are being maintained by hand, which is
+both the evidence that it is worth doing and the evidence that it is fragile.
+
+**One detail worth recording.** `ut`'s repository reports `pushed_at = 2026-09-01`, which is five
+weeks after the pinned commit's date, and it looks like `main` moved. It did not: the 2026-09-01
+push was to **`dependabot/github_actions/actions-056f70b181`**, a different branch. `main` is at
+`dc65567b`, the `v1.2.1` **tag** commit, and GitHub's compare API says `main` and the pinned
+commit are **identical** (ahead 0, behind 0). So the port is pinned to a tag - the right shape -
+and the repository's own "last push" date is a misleading signal.
+
+**And the asymmetry that the audit's item 2 already found is confirmed**: the four Intel ports
+are pinned to **branch tips** of actively-developed `main` branches, while `ut` is pinned to an
+**immutable tag**. All five carry a SHA512, so the download is verified either way. The Intel
+repos publish no tags for these headers at all, so there is nothing better to pin to - but it
+means every Intel bump is a blind re-point of two values that have to change together.
+
+### 8.2 The upstream watch: unchanged, and three of the seven cited issues were already closed
+
+The watch table in [remaining-research.md](remaining-research.md) section 4 has five entries. All
+five are exactly where they were.
+
+| Blocker | State on 2026-11-12 | Moved? |
+|---|---|---|
+| [llvm#171292](https://github.com/llvm/llvm-project/issues/171292) - "P3391R2: `constexpr` `std::format`" | **open**; created 2025-12-09, updated 2026-10-09, assigned `lknknm`, 0 comments | no |
+| [LWG4531](https://wg21.link/LWG4531) | **WP** (Brno, 2026-06-13); the reflector selected option B | no |
+| [llvm#63939](https://github.com/llvm/llvm-project/issues/63939) | **open**; updated 2026-08-25, 3 comments | no |
+| [llvm#62258](https://github.com/llvm/llvm-project/issues/62258) | **open**; updated 2026-08-25, 8 comments | no |
+| [fmt#3403](https://github.com/fmtlib/fmt/issues/3403) | **closed as completed** 2023-06-17 | no |
+
+**One correction to the audit's own citation list.** `tooling-design.md:468` cites seven
+clang-tidy/modules issues without giving their states. Three of them are **closed**:
+
+| Issue | State | Closed |
+|---|---|---|
+| [llvm#145628](https://github.com/llvm/llvm-project/issues/145628) - "Avoid duplicated checkings" | closed, **completed** | 2026-03-19 |
+| [llvm#145630](https://github.com/llvm/llvm-project/issues/145630) - "Skip checking decls in clang-tidy" | closed | 2026-03-19 |
+| [llvm#178471](https://github.com/llvm/llvm-project/issues/178471) - "Fix `performance-trivially-destructible` with C++20 modules" | closed | 2026-04-07 |
+
+`#145630` is the one the audit names in `TOOL-2` - *"does the enabled check skip module
+declarations via `SkipDeclsInModules`, PR #145630 - and is that in 23.1.5?"* - and it **closed in
+March 2026**, before LLVM 23.1.0 (2026-08-25) was cut. So the answer to `TOOL-2`'s parenthetical
+is **yes, it is in 23.1.5**: the change shipped in the 23.1 series.
+
+**And the headline is unaffected.** The two blockers that matter - `#63939` and `#62258` - are
+both still open, and both are the *whole* reason the audit's rule is "clang-tidy checks the
+non-module translation units only". Closing three of the seven did not change that.
+
+### 8.3 The tool versions: everything is current except CMake, which moved today
+
+| Tool | The audit's version | The current version | |
+|---|---|---|---|
+| clang-format / clang-tidy / llvm-profdata | 23.1.5 | 23.1.5 | **current** - LLVM's latest release is `llvmorg-23.1.5` (2026-11-03) |
+| cmake-format / cmake-lint | 0.6.13 | 0.6.13 | **current** - the latest cmakelang on PyPI is 0.6.13 (after 0.6.12 and 0.6.12.dev0) |
+| gcov-16 | 16.2.0 | 16.2.0 | **current** - it is the installed GCC, and GCC 17 is not released |
+| ninja | 1.13.2 | 1.13.2 | **current** - the latest release is v1.13.2 (2025-11-20) |
+| GCC | 16.2.0 | 16.2.0 | **current** |
+| clang-p2996 | 21.0.0git @ `562409c` | 21.0.0git @ `562409c` | **current** - the `p2996` branch tip is exactly this commit (2026-11-03) |
+| vcpkg (tool) | 2026-10-29 | 2026-10-29 | **current** - it matches `VCPKG_TOOL_RELEASE_TAG=2026-10-29` on `master` |
+| **CMake** | **4.4.5** | **4.5.0** | **released today** - `v4.5.0`, 2026-11-12T18:53Z |
+
+**The vcpkg tool's release *tag* is confusing and worth one line.** GitHub's release list's newest
+`vcpkg` release is `2026.10.16`, but the **tool** is tagged `2026-10-29` - the tool's own tag
+lives in `scripts/vcpkg-tool-metadata.txt` and moves independently of the repository's release
+entries. The installed tool is the current one.
+
+**And CMake 4.5.0 is the one that matters.** It is not a version bump: it changed the status of
+the feature the audit's part 4 is about. That is the next section.
+
+### 8.4 CMake 4.5.0 graduated `import std;` - the experimental gate is **gone**
+
+**CMake 4.5.0 was released today** (`v4.5.0`, 2026-11-12T18:53:08Z), and it **promoted
+`import std;` from an experimental feature to a supported one.**
+
+The evidence, in three independent places in CMake's own tree at `v4.5.0`:
+
+**1. The release notes**, `Help/release/4.5.rst`, under "Languages":
+
+> * ``import std`` is now available for all C++ 20 and later code with
+>   :prop_tgt:`CXX_SCAN_FOR_MODULES` enabled.
+
+**2. The manual**, `Help/manual/cmake-cxxmodules.7.rst`. In 4.4.5 the "`import std` Support"
+section ends with:
+
+> *.. note:: This support is provided only when experimental support for ``import std`` has been
+> enabled by the ``CMAKE_EXPERIMENTAL_CXX_IMPORT_STD`` gate.*
+
+In 4.5.0 that note is **gone**, and the section carries a new `.. versionadded:: 4.5` marker.
+`CMAKE_EXPERIMENTAL_CXX_IMPORT_STD` appears **zero** times in the 4.5.0 cxxmodules manual.
+
+**3. The experimental guide**, `Help/dev/experimental.rst`. In 4.4.5 it has a section headed
+"C++ ``import std`` support" with the UUID `f35a9ac6-8463-4d38-8eec-5d6008153e7d` and the
+warning *"This UUID may change in future versions of CMake"*. **In 4.5.0 that section does not
+exist** - the whole file was printed and it is gone.
+
+**What replaces the gate.** Nothing new. CMake's 4.5.0 release notes name the condition as the
+**`CXX_SCAN_FOR_MODULES` target property** (added in CMake 3.28) - *"``import std`` is now
+available for all C++ 20 and later code with `CXX_SCAN_FOR_MODULES` enabled"* - and that property
+is **on by default** for a target that uses C++20 or later. The project already has module
+scanning on: it has a `FILE_SET CXX_MODULES` and a `.cppm`. So the enabling work in 4.5 is
+**zero lines**.
+
+**And the audit named a variable that does not exist.** `import-std.md:176` says the per-target
+switch is `set(CMAKE_CXX_MODULE_STD ON)`. **`CMAKE_CXX_MODULE_STD` appears nowhere in CMake** -
+not in 4.4.5's manual or compiler modules, not in 4.5.0's, and not in the tree's paths. The
+documented switch is the `CXX_SCAN_FOR_MODULES` target property. The audit's line is corrected
+in place below.
+
+**And the toolchain matrix changed in the project's favour.** CMake 4.5.0's manual now lists:
+
+> * Clang 18.1.2 and newer with standard library ``libc++`` or ``libstdc++``
+> * MSVC toolset 14.36 and newer (provided with Visual Studio 17.6 and newer)
+> * GCC 15 and newer, with the exception of MacOS
+> * **GCC 16 and newer on MacOS**
+
+CMake 4.4.5's matrix said only *"GCC 15 and newer"* - so **GCC 16 on macOS was not in the
+supported set**, and 4.5.0 adds it. **That is the project's exact configuration.**
+
+**What this does and does not settle.**
+
+- It **settles** the cost line in section 6's work estimate. That line said *"the experimental
+  UUID (or CMake >= 4.5)"* - and the parenthetical is now the real answer. The "experimental
+  CMake gate" cost, which section 6 counted as *"it turns on an experimental CMake feature for
+  the whole project"*, **goes away** the moment the project moves to 4.5.
+- It **does not settle** `MOD-11`. CMake's matrix says CMake can *build* the std module for
+  "GCC 16 and newer on MacOS"; the audit's failure was an importing translation unit that **also
+  includes standard headers**, and the project's own GCC 16 build does exactly that shape and
+  works. So CMake's 4.5 entry is a **third independent signal** that the audit's GCC-16 failure
+  was a **dialect artefact** (`-fmodules` vs the project's `-fmodules-ts`), not a deficiency -
+  but it is not a measurement of the project's configuration, and it does not retire `MOD-11`.
+- It **does** change one of section 6's conclusions. Section 6 said the GCC question was "not
+  priced" and that the CMake gate was "version-specific and the UUID has to be looked up per
+  CMake". The second half is now false: **there is no UUID to look up**.
+
+**One correction to section 6, made here because it is the same feature.** Section 6's work
+estimate named `CMAKE_CXX_MODULE_STD ON` as the second half of the enabling work. **That variable
+does not exist** - not in CMake 4.4.5 and not in 4.5.0; the switch is the `CXX_SCAN_FOR_MODULES`
+target property. The line is corrected in place below.
+
+### 8.5 GCC 17's libstdc++ implements constexpr `std::format` - P3391R2 lands on the GCC side
+
+**The audit's central fmt finding is about to lose one of its two legs.**
+
+The audit's recommendation was **fmt over `std::format`**, and the reason was that *neither*
+standard library on this machine implements P3391R2 - so **fmt is the only constexpr formatter
+available**. That is true today. It will not be true when GCC 17 lands.
+
+**What GCC 17's libstdc++ has**, read from `gcc-mirror/gcc@master` (the GCC 17 development
+branch) on 2026-11-12:
+
+**1. The feature-test macro is there.** `libstdc++-v3/include/bits/version.def`:
+
+> ```
+> ftms = { name = constexpr_format; // 202511 P3391R2 constexpr std::format
+>          values = { v = 202511; cxxmin = 26; hosted = yes;
+>                     extra_cond = "__cpp_lib_constexpr_exceptions >= 202502L" } };
+> ```
+
+**2. And it is published.** `libstdc++-v3/include/bits/version.h`:
+
+> ```
+> #if !defined(__cpp_lib_constexpr_format)
+> # if (__cplusplus > 202302L) && _GLIBCXX_USE_CXX11_ABI && _GLIBCXX_HOSTED && (__cpp_lib_constexpr_exceptions >= 202502L)
+> #  define __glibcxx_constexpr_format 202511L
+> #  if defined(__glibcxx_want_all) || defined(__glibcxx_want_constexpr_format)
+> #   define __cpp_lib_constexpr_format 202511L
+> #  endif
+> # endif
+> #endif
+> ```
+
+**3. And the implementation is marked.** `libstdc++-v3/include/std/format:67-71`:
+
+> ```
+> #ifdef __glibcxx_constexpr_format // C++ >= 26 && HOSTED && CXX11 strings
+> # define _GLIBCXX_CONSTEXPR_FORMAT constexpr
+> #else
+> # define _GLIBCXX_CONSTEXPR_FORMAT
+> #endif
+> ```
+
+and the **public** entry points carry that macro: `std::format`, `std::vformat`,
+`std::format_to` and `std::formatted_size` are all `inline _GLIBCXX_CONSTEXPR_FORMAT`. The one
+exception is the **locale overload** of `std::format`, which is not - a locale is not
+constexpr.
+
+**4. And the libstdc++ ChangeLog records the landing**: *"include/bits/version.def
+(constexpr_format): Define"*, *"include/bits/version.h: Regenerate"*, and *"include/std/format
+(_GLIBCXX_CONSTEXPR_FORMAT): Define and apply to all of functions except `__write_escaped_ascii`
+and `__formatter_fp` members"*.
+
+**The installed libstdc++ 16 has none of it**, and the reason is instructive:
+
+| | libstdc++ 16 (installed) | libstdc++ 17 (`master`) |
+|---|---|---|
+| `__cpp_lib_constexpr_exceptions` | **202502L** | 202502L |
+| `__glibcxx_constexpr_format` | **absent** | 202511L |
+| `__cpp_lib_constexpr_format` | **absent** | **202511L** |
+| `_GLIBCXX_CONSTEXPR_FORMAT` | **does not exist** (only `_GLIBCXX_CONSTEXPR_FORMAT_ERROR`) | `constexpr` when the macro is on |
+| `std::format_to` is `constexpr` | **no** | **yes** |
+
+**The last condition is already satisfied by GCC 16.** The installed libstdc++ 16 *already*
+publishes `__cpp_lib_constexpr_exceptions 202502L`; the only thing GCC 16 lacked was the format
+implementation itself. So the gap was never a language or ABI gap - it was one header.
+
+**What this changes.**
+
+- **Section 6's row analysis is a "today" statement, not a durable one.** It says rows 7, 8 and 9
+  (the formatter's renderer, the spec parser and the field loop) "flip **lossily**", because
+  "`std::format_to` is **not `constexpr`** in either implementation on this machine". On GCC 17
+  the loss is **gone on the GCC side**. The row-by-row verdict becomes *"lossily today, cleanly
+  on GCC 17"*.
+- **The fmt-vs-`std::format` argument weakens.** The audit's case for fmt was *"neither library
+  has it"*. When libstdc++ 17 has it, the case becomes *"libc++ does not have it"* - which is a
+  **different and weaker** argument, and one that leaves the project's two compilers **disagreeing
+  about whether the standard's formatter is constexpr**. That is itself a portability problem, and
+  it is the kind the audit's own two-compiler rule is meant to avoid. **fmt remains the right
+  answer for this project**, but the *reason* changes from "the standard is not there" to "the
+  standard is not there **on both compilers**".
+- **The `constexpr` formatter cannot be retired until libc++ catches up.** The hand-rolled
+  formatter (plan step 3) and the `static_assert` formatter tests (item 1, Route B) would have a
+  standard-library alternative on GCC 17 - and **not** on libc++ 21. So the hand-rolled formatter
+  stays until **both** compilers agree, which is the same rule the rest of the project follows.
+- **The horizon.** GCC 17 **has not been released**: `gcc.gnu.org/gcc-17/changes.html` says so
+  ("*GCC 17 has not been released yet, so this document is a work-in-progress*"), and the mirror
+  has **no `releases/gcc-17` branch** - `master` *is* the development branch. GCC releases in the
+  spring, so the realistic horizon is **2027**.
+
+**What this does not settle.** Whether GCC 17's constexpr `std::format` actually *works* in a
+constant expression - that needs a compile, and a compile of an unreleased compiler. It is not an
+open item for the plan, which runs on GCC 16 and libc++ 21; it is a **watch item**, and the
+watch is now two rows instead of one.
+
+### 8.6 The standard-library sweep: every answer still holds
+
+Part 11's sweep was re-run, this time at the **feature-test macro** level rather than by looking
+for headers - which is the only way to get the right answer for libc++, because libc++'s
+`<version>` **opens with a synopsis block that lists the macros the standard defines**, including
+ones libc++ does not implement. (The audit already flagged this trap for `std::inplace_vector`;
+it applies to every macro.)
+
+| Feature | libstdc++ 16 (installed) | libc++ 21 (installed) | libc++ `main` | libstdc++ 17 (`master`) |
+|---|---|---|---|---|
+| `__cpp_lib_constexpr_format` | **absent** | **absent** | **absent** | **202511L** |
+| `__cpp_lib_constexpr_exceptions` | 202502L | **absent** | 202411L | 202502L |
+| `__cpp_lib_constexpr_string` | 201907L | 201907L | 201907L | 201907L |
+| `__cpp_lib_inplace_vector` | **202603L** | **not defined** | **not defined** | present (`<inplace_vector>` is real) |
+| `__cpp_lib_simd` | **not defined** | **not defined** | **not defined** | **not defined** |
+| `__cpp_lib_execution` | 201902L | 201902L | 201902L | 201902L |
+
+**So all five of part 11's answers survive**, and two of them are now confirmed at the macro
+level rather than inferred:
+
+- **`std::inplace_vector`: libstdc++ has it, libc++ does not.** libc++ 21's `<version>` line 136
+  *lists* `__cpp_lib_inplace_vector 202406L <inplace_vector>` - **inside the synopsis comment** -
+  and line 573 has it **commented out** (`// # define ...`). It is not defined, and there is no
+  `<inplace_vector>` header in the tree. The audit's caution is right, and the reason for it is
+  now precise. **This is why section 6's row 4 does not flip**: the 2,048-byte buffer stays.
+- **`std::simd`: nobody has it.** libstdc++'s `<simd>` is still a bag of `bits/simd_*` headers
+  with no `std::simd` class - **and that is still true in GCC 17's `master`**. libc++ `main`
+  lists `__cpp_lib_simd 202411L` in the synopsis only; there is no `libcxx/include/simd`.
+- **`std::execution`: still C++17's.** `201902L` everywhere, and libstdc++ 17's `<execution>` is
+  1,948 bytes that includes nothing but `bits/requires_hosted.h` and `bits/version.h`. No
+  senders.
+- **`std::from_chars` for floating point: still not declared** by either library.
+- **`std::format` is not `constexpr`**: true on both installed trees; **not true on GCC 17** -
+  see 8.5.
+
+**One macro moved on libc++ `main`.** `__cpp_lib_constexpr_exceptions` is **202411L** there
+against libstdc++'s **202502L**. That is the macro GCC 17's constexpr format is *gated on*, and
+it is the reason libc++ cannot get constexpr format by copying the libstdc++ change.
+
+### 8.7 The feature-test macro values: still parked, and less urgent for one library
+
+`FMT-13` asked for the **authoritative** feature-test macro values on each toolchain, and it
+**still needs the preprocessor** - one `#include <version>` and a `static_assert` per macro,
+because both libraries define their macros inside per-standard-version branches and a text scan
+cannot pick the right one. **Parked.**
+
+**But the re-validation narrowed it.** The macro *values* are no longer in question for
+libstdc++: the upstream branch now carries the authoritative `__cpp_lib_constexpr_format
+202511L`, and the **value** is what LWG4531 settled. What is still in question is the
+**availability** on the *installed* trees - and the installed trees can be answered by the
+preprocessor alone, with no library change.
+
+And the re-validation also produced a **trap worth naming**: libc++'s `<version>` *begins* with
+a block comment that lists the macros the standard defines, **including the ones libc++ does not
+implement**, and then a second commented-out list of the ones it actually defines. A grep of
+`<version>` therefore reports `__cpp_lib_inplace_vector` and `__cpp_lib_simd` as present. **The
+authoritative answer is the `# define` lines, not the file's contents.**
+
+### What this changes
+
+| | Before this section | After |
+|---|---|---|
+| the five overlay `REF`s | "pinned to the latest upstream commit" | **still true** - all five are at `HEAD`; the Intel four are branch tips and `ut` is a tag |
+| the upstream watch | five blockers | **unchanged** - and three of the seven *cited* clang-tidy issues are now recorded as closed |
+| `TOOL-2`'s parenthetical | "is `SkipDeclsInModules` (PR #145630) in 23.1.5?" | **yes** - `#145630` closed 2026-03-19, before the 23.1 series was cut |
+| the CMake `import std;` gate | "an experimental UUID, looked up per CMake release" | **gone** - CMake 4.5.0 (released today) made `import std;` supported; the switch is `CXX_SCAN_FOR_MODULES` |
+| CMake's toolchain matrix | "GCC 15 and newer" | **"GCC 16 and newer on MacOS"** added in 4.5.0 - the project's exact configuration |
+| section 6's rows 7-9 | "flip lossily - `std::format_to` is not `constexpr` in either implementation" | **lossily today; cleanly on GCC 17** |
+| the fmt-over-`std::format` case | "neither library implements P3391R2" | **"libc++ does not"** - a weaker argument, and the two compilers will disagree |
+| `std::inplace_vector` | "libc++ has none - the file opens with a synopsis block" | **confirmed at the macro level**: the synopsis lists it, the `# define` does not |
+| `std::simd` | "libstdc++ ships a `<simd>` with no `std::simd`; libc++ has no `<simd>`" | **unchanged - and still true in GCC 17's `master`** |
+| `FMT-13` | "needs the preprocessor" | **still parked**, and narrowed: the *values* are settled upstream; libc++'s `<version>` synopsis is a trap |
+
+### Two new watch rows
+
+The audit's watch list had five rows, all blockers. It now has **seven**, and the two new ones
+are the two things that moved:
+
+| Watch | State | What it means |
+|---|---|---|
+| **CMake 4.5.0** | **released 2026-11-12** | `import std;` is supported, not experimental. The gate is gone and the toolchain matrix now names GCC 16 on macOS. `MOD-11` is still open - CMake's matrix is not a measurement of this project's configuration - but the *price* of `import std;` just dropped |
+| **GCC 17's libstdc++** | **in development; not released** | it has `__cpp_lib_constexpr_format 202511L` and a `constexpr` `std::format` family. When it ships, the fmt-vs-`std::format` argument weakens on the GCC side, and the hand-rolled formatter still cannot be retired until libc++ catches up |
 
 ---
 
