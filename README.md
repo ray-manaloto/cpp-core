@@ -14,6 +14,7 @@ ports), and the code uses C++26 static reflection (P2996).
 | `tests/` | The tests, written with [ut](https://github.com/stephenberry/ut). |
 | `cmake/` | The toolchain, the presets, the catalog and the include-what-you-use integration. |
 | `ports/` | The vcpkg overlay ports. |
+| `docs/` | The research: the [C++26 and third-party features audit](docs/cxx26-features-audit/README.md), the ASan leak-check analysis and the module source-location study. |
 
 A new library is a new directory under `modules/`, with a `<name>.cppm` interface unit and a
 `CMakeLists.txt` that declares it as a `CXX_MODULES` file set:
@@ -32,8 +33,11 @@ target_sources(cpp-core-<name> PUBLIC FILE_SET CXX_MODULES FILES <name>.cppm)
 | `p2996-*` | clang-p2996 (bloomberg/clang-p2996, libc++) | `-freflection -fexpansion-statements -fannotation-attributes` |
 
 Both compilers build and pass the tests. The logging module's interface is deliberately free of
-the standard library, because a module's global module fragment is copied into every translation
-unit that imports it (see [Logging](#logging)).
+the standard library: on both compilers today, a standard header in the module's global module
+fragment collides with the standard headers of the translation units that import it (see
+[Logging](#logging)). That collision is an implementation deficiency rather than the standard's
+rule — the C++26 text requires implementations to merge `#include` and `import` without conflicting
+attachments — so the constraint may become removable when the compilers are fixed.
 
 ## Build
 
@@ -146,15 +150,20 @@ header, and it works the same way on both compilers.
 The alternatives that were measured, the reproductions and the upstream sources are in
 [`docs/module-source-location/`](docs/module-source-location/README.md).
 
-The module's interface does not use the standard library. A module's global module fragment is
-copied into every translation unit that imports it, so a standard header that the interface
-depends on ends up next to the standard headers of any translation unit that includes them, and
-the two copies collide:
+The module's interface does not use the standard library. On both compilers today, a standard
+header that the module's global module fragment depends on collides with the standard headers of
+the translation units that import it:
 
 ```
 GCC:    error: redefinition of 'constexpr bool std::__is_constant_evaluated()'
 Clang:  error: type alias template redefinition with different types ('std::__promote_t')
 ```
+
+The C++26 text does not require this collision: [module.global.frag]/1 attaches the global module
+fragment to the global module, and [std.modules]/4-5 requires implementations to merge `#include`
+and `import` without conflicting attachments. Both compilers fail to do that here, so the rule the
+project follows is a workaround for a deficiency, not for the standard. The full account is in the
+[features audit](docs/cxx26-features-audit/README.md).
 
 So the module formats the messages itself (`modules/logging/format.hpp`, a module-private,
 standard-library-free formatter) and reaches its implementation through the
@@ -229,8 +238,17 @@ to refer to.
   `TRACE`→`TraceL2`.
 - **Modules:** the cib module is passed to quill as a tag, and shown in the `%(tags)` field of the
   pattern.
-- **Threading:** quill formats on its backend thread, so runtime arguments are queued rather than
-  formatted on the calling thread.
+- **Threading:** the two paths differ here. The catalog path queues the runtime arguments, and
+  quill formats them on its backend thread. The module path formats the message on the calling
+  thread — into a fixed 2,048-byte buffer — and then copies it into the queue, so each module-path
+  message costs one heap allocation on the calling thread.
+- **Format strings:** the two paths **do not** share a dialect. The catalog path formats with
+  quill's bundled fmt, which implements the C++26 format-spec grammar and checks it against the
+  argument's type; the module path formats with the module's own scanner, which implements the
+  *structure* of that grammar but not its validation. So `info("{:>06}", 42)` gives `000042` on the
+  module path and `    42` on the catalog path, and a specification that fmt would reject
+  (`{:s}` on an `int`) is accepted and ignored by the module path. The fifteen differences are
+  listed in the [features audit](docs/cxx26-features-audit/format-dialect.md).
 - **ODR:** `logging::config<>` is a variable template: every translation unit that logs with the
   `CIB_*` macros must include `cpp-core/logging/cib_quill.hpp` and link `cpp-core::logging`, or it
   would use cib's null logger.
@@ -318,7 +336,9 @@ The reflection demo needs `<meta>`, which is not part of Homebrew's libc++ yet.
     installs the string-catalog tooling (`cmake/string_catalog.cmake` and the python script it
     drives), so that a consumer can use `gen_str_catalog()`.
   - `ut` (Stephen Berry's test framework). Header-only: upstream's module variant needs
-    `import std`, which CMake only supports behind an experimental gate.
+    `import std`, which puts the `std` module in every test translation unit — and GCC 16 then
+    collides with the standard headers the test file includes. CMake's experimental gate is not
+    the obstacle: upstream ships the `import std` gate UUIDs itself.
 
 ## Without vcpkg
 

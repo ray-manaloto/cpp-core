@@ -67,6 +67,58 @@ violation would be the project's own fault.
 
 **The fix:** reword both comments. A comment-only change; no compile needed to know it is right.
 
+**Also:** the same claim is in the root `README.md` - at the top ("The logging module's interface is
+deliberately free of the standard library, because a module's global module fragment is copied into
+every translation unit that imports it") and in the Logging section ("A module's global module
+fragment is copied into every translation unit that imports it, so a standard header that the
+interface depends on ends up next to the standard headers of any translation unit that includes
+them"). **The README was corrected** when part 13 was written; the two source comments are still
+to do, because they are source changes and the build lane is parked.
+
+### DEF-4 - the two logging paths do not share a format-string dialect
+
+**The same format string produces different output depending on which path it goes through.** This
+is new in part 13, and it is the most user-visible thing in this list.
+
+| Call | The module path | The catalog path |
+|---|---|---|
+| `info("{:>06}", 42)` | "000042" | "    42" |
+| `info("{}", 1234567.0)` | "1.23457e+06" | "1234567" |
+
+The module path formats with the module's own scanner (`modules/logging/format.hpp`); the catalog
+path formats with quill's bundled fmt, which implements the C++26 format-spec grammar and checks it
+against the argument's type. Part 13 lists fifteen differences (D1-D15), of which these two are the
+most consequential: the module's `0`-padding ignores the standard's "no zero padding when an
+alignment is given" rule, and its default floating-point presentation is `%g` - six significant
+digits - where the standard's is the shortest round-trip.
+
+**The fix has three parts, and only one of them is small:**
+
+1. the float default, in the implementation translation unit - this is **DEF-2** and step 5 of the
+   plan (fmt in `format_double`);
+2. the format-specification validation, in the module interface - this is **DEF-5**;
+3. the dialect itself, which cannot be made identical while the module formats inside its own
+   interface - this is **FMT-14**.
+
+**The test it needs:** a differential test that formats the same values through both paths and
+compares them. Part 13's D-table is the checklist.
+
+### DEF-5 - the module never validates the format specification
+
+**A format specification that `std::format` and fmt reject at compile time is accepted here, and
+silently ignored at run time.** `scan_format` (`format.hpp:220-281`) scans the specification only to
+find its end (`format.hpp:244-250`), and `parse_spec` (`format.hpp:477-514`) takes *any* trailing
+character as the type character (`format.hpp:509-513`). So `info("{:s}", 42)` compiles, prints "42",
+and tells the reader nothing.
+
+**The fix:** the check would have to move from `format_matches<arg_count>` (`format.hpp:284-294`),
+which knows only the *number* of arguments, into `format_string`'s constructor
+(`logging.cppm:66-76`), which knows their *types*. That is a real piece of work - the scanner would
+have to become a parser that is told the argument's type - and it is **FMT-14**'s option (b).
+
+**The test it needs:** the negative compile-time cases - `{:s}` on an `int`, `{:d}` on a `double`,
+`{:d.3}` on an `int`, `{:0}` on a string - each of which must stop compiling.
+
 ## 2. fmt and `constexpr` (FMT)
 
 From [constexpr-and-fmt.md](constexpr-and-fmt.md) section 4.
@@ -86,6 +138,7 @@ From [constexpr-and-fmt.md](constexpr-and-fmt.md) section 4.
 | FMT-11 | Does the catalog tooling's `nm` scan still find the same undefined `catalog<>` / `module<>` symbols if the cib tag string is built with `fmt::format`? The tags are runtime data, not types, so it should not matter | a run - **also MAC-2** |
 | FMT-12 | Does `fmt::runtime` exist in fmt 12.2.1's public API under that name, and is it the right way to format a runtime-built specification in `format_double`? | reading the header, plus a compile |
 | FMT-13 | What are the **authoritative** feature-test macro values on each toolchain? Part 11 reports *declaration* and the set of values each macro is declared with, because both libraries define their macros inside per-standard-version branches and a text scan cannot pick the right one. The authoritative answer needs the preprocessor - one `#include <version>` and a `static_assert` per macro | a compile |
+| FMT-14 | **The module path's format-string dialect: document it, validate it, or move it?** Part 13 shows the module path and the catalog path do not share a dialect, and that the difference is structural - fmt cannot enter the module interface, so the module's own dialect stays as long as the module formats inside its own interface. Option (a): document the differences (D1-D15) and stop. Option (b): validate the specification against the argument's type, the way `std::format` and fmt do - the check moves into `format_string`'s constructor, which knows the types (`logging.cppm:66-76`). Option (c): move the formatting out of the module interface - the plan's last step, which needs QUIL-1. **This is an owner decision** | an owner decision |
 
 ## 3. quill's runtime formatting (QUIL)
 
@@ -101,6 +154,7 @@ From [quill-runtime-formatting.md](quill-runtime-formatting.md).
 | QUIL-6 | Will the compiler accept a `char const[N]` with no terminator at the `consteval format_string` boundary (`logging.cppm:67`)? If it will, option (b) introduces an out-of-bounds read in quill's `safe_strnlen` that is impossible today, and the consteval check would have to require `text[N-1] == '\0'` | a compile |
 | QUIL-7 | Does a message over 2047 bytes behave acceptably on the default `UnboundedBlocking` queue, and would a bounded queue throw `QuillError` (`Logger.h:871-882`) where the message is silently truncated today? | a run |
 | QUIL-8 | `emit()` hard-codes `<true>` for the immediate-flush template parameter (`quill_logger.cpp:117`). Should the module path flush on every message, or match quill's macro-free default? That is a throughput decision | a measurement, not a guess |
+| QUIL-9 | **The public `flush()` needs quill's static-destructor caveat, or a safe implementation.** `flush_log()` "blocks the calling thread until all log messages up to the current timestamp are flushed" (`quill/Logger.h:604`) and carries the warning "Do not call this function from the destructor of a static object. This may lead to application crashes if the thread-local ThreadContext is destroyed before the static object invoking `flush_log`" (`Logger.h:613`). The project's `com::rsm::logging::flush()` (`logging.cppm:89`) says nothing about it, and a consumer cannot see quill's warning. There is **no bug today** - the project's own `main()` calls it from `main` (`src/main.cpp:15`) - but the constraint has to be documented, or `flush()` has to be made safe | an owner decision, then an edit |
 
 ## 4. The tooling (TOOL)
 
@@ -144,6 +198,12 @@ From [import-std.md](import-std.md).
 | MOD-7 | Does CMake's dependency scanning handle `#if` around `import std;` in `logging.cppm`? | a run |
 | MOD-8 | Do quill's, cib's and ut's headers compile in a translation unit that imports `std` on clang-p2996? libc++ documents include-after-import failures | a compile |
 | MOD-9 | Does the catalog's `nm` scan still find the same undefined `catalog<>` / `module<>` symbols when the importers use `import std;`? | a run |
+
+**One question this section has already answered:** *should the test framework's module variant be
+used?* **No** - it is reachable (upstream ships the `import std` gate table, and its CMake 4.4 UUID
+is the one this project already uses) but not usable, because `import ut;` makes the `std` module
+reachable in the test translation unit and GCC 16 then collides with the standard headers the test
+file needs. Part 14 has the evidence; the answer does not depend on MOD-6's outcome.
 
 ## 6. Static reflection (REFL)
 
@@ -251,3 +311,11 @@ These were asked, answered and are recorded so nobody re-derives them.
 | Does the project have CI? | **No** - there is no `.github/` directory and no git remote. `TOOL-16`'s question about a CI image is moot; the gates are local presets until CI exists | part 12 |
 | Does the project set compiler warnings? | **No** - there is not one `-Wall`/`-Wextra`/`-Wpedantic` in the toolchain or in any target. `BUILD-1` is the owner's decision | part 12 |
 | Can another project consume cpp-core? | **Not today** - there is no `install()` call and no export set. `BUILD-2` and `BUILD-3` are the owner's decisions | part 12 |
+| Does the module path share a format-string dialect with the catalog path? | **No** - and the differences are silent. Part 13 lists fifteen of them; the two that matter most are `{:>06}` (the module path gives "000042", fmt gives "    42") and the default float presentation (`%g`, so 1234567.0 prints as "1.23457e+06" where fmt gives "1234567"). This is **DEF-4** | part 13 |
+| Is the module's format specification checked against the argument's type? | **No** - `scan_format` only finds the specification's end and `parse_spec` takes any trailing character as the type, so `{:s}` on an `int` compiles and is silently ignored. This is **DEF-5** | part 13 |
+| Did Intel write a constexpr formatter of its own? | **No** - Intel's `stdx::ct_format` is fmt's compile-time API: `STDX_FMT_COMPILE` is `FMT_COMPILE` (`stdx/detail/fmt.hpp:14`), and `perform_format` is a `consteval` that calls `fmt::format_to` into a fixed-size `ct_string` (`stdx/ct_format.hpp:326-331`). Intel's *own* hand-rolled formatter is the freestanding one, and it `static_assert`s what it does not support. **The fmt decision is corroborated independently** | part 14; `upstream/stdx/` |
+| Should the test framework's module variant be used? | **No** - it is *reachable* (upstream ships the `import std` gate table, and its CMake 4.4 UUID is the one this project already uses) but not *usable*: `import ut;` makes the `std` module reachable in the test translation unit, and GCC 16 then collides with every textual standard include - and `tests/logging_test.cpp` needs `<cstdio>`, `<string>` and `<unistd.h>` | part 14; `upstream/ut/` |
+| Is the logger's lifetime sound? | **Yes**, with one hazard in the public API: the backend is stopped at exit through quill's own `atexit` handler, the level threshold is atomic, and the project's level round-trip is exact. The hazard is `flush()`, which quill says must not be called from a static object's destructor (`quill/Logger.h:613`) and which the project's public API does not mention - **QUIL-9** | part 14 |
+| Is DEF-1 a data race? | **No** - the threshold is atomic (`quill/core/LoggerBase.h:224`) and correct; the module path simply never asks. The *sink* threshold (default `TraceL3`) is what filters, so everything is written. It is a policy defect, not a race | part 14 |
+| Is fmt's constexpr support still pending? | **No** - fmt#3403 was **closed as completed** on 2023-06-17, and the installed 12.2.1 has it. The remaining blocker is the standard libraries' (llvm#171292, still open; and LWG4531, which settled the macro values at Brno in June 2026) | part 14 |
+| Where does the module path format its message? | **On the calling thread**, and then it is copied into a `std::string` - so each module-path message costs one heap allocation on the calling thread (`logging.cppm:112-114`, `quill_logger.cpp:118`). The catalog path queues the arguments and formats on the backend thread. The root README's "What the two paths share → Threading" said only the second | part 13; part 14 |

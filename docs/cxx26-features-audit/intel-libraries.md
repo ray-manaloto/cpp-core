@@ -350,7 +350,7 @@ A function template cannot capture `__FILE__` and `__LINE__` from the call site 
 | **printf-style formatter** (`format_message`, `format_value`, `format_integer`, `format_double`, `parse_spec`, `scan_format`, `message_buffer`) | Full `std::format`-like runtime formatting with `{}` replacements, format specs (`{:>10}`, `{:x}`, `{:.2f}`), fixed 2048-byte stack buffer | `stdx::ct_format` is **compile-time only** — it produces a `format_result` with folded compile-time args and a tuple of runtime args. It does **not** do runtime formatting. `log_fmt/logger.hpp` delegates to `fmt::format_to` at runtime. | ❌ **Cannot replace**. The project's formatter is a *runtime* formatter. `stdx::ct_format` solves a different problem (compile-time folding). The project would still need a runtime formatter (or use `fmt`/`std::format` directly). |
 | **Fixed-capacity message buffer** (`message_buffer` with 2048-byte stack array) | Stack-allocated buffer with `append`, `append_padded`, overflow protection | `stdx::span` + `stdx::array` could *implement* this, but no ready-made "fixed stack buffer with padding" type exists. `stdx::cx_vector` is compile-time only. | ⚠️ **Partial**. Could rebuild `message_buffer` using `stdx::array` + `stdx::span`, but no drop-in replacement. |
 | **Quill level mapping** (`to_quill_level` in `cib_quill.hpp`) | Maps `logging::level` (MIPI Sys-T: MAX=0...TRACE=7) → `quill::LogLevel` (TraceL3...TraceL2) | No equivalent. This is project-specific. | ❌ **Cannot replace**. |
-| **Float formatter** (`format_double` in `internal.hpp` / `quill_logger.cpp`) | Formats `double` with `type` (`f`/`e`/`g`) and `precision` into buffer | `stdx::ct_format` does **not** support runtime float formatting. `fmt`/`std::format` does, but that's external. | ❌ **Cannot replace**. |
+| **Float formatter** (`format_double` in `src/logging/quill_logger.cpp:121-167`) | Formats `double` with `type` (`f`/`e`/`g`) and `precision` into buffer | `stdx::ct_format` does **not** support runtime float formatting. `fmt`/`std::format` does, but that's external. | ❌ **Cannot replace**. (Read in full since this table was written - see section 7.) |
 
 ### What *Could* Be Adopted from Intel Libraries
 
@@ -411,7 +411,8 @@ The BSL-1.0 is permissive (similar to MIT/BSD) and allows commercial use, modifi
 | `intel-cib` flow/interrupt/msg/nexus/seq/lookup/match internals | Not analyzed — outside logging scope. |
 | `async` schedulers (`runloop_scheduler`, `thread_scheduler`, etc.) | Headers listed but **not read** — assumed to implement P2300 scheduler concepts. |
 | `log_binary/catalog/builder.hpp`, `mipi_builder.hpp`, `writer.hpp`, `arguments.hpp`, `mipi_messages.hpp` | Not read — encoder uses them but exact API not verified. |
-| Project's `format_double` implementation | Only declaration seen in `internal.hpp`; definition in `quill_logger.cpp` (not read). |
+| Project's `format_double` implementation | **Now read** (2026-11-12): the declaration is `include/cpp-core/logging/internal.hpp:52-53`, the definition is `src/logging/quill_logger.cpp:121-167`. It uses `std::snprintf` with `%f`, `%e`, `%E`, `%g` and `%G`, and treats `'f'` and the default alike (`quill_logger.cpp:130-137`). The verdict in section 5 stands, and the float default is **DEF-2** |
+| `stdx::ct_format`'s implementation | **Now read** (2026-11-12): it is fmt's compile-time API - `STDX_FMT_COMPILE` is `FMT_COMPILE` (`stdx/detail/fmt.hpp:14`) and `perform_format` is a `consteval` that calls `fmt::format_to` into a fixed-size `ct_string` (`stdx/ct_format.hpp:326-331`). See [remaining-research.md](remaining-research.md) section 1 |
 | `conc::atomic.hpp`, `conc::concepts.hpp` | Not read. |
 
 ---

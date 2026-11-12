@@ -35,7 +35,7 @@ possible**. What remains is the implementation, which is parked.
     shims fail with "No version is set" - it has to be found by path or a project `.mise.toml`
     added and trusted); `gcov-16` in `/opt/homebrew/opt/gcc/bin`; no `lcov`/`genhtml`.
 - `.editorconfig` made to agree with the formatter: `2ef42de`.
-- The features audit, in twelve parts: `3d7e865`, `15be31c`, `0e414de`, plus the parts written since
+- The features audit, in fourteen parts: `3d7e865`, `15be31c`, `0e414de`, plus the parts written since
   (reflection, macro reduction, fmt and `constexpr`, the consolidated open-items list).
 - The SDLC subagent role definitions: `22b6a65`.
 
@@ -57,6 +57,12 @@ possible**. What remains is the implementation, which is parked.
 | 10 | [open-items.md](docs/cxx26-features-audit/open-items.md) | **every open question, defect and to-do, in one list** |
 | 11 | [cxx26-library-availability.md](docs/cxx26-features-audit/cxx26-library-availability.md) | the verified C++26 library sweep against both toolchains' headers |
 | 12 | [build-and-dependencies.md](docs/cxx26-features-audit/build-and-dependencies.md) | the vcpkg overlays, the triplets and the CMake - the build as a subject |
+| 13 | [format-dialect.md](docs/cxx26-features-audit/format-dialect.md) | the module path's format strings against the C++26 grammar and fmt's - and the two paths' disagreement |
+| 14 | [remaining-research.md](docs/cxx26-features-audit/remaining-research.md) | the four questions that needed no compile: Intel's `stdx`, the logger's lifetime, `ut`'s module, the upstream watch |
+
+The upstream sources those parts quote are vendored under
+[`docs/cxx26-features-audit/upstream/`](docs/cxx26-features-audit/upstream/README.md), so the review
+can be done offline.
 
 ### The decisions the owner added, and what they mean
 
@@ -186,12 +192,12 @@ When the build lane reopens:
 ## The open items, in one place
 
 **[docs/cxx26-features-audit/open-items.md](docs/cxx26-features-audit/open-items.md)** has all of
-them: 3 defects, 13 fmt/`constexpr` questions, 8 quill questions, 16 tooling questions, 9
+them: 5 defects, 14 fmt/`constexpr` questions, 9 quill questions, 16 tooling questions, 9
 `import std;` questions, 4 reflection questions, 3 macro questions, 10 coverage to-dos, 6 build
 questions and 2 dependency-tree questions - each with what settles it, plus a table of the
 questions that are **not** open because they have already been answered.
 
-## What the last two parts changed
+## What parts 11 and 12 changed
 
 **Part 11 - the standard library, verified.** A sweep of the C++26 library facilities against the
 two trees the project's own compilers use (libstdc++ 16 at
@@ -236,6 +242,61 @@ change the plan:
   and `TOOL-16`'s question about a CI image is moot (`BUILD-5`).
 - **The catalog IDs may not be stable across compilers** - `gen_str_catalog` derives them from
   `nm`, whose output depends on the compiler's mangling (`BUILD-6`).
+
+## What parts 13 and 14 changed
+
+**Part 13 - the format-string dialect.** The project runs **two** format-string dialects at once,
+and they do not agree. The module path uses the module's own scanner; the catalog path uses quill's
+bundled fmt, which implements the C++26 format-spec grammar and checks it against the argument's
+type. Part 13 compares the three grammars - the standard's, fmt's and the module's - and lists
+fifteen differences (D1-D15). Two of them change output today:
+
+- `info("{:>06}", 42)` gives **"000042"** on the module path and **"    42"** on the catalog path
+  (the standard says the `0` is ignored when an alignment is given; fmt says so in a comment, and
+  the module does not);
+- `info("{}", 1234567.0)` gives **"1.23457e+06"** on the module path and **"1234567"** on the
+  catalog path - the module's default is `%g`, six significant digits, where the standard's is the
+  shortest round-trip. **This is DEF-2 seen from the other side: the default is wrong too, and the
+  default is what every unadorned `{}` uses.** (Step 5 of the plan fixes this one in both paths,
+  because the module's float formatting already happens in the implementation TU, in
+  `format_double`.)
+
+And one of them is not a formatting difference at all: **the module never validates the format
+specification** (`scan_format` only finds its end, `parse_spec` takes any character as the type), so
+`info("{:s}", 42)` compiles and is silently ignored, where `std::format` and fmt reject it at
+compile time. That is **DEF-5**, and fixing it means moving the check from `format_matches<arg_count>`
+(which knows only the argument *count*) into `format_string`'s constructor (which knows their
+*types*).
+
+**The dialect difference is structural**, not a bug in one place: fmt cannot enter the module
+interface, so the module's own dialect stays as long as the module formats inside its own interface.
+Making the two paths agree means moving the formatting out of the module interface - the plan's last
+step. So the decision is **FMT-14**: document the dialect, validate the specification, or move the
+formatting.
+
+**Part 14 - the four questions that needed no compile.**
+
+- **Intel's `stdx` is fmt-based.** `STDX_FMT_COMPILE` *is* `FMT_COMPILE`, and `stdx::ct_format`'s
+  `perform_format` is a `consteval` that calls `fmt::format_to` into a fixed-size `ct_string`.
+  **Intel did not write a constexpr formatter - they used fmt's one**, which independently
+  corroborates the fmt decision. (Intel's *own* hand-rolled one is the freestanding mini-formatter,
+  and it `static_assert`s what it does not support - the opposite of the module's scanner.)
+- **The logger's lifetime is sound**, with one hazard in the public API: quill says `flush_log()`
+  must not be called from a static object's destructor (`quill/Logger.h:613`), and the project's
+  public `flush()` does not say so (**QUIL-9**). The backend is stopped at exit through quill's own
+  `atexit` handler, the level threshold is atomic, and the project's level round-trip is exact.
+- **`ut`'s module variant is reachable and still not usable.** Upstream ships the `import std`
+  gate table, and its CMake 4.4 UUID is the one this project already uses - so CMake was never the
+  obstacle. But `import ut;` puts the `std` module in the test translation unit, and GCC 16 then
+  collides with the standard headers `tests/logging_test.cpp` needs.
+- **The upstream watch:** fmt#3403 is **closed as completed** (2023-06-17) - the fmt side of the
+  watch list is resolved; llvm#171292 is still open, and LWG4531 (WP, Brno June 2026) has settled
+  the macro values; llvm#63939 and #62258 have not moved.
+
+**The root README was corrected** in the same commit: the global-module-fragment rationale (the
+observed failure mode, not the standard's rule), the "the two paths share the same threading"
+claim (only the catalog path formats on the backend thread), the `ut` port's reason, and a pointer
+to the audit.
 
 ## State of the working tree
 

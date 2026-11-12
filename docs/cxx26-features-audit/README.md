@@ -1,6 +1,6 @@
 # The C++26 and third-party features audit
 
-**Date:** 2026-11-11
+**Date:** 2026-11-11, updated through 2026-11-12
 **Status:** research. Nothing in this directory is applied to the build; it is the evidence and the
 recommendations for the three questions the owner asked:
 
@@ -25,8 +25,13 @@ recommendations for the three questions the owner asked:
 | 10 | [open-items.md](open-items.md) | **every open question, defect and to-do, in one list** |
 | 11 | [cxx26-library-availability.md](cxx26-library-availability.md) | the verified C++26 library sweep against both toolchains' headers |
 | 12 | [build-and-dependencies.md](build-and-dependencies.md) | the vcpkg overlays, the triplets and the CMake - the build as a subject |
+| 13 | [format-dialect.md](format-dialect.md) | the module path's format strings against the C++26 grammar and fmt's - and the two paths' disagreement |
+| 14 | [remaining-research.md](remaining-research.md) | the four questions that needed no compile: Intel's `stdx`, the logger's lifetime, `ut`'s module, the upstream watch |
+| - | [upstream/](upstream/) | the upstream sources these parts quote, vendored so the review can be done offline |
 
-## The defect this audit found
+## The defects this audit found
+
+There are five now. The first is the important one.
 
 **`set_level()` does not filter anything on the module path.** A message logged below the
 configured level is still emitted.
@@ -53,6 +58,15 @@ The test suite cannot catch this: it sets the level and reads it back, but never
 message *below* the threshold is suppressed. That assertion belongs in the coverage work.
 
 **This is a bug, not a trade-off, and it should be fixed whatever else happens.**
+
+The other four, in the order they were found:
+
+| # | The defect | Why it matters | Part |
+|---|---|---|---|
+| **DEF-2** | `format_double` treats `'f'` and the default alike and uses `%g`, so `{:f}` gives "3.5" where `std::format` gives "3.500000" | the float format is wrong in the one case everybody writes | 8 |
+| **DEF-3** | the repository's comments (and the root README) say a module's global module fragment "is copied into every importing translation unit" | that is the observed failure mode, not the standard's rule ([module.global.frag]/1, [std.modules]/4-5). The GCC failures are implementation deficiencies | 4 |
+| **DEF-4** | **the two logging paths do not share a format-string dialect**, and the differences are silent: `info("{:>06}", 42)` gives "000042" on the module path and "    42" on the catalog path | the same project, the same format string, two answers | 13 |
+| **DEF-5** | the module never validates the format specification against the argument's type, so `info("{:s}", 42)` compiles and is silently ignored | a format string that `std::format` and fmt reject is accepted here | 13 |
 
 
 ## The verdict in one paragraph
@@ -123,7 +137,7 @@ therefore:
 | 2 | `convertible_to` concept | `format.hpp:110-113` | `std::convertible_to` | same as #1 | same |
 | 3 | `forward` | `format.hpp:129-136` | `std::forward` | same as #1 | same |
 | 4 | `message_buffer` (2048-byte stack buffer) | `format.hpp:158-210` | `std::inplace_vector<char, 2048>` | **defer** | `std::inplace_vector` is C++26 but exists in **libstdc++ only**; libc++ 21 has no `<inplace_vector>` **at all**, not merely a missing macro. Two compilers must keep working. Part 11 confirms it |
-| 5 | `scan_format` + `format_matches` (the consteval format-string scanner) | `format.hpp:217-298` | `stdx::ct_format` / `stdx::ct_string` (Intel), or `std::format_string<Args...>` | **keep the hand-rolled scanner** | Intel's `stdx` is ruled out: `stdx/ct_string.hpp:8-14` includes seven standard headers and `stdx/ct_format.hpp` adds `<algorithm>`, fmt and Boost.MP11 - none of which may enter the module interface (part 6). `std::format_string<Args...>` would work, but only if the module may reach the standard library, and it is not `constexpr`-usable at runtime yet in either implementation (see the `std::format` row below) |
+| 5 | `scan_format` + `format_matches` (the consteval format-string scanner) | `format.hpp:217-298` | `stdx::ct_format` / `stdx::ct_string` (Intel), or `std::format_string<Args...>` | **keep the hand-rolled scanner** | Intel's `stdx` is ruled out: `stdx/ct_string.hpp:8-14` includes seven standard headers and `stdx/ct_format.hpp` adds `<algorithm>`, fmt and Boost.MP11 - none of which may enter the module interface (part 6). And Intel's own compile-time formatter **is** fmt's (`STDX_FMT_COMPILE` is `FMT_COMPILE`, `stdx/detail/fmt.hpp:14`), so there is no second implementation to borrow (part 14). `std::format_string<Args...>` would work, but only if the module may reach the standard library, and it is not `constexpr`-usable at runtime yet in either implementation (see the `std::format` row below) |
 | 6 | `format_integer` | `format.hpp:333-426` | `std::to_chars` | **replace if the module may use the standard library** | the hand-rolled version is 94 lines of base/sign/prefix/zero-padding logic |
 | 7 | `format_value` (the per-type dispatch) | `format.hpp:428-468` | `std::formatter<T>` / `fmt::formatter<T>` | **replace if the module may use the standard library** | the hand-rolled version is a closed set of `if constexpr` branches; the standard has an extensible `formatter` specialisation point |
 | 8 | `parse_spec` (the runtime format-spec parser) | `format.hpp:481-519` | `std::format_to` / `fmt::format_to` | **replace if the module may use the standard library** | 39 lines re-implementing `[[fill]align][sign][#][0][width][.prec][type]` |
@@ -227,9 +241,9 @@ In summary, and all of it needs a compile, a run, or an owner decision:
 
 | Area | Items | The load-bearing one |
 |---|---|---|
-| **The defects** | 3 | `DEF-1`: `set_level()` filters nothing on the module path - a bug, three lines at each of two call sites |
-| **fmt and `constexpr`** | 13 | `FMT-4` / `FMT-5`: can `format.hpp` be made `constexpr` wholesale, and does the `static_assert` pattern work? The compiler is the test |
-| **quill's runtime formatting** | 8 | `QUIL-1`: can a `quill::Codec` push three arguments from one pack element? It decides whether the 607-line formatter can shrink |
+| **The defects** | 5 | `DEF-1`: `set_level()` filters nothing on the module path - a bug, three lines at each of two call sites |
+| **fmt and `constexpr`** | 14 | `FMT-4` / `FMT-5`: can `format.hpp` be made `constexpr` wholesale, and does the `static_assert` pattern work? The compiler is the test |
+| **quill's runtime formatting** | 9 | `QUIL-1`: can a `quill::Codec` push three arguments from one pack element? It decides whether the 607-line formatter can shrink |
 | **The tooling** | 16 | `TOOL-6`: does GCC 16 emit arcs for uninstantiated templates and `consteval` bodies? It decides whether the coverage numbers can be trusted at all |
 | **`import std;`** | 9 | `MOD-6`: is the GCC 16 failure an artefact of CMake not building header units, or a merge deficiency? |
 | **Static reflection** | 4 | `REFL-1`: do the two compilers' `members_of` forms compile the same source? |
@@ -248,7 +262,7 @@ The first thing to run when the build lane reopens is in [PARKED.md](../../PARKE
 
 ## The corrections this audit made to itself
 
-Two claims in the first draft of this audit were wrong, and both are load-bearing. They are
+Seven claims in the first draft of this audit were wrong, and they are load-bearing. They are
 recorded here because a document that hides its own corrections is not much use to a reviewer.
 
 **1. "`std::format` is not `constexpr` in C++26 (P2210R2)" - wrong on both counts.** P2210R2 is
@@ -285,6 +299,14 @@ hand-rolled scanner.** It is not: `stdx/ct_string.hpp:8-14` includes seven stand
 `stdx/ct_format.hpp` adds `<algorithm>`, fmt and Boost.MP11, so `stdx` cannot enter the module
 interface at all. See part 6.
 
+**The question was also framed wrongly**, and part 14 fixed that. The question was never "could
+`stdx` replace the scanner?" - it was "what does Intel do for constexpr formatting?", and the
+answer is: **Intel uses fmt's compile-time API.** `STDX_FMT_COMPILE` *is* `FMT_COMPILE`
+(`stdx/detail/fmt.hpp:14`), and `stdx::ct_format`'s `perform_format` is a `consteval` that calls
+`fmt::format_to` into a fixed-size `ct_string` (`stdx/ct_format.hpp:326-331`). Intel did not write
+a constexpr formatter; they used fmt's one. That is **independent corroboration** of the fmt
+decision - the same answer, from a project with a different constraint.
+
 **4. "constexpr `std::string` / `constexpr std::vector`: no - P2278 is not implemented."** The
 verdict stands, but the reason was imprecise. **Both** libraries declare
 `__cpp_lib_constexpr_string` and `__cpp_lib_constexpr_vector` (libc++ 21 at 201907L for both;
@@ -314,6 +336,32 @@ corrects:
 The verified result: **22 facilities are declared in both libraries, 9 in libstdc++ only, 0 in
 libc++ only, and 5 in neither** - `std::simd`, `std::linalg`, constexpr `std::format`,
 `std::containers` and `std::from_chars` for floating point. Part 11.
+
+**6. "The formatting follows the shape of `std::format`"** - that is `modules/logging/format.hpp`'s
+own comment (lines 8-10), and it is true of the *structure* and misleading about the
+*specification*. The module implements the brace structure faithfully - the escapes, the automatic
+and manual indexing, the rule that they may not be mixed, the alignment defaults, the centring -
+but it implements the format specification loosely and **never validates it**: `scan_format` only
+finds the specification's end (`format.hpp:244-250`), and `parse_spec` takes any trailing character
+as the type (`format.hpp:509-513`). So `info("{:s}", 42)` compiles, and prints "42".
+
+Part 13 lists the fifteen differences from the C++26 grammar, and the one that is not a formatting
+difference at all is **D1**: the standard says a format string whose specification does not fit the
+argument's type "is not a format string for args" ([format.string.general]/5), so `std::format` and
+fmt reject it at compile time. The module accepts it. That is **DEF-5**.
+
+**7. "The two paths share the same threading behaviour."** The root README's "What the two paths
+share" section lists *call site fidelity*, *levels*, *modules*, *threading* and *ODR*, and says:
+
+> **Threading:** quill formats on its backend thread, so runtime arguments are queued rather than
+> formatted on the calling thread.
+
+That is true of the **catalog path** and false of the **module path**. The module path formats the
+message on the **calling** thread (`logging.cppm:112-114` builds it in a stack buffer) and then
+copies it into a `std::string` (`quill_logger.cpp:118`), so **each module-path message costs one
+heap allocation on the calling thread**. The catalog path queues the *arguments* and lets the
+backend format them. The two paths have different performance profiles as well as different
+format-string dialects. Part 13; the README was corrected.
 
 ## The method
 
