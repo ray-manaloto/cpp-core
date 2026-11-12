@@ -407,6 +407,11 @@ These need a compile, and they are the first thing to run when the build lane re
 12. **Does `fmt::runtime` exist in fmt 12.2.1's public API** under that name, and is it the right
     way to format a runtime-built specification in `format_double`?
 
+**These twelve are the ones this part raised. The canonical list is
+[open-items.md](open-items.md) (part 10), which numbers them `FMT-1` to `FMT-12` and has since
+grown a thirteenth - `FMT-13`, the authoritative feature-test macro values on each toolchain,
+added by part 11.**
+
 ## 5. The recommendation, in one paragraph
 
 **Adopt fmt as the project's formatting library, and declare it in `vcpkg.json`; use it in the

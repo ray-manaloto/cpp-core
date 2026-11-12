@@ -11,7 +11,10 @@ itself is in [README.md](README.md) and [PARKED.md](../../PARKED.md).
 Two kinds of item are mixed here on purpose:
 
 - **issues** - something is wrong today and should be fixed (section 1);
-- **open questions** - something is not known yet and needs a measurement (sections 2 to 8).
+- **open questions** - something is not known yet and needs a measurement (sections 2 to 11).
+
+Section 12 is the other way round: the questions that have **already** been answered, recorded so
+that nobody re-derives them.
 
 ## 1. The issues - known defects, to fix
 
@@ -82,6 +85,7 @@ From [constexpr-and-fmt.md](constexpr-and-fmt.md) section 4.
 | FMT-10 | Does `std::source_location::current()` in a default argument on `quill_config::logger::log` return the **caller's** location, given that the call goes through the `logging::log<Env>` template? It may be the reason the CIB macro cannot be dropped | a compile - **also MAC-1** |
 | FMT-11 | Does the catalog tooling's `nm` scan still find the same undefined `catalog<>` / `module<>` symbols if the cib tag string is built with `fmt::format`? The tags are runtime data, not types, so it should not matter | a run - **also MAC-2** |
 | FMT-12 | Does `fmt::runtime` exist in fmt 12.2.1's public API under that name, and is it the right way to format a runtime-built specification in `format_double`? | reading the header, plus a compile |
+| FMT-13 | What are the **authoritative** feature-test macro values on each toolchain? Part 11 reports *declaration* and the set of values each macro is declared with, because both libraries define their macros inside per-standard-version branches and a text scan cannot pick the right one. The authoritative answer needs the preprocessor - one `#include <version>` and a `static_assert` per macro | a compile |
 
 ## 3. quill's runtime formatting (QUIL)
 
@@ -190,7 +194,30 @@ on **both** compilers, with no test binary and no coverage instrumentation. That
 guarantee than a runtime test, and it is exactly what a 100% coverage target wants: the
 compile-time-only code the coverage report cannot see gets verified instead.
 
-## 9. The environment (ENV)
+## 9. The build system (BUILD)
+
+From [build-and-dependencies.md](build-and-dependencies.md). These are new: the features audit
+never treated the build as a subject.
+
+| # | Question | Settled by |
+|---|---|---|
+| BUILD-1 | **What warning flags should the project use?** There are none today - not `-Wall`, not `-Wextra`, not `-Wpedantic`, not `-Wconversion`, not `-Wshadow`, in the toolchain or per target. That is a gap next to a clang-tidy plan, but adding warnings is a **behavioural** change (new diagnostics on existing code), so it is the owner's call | an owner decision |
+| BUILD-2 | **Should cpp-core be consumable outside this repository?** There is not one `install()` call and no `export()` set in any of the five `CMakeLists.txt` files, so another project cannot `find_package(cpp-core)` and cannot import the module | an owner decision |
+| BUILD-3 | **What is the public header surface?** All three headers in `include/cpp-core/logging/` are published by `target_include_directories(... PUBLIC ...)`, and `quill_logger.hpp` includes `<quill/Logger.h>` - even though its own comment says it is "the implementation's business, not part of the module's public interface". With no install rules there is no install-time boundary either, so "public" is currently an accident | an owner decision, then an implementation |
+| BUILD-4 | **Is `clang23` kept?** The toolchain and `cmake/cpp-core-check.cmake` both accept it, with a full validation branch, but there is **no `clang23` triplet and no `clang23` preset** - so it cannot be reached through the supported path. Yet part 3's clang-tidy design needs Homebrew clang 23 to build a BMI with | an owner decision |
+| BUILD-5 | **Should there be CI?** There is no `.github/` directory and no git remote. The coverage gate, the format check and the clang-tidy check therefore have **no home** until CI exists - they would be local presets. This also makes `TOOL-16` moot | an owner decision |
+| BUILD-6 | **Are the catalog IDs stable across compilers?** `gen_str_catalog` derives them from `nm` output, and `nm` output depends on the compiler's mangling - so the same source may produce different IDs under gcc16 and p2996. If it does, the application and the tests disagree about which ID is which message. **This is a different question from `MAC-2` / `FMT-11`**, which ask whether the *macro* form changes the symbols | a run, and a comparison of the two catalogs |
+
+## 10. The dependency tree (VCPKG)
+
+From [build-and-dependencies.md](build-and-dependencies.md).
+
+| # | Question | Settled by |
+|---|---|---|
+| VCPKG-1 | Does the **upstream** vcpkg `quill` port have an opt-in feature for an external fmt? The *installed* port installs only `quill/bundled/fmt/`, so the two copies of fmt are structural - but the port's `vcpkg.json` at the pinned baseline cannot be read on this machine, because `$VCPKG_ROOT` is the vcpkg *tool* with no `ports` tree and no `.git` | reading the registry at the pinned baseline `245d37306671ea67d8f313081a81aae8079f8916` |
+| VCPKG-2 | Do the five overlay ports **shadow builtin vcpkg ports**? `ports/README.md` warns that a shadowed library stops following the pinned baseline. `ut` is the likely one - it is a popular header-only test library that vcpkg ships - and the overlay pins version 1.2.1 (REF `dc65567be78febd265ca36c324e1c504512d4d74`). The four Intel ports use `version-date`, so they pin a snapshot of a moving target rather than a release | the same registry read |
+
+## 11. The environment (ENV)
 
 | # | Item | Settled by |
 |---|---|---|
@@ -198,7 +225,7 @@ compile-time-only code the coverage report cannot see gets verified instead.
 | ENV-2 | `build/coverage-clang/` - an abandoned experiment. The raw-profile version mismatch (clang v10 against `llvm-profdata` 23.1.5's v11) makes it unusable; it can be deleted | an owner decision |
 | ENV-3 | `ZAI_API_KEY` for the `zai-coding-plan` provider: the two saved `Z.AI` accounts in `opencode auth list` belong to the `zai` integration, not to `zai-coding-plan`, so they do not satisfy it. Either `opencode service set env ZAI_API_KEY <key>` (stops and restarts the background service) or `opencode auth login zai-coding-plan` (a saved account, no restart). The local `opencode.json` registers only `glm-4.7` for that provider; `glm-5.3` and `glm-5.3-flash` are in the catalog and would have to be added | an owner decision |
 
-## 10. What is *not* an open question
+## 12. What is *not* an open question
 
 These were asked, answered and are recorded so nobody re-derives them.
 
@@ -215,3 +242,12 @@ These were asked, answered and are recorded so nobody re-derives them.
 | Should the `CIB_*` macros stay? | **Yes** - the mechanism underneath is already macro-free, and every macro has a macro-free equivalent, but each costs verbosity at the call site and buys nothing the project does not already have. Four invocations, all in `src/app.cpp` | [macro-reduction.md](macro-reduction.md) |
 | Can clang-tidy check the module interface unit? | **No** - the co_compile invocations are unconsumable (llvm#62258) and the module's binary is locked to the clang that built it (llvm#63939). Check the non-module translation units only | the llvm issues |
 | Which coverage route works here? | **GCC 16 + `gcov-16 --json-format` + a stdlib-only Python gate.** Clang's raw profile is v10 and `llvm-profdata` 23.1.5 wants v11; `gcovr` is broken on this machine; `lcov` and `genhtml` are absent | [tooling-design.md](tooling-design.md) |
+| Is `std::inplace_vector` available on libc++ 21? | **No** - there is no `<inplace_vector>` at all, not merely a missing macro. The deferral in the audit's table stands. (A naive grep of libc++'s `<version>` says otherwise, because the file opens with a synopsis block that lists unimplemented features) | part 11 |
+| Is `std::from_chars` for floating point an option? | **No** - neither library declares `__cpp_lib_from_chars`. `to_chars` for floats *is* available in both (libc++ has the overloads but did not bump its macro) | part 11 |
+| Is `std::execution` (P2300) in libstdc++? | **No** - libstdc++'s `__cpp_lib_execution 201902L` is C++17's P0443 (parallel algorithms), and its `<execution>` contains no senders at all | part 11 |
+| Is `std::simd` usable? | **No** - libstdc++ 16 ships a `<simd>` with no `std::simd` class in it; libc++ 21 has no `<simd>` | part 11 |
+| Does declaring `"fmt"` in `vcpkg.json` cost anything? | **No** - fmt 12.2.1 is already installed, because `intel-cpp-std-extensions` depends on it. It is a one-line manifest change with no download and no port rebuild | part 12 |
+| Are the two copies of fmt avoidable? | **No** - the vcpkg `quill` port installs only `quill/bundled/fmt/`, so quill's `fmtquill` and the standalone `fmt` coexist whatever the project does. The rule stands: custom formatters are written for `fmt` only | part 12 |
+| Does the project have CI? | **No** - there is no `.github/` directory and no git remote. `TOOL-16`'s question about a CI image is moot; the gates are local presets until CI exists | part 12 |
+| Does the project set compiler warnings? | **No** - there is not one `-Wall`/`-Wextra`/`-Wpedantic` in the toolchain or in any target. `BUILD-1` is the owner's decision | part 12 |
+| Can another project consume cpp-core? | **Not today** - there is no `install()` call and no export set. `BUILD-2` and `BUILD-3` are the owner's decisions | part 12 |

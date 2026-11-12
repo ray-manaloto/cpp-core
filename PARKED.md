@@ -35,7 +35,7 @@ possible**. What remains is the implementation, which is parked.
     shims fail with "No version is set" - it has to be found by path or a project `.mise.toml`
     added and trusted); `gcov-16` in `/opt/homebrew/opt/gcc/bin`; no `lcov`/`genhtml`.
 - `.editorconfig` made to agree with the formatter: `2ef42de`.
-- The features audit, in ten parts: `3d7e865`, `15be31c`, `0e414de`, plus the parts written since
+- The features audit, in twelve parts: `3d7e865`, `15be31c`, `0e414de`, plus the parts written since
   (reflection, macro reduction, fmt and `constexpr`, the consolidated open-items list).
 - The SDLC subagent role definitions: `22b6a65`.
 
@@ -55,6 +55,8 @@ possible**. What remains is the implementation, which is parked.
 | 8 | [quill-runtime-formatting.md](docs/cxx26-features-audit/quill-runtime-formatting.md) | quill's runtime formatting, the type-erasure boundary, and the defect below |
 | 9 | [constexpr-and-fmt.md](docs/cxx26-features-audit/constexpr-and-fmt.md) | fmt over `std::format`, and the `constexpr` inventory |
 | 10 | [open-items.md](docs/cxx26-features-audit/open-items.md) | **every open question, defect and to-do, in one list** |
+| 11 | [cxx26-library-availability.md](docs/cxx26-features-audit/cxx26-library-availability.md) | the verified C++26 library sweep against both toolchains' headers |
+| 12 | [build-and-dependencies.md](docs/cxx26-features-audit/build-and-dependencies.md) | the vcpkg overlays, the triplets and the CMake - the build as a subject |
 
 ### The decisions the owner added, and what they mean
 
@@ -148,7 +150,8 @@ When the build lane reopens:
    emitted". Three lines in each of the two call sites; the test would fail until it is fixed.
 2. **Add `"fmt"` to `vcpkg.json`** as a direct dependency. It is currently transitive only, through
    `intel-cpp-std-extensions`, and quill bundles its own copy under `quill/bundled/fmt` in the
-   namespace `fmtquill`. One line.
+   namespace `fmtquill`. One line - and **free**: fmt 12.2.1 is already installed, so this is a
+   manifest change with no download, no version change and no port rebuild (part 12).
 3. **Mark the fifteen `format.hpp` functions `constexpr`.** About fifteen keywords, no signature
    change, no behaviour change. The compiler is the test.
 4. **Add the `static_assert` formatter tests.** A new file (or a block in the existing test file);
@@ -183,10 +186,56 @@ When the build lane reopens:
 ## The open items, in one place
 
 **[docs/cxx26-features-audit/open-items.md](docs/cxx26-features-audit/open-items.md)** has all of
-them: 3 defects, 12 fmt/`constexpr` questions, 8 quill questions, 16 tooling questions, 9
-`import std;` questions, 4 reflection questions, 3 macro questions, 10 coverage to-dos and 3
-environment items - each with what settles it, plus a table of the questions that are **not** open
-because they have already been answered.
+them: 3 defects, 13 fmt/`constexpr` questions, 8 quill questions, 16 tooling questions, 9
+`import std;` questions, 4 reflection questions, 3 macro questions, 10 coverage to-dos, 6 build
+questions and 2 dependency-tree questions - each with what settles it, plus a table of the
+questions that are **not** open because they have already been answered.
+
+## What the last two parts changed
+
+**Part 11 - the standard library, verified.** A sweep of the C++26 library facilities against the
+two trees the project's own compilers use (libstdc++ 16 at
+`/opt/homebrew/Cellar/gcc/16.2.0/include/c++/16`, libc++ 21 in the p2996 toolchain). **22
+facilities are declared in both, 9 in libstdc++ only, 0 in libc++ only, 5 in neither** (`std::simd`,
+`std::linalg`, constexpr `std::format`, `std::containers`, `std::from_chars` for floating point).
+Two corrections to the audit's own table:
+
+- **constexpr `std::string` / `constexpr std::vector`**: the verdict ("no") stands, but the reason
+  was imprecise. Both libraries declare the macros - it is the *partial* constexpr (construct a
+  string, construct and clear a vector), with no constexpr mutation and no constexpr allocation.
+  Neither can build a `std::string` by formatting at compile time, which is what the project wants.
+- **`std::from_chars` for floating point is in neither library.** `to_chars` for floats *is* in
+  both - libc++ 21 has the overloads (`charconv:39-50`) but never bumped `__cpp_lib_to_chars` off
+  the C++17 value, so the macro under-reports it. Neither is `constexpr` (P2291R3 made only the
+  integral overloads so).
+
+Two traps are documented because they are easy to fall into again: libc++'s `<version>` opens with
+a **synopsis block** that lists unimplemented features as if they existed (its `<inplace_vector>`
+entry is commented out at `version:573`), and both libraries define their macros inside
+per-standard-version branches, so "the last `#define` in the file" picks the **oldest** branch.
+
+**Part 12 - the build, which the audit never treated as a subject.** Ten findings, of which these
+change the plan:
+
+- **`fmt` is already installed** - `intel-cpp-std-extensions` depends on it. Step 2 of the plan
+  (adding `"fmt"` to `vcpkg.json`) is a one-line manifest change with **no download and no port
+  rebuild**.
+- **The two copies of fmt are structural.** The vcpkg `quill` port installs only
+  `quill/bundled/fmt/`, so quill's `fmtquill` and the standalone `fmt` coexist whatever the
+  project does. The rule stands: custom formatters are written for `fmt` only.
+- **There are no compiler warning flags at all** - not `-Wall`, not `-Wextra`. That is a gap next
+  to a clang-tidy plan, but adding warnings is a behavioural change, so it is the owner's call
+  (`BUILD-1`).
+- **There are no install or export rules**, and the "public" header surface is an accident:
+  `quill_logger.hpp` is published under `include/` and pulls in `<quill/Logger.h>`, although its
+  own comment calls it implementation-private (`BUILD-2`, `BUILD-3`).
+- **`clang23` is unreachable** - the toolchain and the configure check accept it, but it has no
+  triplet and no preset. Part 3's clang-tidy design needs Homebrew clang 23 to build a BMI with
+  (`BUILD-4`).
+- **There is no CI and no git remote**, so the coverage, format and tidy gates have nowhere to run
+  and `TOOL-16`'s question about a CI image is moot (`BUILD-5`).
+- **The catalog IDs may not be stable across compilers** - `gen_str_catalog` derives them from
+  `nm`, whose output depends on the compiler's mangling (`BUILD-6`).
 
 ## State of the working tree
 

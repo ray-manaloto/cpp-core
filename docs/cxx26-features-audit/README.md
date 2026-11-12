@@ -23,6 +23,8 @@ recommendations for the three questions the owner asked:
 | 8 | [quill-runtime-formatting.md](quill-runtime-formatting.md) | whether quill can format from a runtime format string, the type-erasure boundary, and a live defect |
 | 9 | [constexpr-and-fmt.md](constexpr-and-fmt.md) | fmt over `std::format`, and the per-function `constexpr` / `consteval` inventory |
 | 10 | [open-items.md](open-items.md) | **every open question, defect and to-do, in one list** |
+| 11 | [cxx26-library-availability.md](cxx26-library-availability.md) | the verified C++26 library sweep against both toolchains' headers |
+| 12 | [build-and-dependencies.md](build-and-dependencies.md) | the vcpkg overlays, the triplets and the CMake - the build as a subject |
 
 ## The defect this audit found
 
@@ -120,7 +122,7 @@ therefore:
 | 1 | `is_same`, `remove_cvref_t`, `remove_extent_t`, `is_array`, `is_integral`, `is_floating_point`, `is_signed_v`, `type_identity_t` | `format.hpp:20-107` | `std::remove_cvref_t`, `std::remove_extent_t`, `std::is_array_v`, `std::is_integral_v`, `std::is_floating_point_v`, `std::is_signed_v`, `std::type_identity_t` | **keep the hand-rolled ones unless the module may use the standard library** | they are plain language rules, not reflection's job; the only blocker is the standard-library-free rule, not reflection |
 | 2 | `convertible_to` concept | `format.hpp:110-113` | `std::convertible_to` | same as #1 | same |
 | 3 | `forward` | `format.hpp:129-136` | `std::forward` | same as #1 | same |
-| 4 | `message_buffer` (2048-byte stack buffer) | `format.hpp:158-210` | `std::inplace_vector<char, 2048>` | **defer** | `std::inplace_vector` is C++26 but exists in **libstdc++ only**; libc++ 21 has no `<inplace_vector>`. Two compilers must keep working |
+| 4 | `message_buffer` (2048-byte stack buffer) | `format.hpp:158-210` | `std::inplace_vector<char, 2048>` | **defer** | `std::inplace_vector` is C++26 but exists in **libstdc++ only**; libc++ 21 has no `<inplace_vector>` **at all**, not merely a missing macro. Two compilers must keep working. Part 11 confirms it |
 | 5 | `scan_format` + `format_matches` (the consteval format-string scanner) | `format.hpp:217-298` | `stdx::ct_format` / `stdx::ct_string` (Intel), or `std::format_string<Args...>` | **keep the hand-rolled scanner** | Intel's `stdx` is ruled out: `stdx/ct_string.hpp:8-14` includes seven standard headers and `stdx/ct_format.hpp` adds `<algorithm>`, fmt and Boost.MP11 - none of which may enter the module interface (part 6). `std::format_string<Args...>` would work, but only if the module may reach the standard library, and it is not `constexpr`-usable at runtime yet in either implementation (see the `std::format` row below) |
 | 6 | `format_integer` | `format.hpp:333-426` | `std::to_chars` | **replace if the module may use the standard library** | the hand-rolled version is 94 lines of base/sign/prefix/zero-padding logic |
 | 7 | `format_value` (the per-type dispatch) | `format.hpp:428-468` | `std::formatter<T>` / `fmt::formatter<T>` | **replace if the module may use the standard library** | the hand-rolled version is a closed set of `if constexpr` branches; the standard has an extensible `formatter` specialisation point |
@@ -175,6 +177,11 @@ Verified on both toolchains (GCC 16.2.0 / libstdc++ and clang-p2996 21.0.0git / 
 | `std::source_location` | yes | the canonical call-site capture |
 | `std::format`, `std::vformat`, `std::print`, `std::println` | yes | usable at runtime; **not** `constexpr` in either implementation on this machine. C++26 *does* make them `constexpr` (**P3391R2**, `__cpp_lib_constexpr_format 202511L`), but libstdc++ 16 and libc++ 21 have not implemented it - and neither has constexpr `std::string`. **Not used by this project**: fmt is the project's formatter (part 9) |
 | `fmt::format`, `fmt::compile`, `fmt::format_to_n` | yes - outside the module | fmt 12.2.1; **not** usable inside the module interface. `FMT_STATIC_FORMAT` is `constexpr` and needs no constexpr `std::string` |
+| `std::to_chars` (floating point) | yes | **available in both** - libc++ 21 has the overloads (`charconv:39-50`) but did not bump `__cpp_lib_to_chars` off the C++17 value, so the macro under-reports it. **Not `constexpr`**: P2291R3 made only the integral overloads `constexpr` |
+| `std::from_chars` (floating point) | **no** | neither library declares `__cpp_lib_from_chars`, so a `from_chars`-based float *parser* is not an option either |
+| `std::inplace_vector`, `std::function_ref`, `std::move_only_function`, `std::generator`, `std::text_encoding`, `std::stacktrace`, `std::ranges::zip`, `std::execution` | **GCC only** | libc++ 21 has **none** of them: no `<inplace_vector>` at all, and the rest without their macros. `std::execution` in libstdc++ is C++17's P0443, not C++26's P2300 |
+| `std::simd`, `std::linalg`, `std::containers` (the free functions) | **no** | libstdc++ 16 ships a `<simd>` with no `std::simd` in it; neither library has `<linalg>` or `<containers>` |
+| constexpr `std::string` / constexpr `std::vector` | **partial only** | both declare `__cpp_lib_constexpr_string` / `__cpp_lib_constexpr_vector`: a `std::string` you can *construct* at compile time, and a `std::vector` you can construct and clear. **No** constexpr mutation and **no** constexpr allocation - so neither can build a `std::string` by formatting at compile time. Part 11 |
 | `std::expected`, `std::optional`, `std::ranges` | yes | `constexpr` |
 | `std::to_underlying`, `std::byteswap` | yes | `constexpr` |
 | `constexpr std::string_view` | yes | `constexpr` |
@@ -214,20 +221,22 @@ empty.
 
 **They are all in one place now: [open-items.md](open-items.md)** - part 10. It has every open
 question, every known defect and every to-do, grouped and numbered (`DEF-`, `FMT-`, `QUIL-`,
-`TOOL-`, `MOD-`, `REFL-`, `MAC-`, `COV-`, `ENV-`), each with what settles it.
+`TOOL-`, `MOD-`, `REFL-`, `MAC-`, `COV-`, `BUILD-`, `VCPKG-`, `ENV-`), each with what settles it.
 
 In summary, and all of it needs a compile, a run, or an owner decision:
 
 | Area | Items | The load-bearing one |
 |---|---|---|
 | **The defects** | 3 | `DEF-1`: `set_level()` filters nothing on the module path - a bug, three lines at each of two call sites |
-| **fmt and `constexpr`** | 12 | `FMT-4` / `FMT-5`: can `format.hpp` be made `constexpr` wholesale, and does the `static_assert` pattern work? The compiler is the test |
+| **fmt and `constexpr`** | 13 | `FMT-4` / `FMT-5`: can `format.hpp` be made `constexpr` wholesale, and does the `static_assert` pattern work? The compiler is the test |
 | **quill's runtime formatting** | 8 | `QUIL-1`: can a `quill::Codec` push three arguments from one pack element? It decides whether the 607-line formatter can shrink |
 | **The tooling** | 16 | `TOOL-6`: does GCC 16 emit arcs for uninstantiated templates and `consteval` bodies? It decides whether the coverage numbers can be trusted at all |
 | **`import std;`** | 9 | `MOD-6`: is the GCC 16 failure an artefact of CMake not building header units, or a merge deficiency? |
 | **Static reflection** | 4 | `REFL-1`: do the two compilers' `members_of` forms compile the same source? |
 | **The macros** | 3 | `MAC-1`: does `std::source_location::current()` in a default argument return the *caller's* location through the `logging::log<Env>` template? It may be why the CIB macro cannot be dropped |
 | **Coverage to-dos** | 10 | the uncovered set, branch by branch - and the `constexpr` change removes half of it from the runtime problem |
+| **The build system** | 6 | `BUILD-1`: there are no compiler warning flags at all - not `-Wall`, not `-Wextra`. That is an owner decision, because adding them is a behavioural change |
+| **The dependency tree** | 2 | `VCPKG-2`: do the five overlay ports shadow builtin vcpkg ports? `ut` is the likely one, and a shadowed port stops following the pinned baseline |
 | **The environment** | 3 | `ENV-1`: the two copies of fmt, and the rule that custom formatters are written for `fmt` only |
 
 Two more that were answered in the first draft and are recorded in part 10, section 10: GCC throws
@@ -275,6 +284,36 @@ fixed upstream, whereas a rule violation would be the project's own fault.
 hand-rolled scanner.** It is not: `stdx/ct_string.hpp:8-14` includes seven standard headers and
 `stdx/ct_format.hpp` adds `<algorithm>`, fmt and Boost.MP11, so `stdx` cannot enter the module
 interface at all. See part 6.
+
+**4. "constexpr `std::string` / `constexpr std::vector`: no - P2278 is not implemented."** The
+verdict stands, but the reason was imprecise. **Both** libraries declare
+`__cpp_lib_constexpr_string` and `__cpp_lib_constexpr_vector` (libc++ 21 at 201907L for both;
+libstdc++ 16 at 201611L / 201811L / 201907L depending on the standard branch). What that macro
+denotes is the **partial** constexpr support - a `std::string` you can *construct* at compile time
+(libc++ 21 puts `_LIBCPP_CONSTEXPR_SINCE_CXX20` on the `(const _CharT*, size_type)` constructor,
+`string:1068`), and a `std::vector` you can construct and clear. There is **no** constexpr
+mutation and **no** constexpr allocation.
+
+The distinction matters because the project wants a `std::string` it can *build by formatting* at
+compile time, and neither library can do that. Part 11.
+
+**5. "The standard library gives us a set of facilities; here is the summary."** The summary was
+right but incomplete, and a naive reading of the headers gets it wrong in two ways that part 11
+corrects:
+
+- libc++'s `<version>` opens with a `/* version synopsis */` block (lines 13-279) that tabulates
+  every macro the library *knows about*, including ones it has **not** implemented - whose real
+  `#define` further down is commented out. Grepping it without stripping comments makes libc++
+  look as if it had `<inplace_vector>`. **It does not**: no header, and the synopsis entry is
+  commented out at `version:573`.
+- Both libraries define their feature-test macros inside per-standard-version branches, so a
+  header's macro is not one number. Taking "the last `#define` in the file" picks the **oldest**
+  branch - which is how a first pass of the sweep reported libstdc++'s `__cpp_lib_optional` as
+  `201606L` when the C++23+ branch declares `202110L`.
+
+The verified result: **22 facilities are declared in both libraries, 9 in libstdc++ only, 0 in
+libc++ only, and 5 in neither** - `std::simd`, `std::linalg`, constexpr `std::format`,
+`std::containers` and `std::from_chars` for floating point. Part 11.
 
 ## The method
 
