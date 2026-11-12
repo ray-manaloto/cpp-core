@@ -59,24 +59,35 @@ macro would have been needed - the source location of a log call - was already s
 `format_string` and `log_raw`, a default argument being evaluated at the call site). The
 hand-rolled code is concentrated in one file, `modules/logging/format.hpp` (607 lines), and it
 exists for **one** reason: the module's interface must not name standard-library types, because a
-module's global module fragment is copied into every importing translation unit and the standard
-headers collide there. **That single constraint is what the whole audit turns on**, and it is now
-known to be removable on clang-p2996 and not on GCC 16 (see part 4). The honest summary is
+standard header in the module's global module fragment collides with the importing translation
+unit's own standard headers. **That single constraint is what the whole audit turns on**, and it is
+now known to be removable on clang-p2996 and not on GCC 16 (see part 4). The honest summary is
 therefore:
 
-- **The formatter cannot be replaced by `std::format` yet**, because `std::format` is not
-  `constexpr` in C++26 (P2210R2) and the project needs the format string checked at compile time.
+- **The formatter cannot be replaced by `std::format` yet** - but **not** for the reason the first
+  draft of this audit gave. C++26 *does* make `std::format` constexpr: **P3391R2** ("constexpr
+  `std::format`") was adopted at the November 2025 Kona meeting, the C++26 draft declares `format`,
+  `format_to`, `vformat_to` and `format_to_n` `constexpr`, and the feature-test macro is
+  `__cpp_lib_constexpr_format 202511L`. **Neither standard library on this machine implements it** -
+  libstdc++ 16 defines no such macro and declares `std::format` without `constexpr`, and libc++ 21
+  does the same (llvm#171292 is still open). The underlying reason is that `std::string` is not
+  constexpr in either library yet either. So the conclusion stands and the reason changes: **wait
+  for the libraries, not for the standard.**
 - **The formatter can be replaced by `std::format` at runtime**, with `std::format_string<Args...>`
   keeping the compile-time check, *if* the module is allowed to reach the standard library.
 - **Static reflection cannot replace anything today**: every `std::meta` range-returning
   metafunction allocates, and neither compiler implements constexpr allocation (P2680 / P1974), so
   a reflection range cannot be walked in a constant expression.
-- **The Intel `CIB_*` macros have no macro-free equivalent** and should stay. The macros are not
-  decoration: they capture the call site's file and line, fold the compile-time arguments into the
-  format string and install a compile-time environment, all in one expansion.
-- **The Intel `stdx` constexpr facilities (`ct_format`, `ct_string`) are the most promising
-  replacement** for the module's hand-rolled compile-time scanner, *provided* they do not pull in
-  the standard library - which part 6 checks.
+- **The Intel `CIB_*` macros should stay.** The mechanism underneath them is already macro-free -
+  `logging::log<Env>` is a function template and `stdx::ct_format<Fmt>` is a variable template -
+  and each macro has a macro-free equivalent, but every one of them costs verbosity at the call
+  site and buys nothing the project does not already have. The project uses **four** macro
+  invocations, all in `src/app.cpp`.
+- **The Intel `stdx` constexpr facilities cannot replace the module's hand-rolled compile-time
+  scanner**, because they pull in the standard library: `stdx/ct_string.hpp:8-14` includes
+  `<array> <concepts> <cstddef> <iterator> <string_view> <type_traits> <utility>`, and
+  `stdx/ct_format.hpp` adds `<algorithm>`, fmt and Boost.MP11. The module interface may not have
+  any of them.
 - **Quill can format from a runtime format string** - `log_statement_runtime_metadata` takes a
   plain `char const*` (`quill/Logger.h:426-431`) - and quill has **no compile-time format-string
   check to lose** (it never uses fmt's compile-time checker), so cpp-core's own `consteval` check
@@ -93,7 +104,7 @@ therefore:
 | 2 | `convertible_to` concept | `format.hpp:110-113` | `std::convertible_to` | same as #1 | same |
 | 3 | `forward` | `format.hpp:129-136` | `std::forward` | same as #1 | same |
 | 4 | `message_buffer` (2048-byte stack buffer) | `format.hpp:158-210` | `std::inplace_vector<char, 2048>` | **defer** | `std::inplace_vector` is C++26 but exists in **libstdc++ only**; libc++ 21 has no `<inplace_vector>`. Two compilers must keep working |
-| 5 | `scan_format` + `format_matches` (the consteval format-string scanner) | `format.hpp:217-298` | `stdx::ct_format` / `stdx::ct_string` (Intel), or `std::format_string<Args...>` | **investigate - most promising** | `std::format` itself is not constexpr (P2210R2), but `std::format_string` is constexpr-constructible, and Intel's `stdx` has constexpr formatting that may be standard-library-free. Part 6 settles whether `stdx` is usable inside the module |
+| 5 | `scan_format` + `format_matches` (the consteval format-string scanner) | `format.hpp:217-298` | `stdx::ct_format` / `stdx::ct_string` (Intel), or `std::format_string<Args...>` | **keep the hand-rolled scanner** | Intel's `stdx` is ruled out: `stdx/ct_string.hpp:8-14` includes seven standard headers and `stdx/ct_format.hpp` adds `<algorithm>`, fmt and Boost.MP11 - none of which may enter the module interface (part 6). `std::format_string<Args...>` would work, but only if the module may reach the standard library, and it is not `constexpr`-usable at runtime yet in either implementation (see the `std::format` row below) |
 | 6 | `format_integer` | `format.hpp:333-426` | `std::to_chars` | **replace if the module may use the standard library** | the hand-rolled version is 94 lines of base/sign/prefix/zero-padding logic |
 | 7 | `format_value` (the per-type dispatch) | `format.hpp:428-468` | `std::formatter<T>` / `fmt::formatter<T>` | **replace if the module may use the standard library** | the hand-rolled version is a closed set of `if constexpr` branches; the standard has an extensible `formatter` specialisation point |
 | 8 | `parse_spec` (the runtime format-spec parser) | `format.hpp:481-519` | `std::format_to` / `fmt::format_to` | **replace if the module may use the standard library** | 39 lines re-implementing `[[fill]align][sign][#][0][width][.prec][type]` |
@@ -103,11 +114,11 @@ therefore:
 | 12 | `decay_enum_value` | `cib_quill.hpp:53-61` | `std::to_underlying` (C++23) | **replace** | `std::to_underlying` is in libstdc++ and libc++ alike; this header is not standard-library-free |
 | 13 | the cib tag string built with `std::string` concatenation | `cib_quill.hpp:143-149` | `std::format` | **replace** | this header is not standard-library-free, `std::format` is in both standard libraries, and it is a plain format call. (`fmt::format` would also work, but fmt is only a **transitive** dependency here - quill 13.1.0 *bundles* its own copy under `quill/bundled/fmt` in the namespace `fmtquill`, and the standalone fmt 12.2.1 in the include tree comes in through `intel-cpp-std-extensions`. Using it directly would mean declaring it in `vcpkg.json` first.) |
 | 14 | `stdx::ct_conversions::type_as_string` / `enum_as_string` | used by nothing today | static reflection, or `stdx::ct_conversions` | **keep `stdx`** | Intel's version is `constexpr` and already a dependency; reflection cannot do it yet (no constexpr allocation) |
-| 15 | the `CIB_LOG_MODULE` / `CIB_INFO` / `CIB_WARN` / `CIB_ERROR` macros | `src/app.cpp:21-30` | - | **keep** | part 6: the macros capture the call site, fold the compile-time arguments and install the compile-time environment; no template-only equivalent exists |
-| 16 | the `__builtin_FILE` / `__builtin_LINE` / `__builtin_FUNCTION` default arguments | `logging.cppm:68-70`, `:104-105` | `std::source_location::current()` | **keep, or replace if #4 below is adopted** | `std::source_location::current()` as a default argument is the same idiom, canonicalised. The hand-rolled version exists only because the module may not name `<source_location>` |
+| 15 | the `CIB_LOG_MODULE` / `CIB_INFO` / `CIB_WARN` / `CIB_ERROR` macros | `src/app.cpp:21-30` | - | **keep** | part 6: the mechanism underneath is already macro-free (`logging::log<Env>` is a function template, `stdx::ct_format<Fmt>` is a variable template) and every macro has a macro-free equivalent, but each one costs verbosity at the call site and buys nothing. The project uses four macro invocations, all in one file |
+| 16 | the `__builtin_FILE` / `__builtin_LINE` / `__builtin_FUNCTION` default arguments | `logging.cppm:68-70`, `:104-105` | `std::source_location::current()` | **keep in the module; use it in the cib path** | `std::source_location::current()` as a default argument is the same idiom, canonicalised. The module may not name `<source_location>`, but the **cib path may** - it already includes `<string>`, `<string_view>` and `<type_traits>`. Part 6, option (e) |
 | 17 | the source-location capture itself | `logging.cppm` | - | **already macro-free** | a default argument is evaluated at the call site; this is the standard trick and needs no macro |
-| 18 | the whole standard-library-free module rule | `logging.cppm:9-19` | `import std;` | **the one real decision** | part 4: works on clang-p2996 with an empty global module fragment; on GCC 16 every importing translation unit would have to stop including standard headers |
-| 19 | the `format_string` class's compile-time check | `logging.cppm:64-84` | `std::format_string<Args...>` | **replace if #18 is adopted** | `std::format_string` is constexpr-constructible, so the compile-time check survives even though `std::format` is not constexpr |
+| 18 | the whole standard-library-free module rule | `logging.cppm:9-19` | `import std;` | **the one real decision** | part 4: works on clang-p2996 with an empty global module fragment; on GCC 16 every importing translation unit would have to stop including standard headers. Note that the standard *permits* the mixing ([std.modules]/4-5 makes it an implementation obligation), so the GCC failures are deficiencies, not ill-formed programs |
+| 19 | the `format_string` class's compile-time check | `logging.cppm:64-84` | `std::format_string<Args...>` | **replace if #18 is adopted** | `std::format_string` is constexpr-constructible, so the compile-time check survives even though `std::format` itself is not `constexpr` **in either implementation on this machine** |
 | 20 | `std::meta::nonstatic_data_members_of` | `src/reflection_demo.cpp:23-24` | - | **keep** | it is already the C++26 facility, used for what it is for |
 
 ## What the standard library gives today, on both compilers
@@ -117,7 +128,7 @@ Verified on both toolchains (GCC 16.2.0 / libstdc++ and clang-p2996 21.0.0git / 
 | Facility | Usable in shared code? | Note |
 |---|---|---|
 | `std::source_location` | yes | the canonical call-site capture |
-| `std::format`, `std::vformat`, `std::print`, `std::println` | yes | **not** `constexpr` (P2210R2) |
+| `std::format`, `std::vformat`, `std::print`, `std::println` | yes | usable at runtime; **not** `constexpr` in either implementation on this machine. C++26 *does* make them `constexpr` (**P3391R2**, `__cpp_lib_constexpr_format 202511L`), but libstdc++ 16 and libc++ 21 have not implemented it - and neither has constexpr `std::string` |
 | `std::expected`, `std::optional`, `std::ranges` | yes | `constexpr` |
 | `std::to_underlying`, `std::byteswap` | yes | `constexpr` |
 | `constexpr std::string_view` | yes | `constexpr` |
@@ -127,6 +138,7 @@ Verified on both toolchains (GCC 16.2.0 / libstdc++ and clang-p2996 21.0.0git / 
 | `std::text_encoding`, `std::simd`, `std::stacktrace` | **no** | absent or gated off in libc++; `simd` is x86-only here, `stacktrace` is off on macOS |
 | `std::meta` ranges walked at compile time | **no** | no constexpr allocation (P2680 / P1974) |
 | `constexpr std::string` / `constexpr std::vector` | **no** | P2278 is not implemented |
+| Intel `stdx` (`ct_format`, `ct_string`) inside the module interface | **no** | `stdx/ct_string.hpp:8-14` includes seven standard headers; `stdx/ct_format.hpp` adds `<algorithm>`, fmt and Boost.MP11 |
 
 ## The tooling, in one table
 
@@ -171,6 +183,52 @@ These need a compile to settle, and they are the first thing to run when the bui
    throws `std::meta::exception` ("reflection with has_identifier false").
 7. Does `std::source_location::current()` return a non-empty `function_name()` in a `constexpr`
    context? It came back empty in an earlier probe.
+8. Does a `quill::Codec` that pushes three arguments from one pack element satisfy a `"{} {} {}"`
+   statement? This is the load-bearing unknown for the formatter rewrite (part 8).
+9. Does `std::source_location::current()` in a default argument on `quill_config::logger::log`
+   return the *caller's* location, given that the call goes through the `logging::log<Env>`
+   template? If it does not, that is the reason the CIB macro cannot be dropped (part 6).
+10. When libstdc++ and libc++ implement P3391R2, does `std::format_string<Args...>` accept every
+    format string the project's own scanner accepts? The two dialects are not identical.
+
+## The corrections this audit made to itself
+
+Two claims in the first draft of this audit were wrong, and both are load-bearing. They are
+recorded here because a document that hides its own corrections is not much use to a reviewer.
+
+**1. "`std::format` is not `constexpr` in C++26 (P2210R2)" - wrong on both counts.** P2210R2 is
+"Superior String Splitting", an unrelated paper. The real paper is **P3391R2**, "constexpr
+`std::format`", which was **adopted into C++26** at the November 2025 Kona meeting. The C++26
+draft's synopsis declares `format`, `format_to`, `vformat_to` and `format_to_n` `constexpr`, and
+the feature-test macro is `__cpp_lib_constexpr_format 202511L` (the draft also defines
+`__cpp_lib_constexpr_string 202511L`).
+
+The *conclusion* survives, but the *reason* changes: **neither standard library on this machine
+implements P3391R2.** libstdc++ 16 defines no `__cpp_lib_constexpr_format` and declares
+`std::format` without `constexpr`; libc++ 21 defines no such macro either (`__cpp_lib_format` is
+still `202110L`) and llvm#171292 is still open. The underlying reason is that `std::string` is not
+constexpr in either library yet either.
+
+**2. "A module's global module fragment is copied into every translation unit that imports it."**
+This is the wording in `modules/logging/logging.cppm:9-19` and in this audit's first draft. It
+describes the *observed failure mode* accurately, but it is **not what the standard says**. The
+draft says the global module fragment "can be used to provide declarations that are attached to
+the global module and usable within the module unit" ([module.global.frag]/1), and it makes the
+mixing of `#include` and `import` an implementation obligation: "Conforming implementations ensure
+that mixing #include and import does not result in conflicting attachments" ([std.modules]/4) and
+"A declaration in the standard library denotes the same entity regardless of whether it was made
+reachable through including a header, importing a header unit, or importing a C++ library module"
+([std.modules]/5).
+
+So the GCC 16 failures are **implementation deficiencies, not ill-formed programs**, and the
+repository's comment overstates the standard's rule. The design conclusion is unchanged - and
+arguably stronger, because a deficiency is something a project has to work around until it is
+fixed upstream, whereas a rule violation would be the project's own fault.
+
+**3. The Intel `stdx` constexpr formatting is the most promising replacement for the module's
+hand-rolled scanner.** It is not: `stdx/ct_string.hpp:8-14` includes seven standard headers and
+`stdx/ct_format.hpp` adds `<algorithm>`, fmt and Boost.MP11, so `stdx` cannot enter the module
+interface at all. See part 6.
 
 ## The method
 
