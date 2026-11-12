@@ -27,11 +27,12 @@ recommendations for the three questions the owner asked:
 | 12 | [build-and-dependencies.md](build-and-dependencies.md) | the vcpkg overlays, the triplets and the CMake - the build as a subject |
 | 13 | [format-dialect.md](format-dialect.md) | the module path's format strings against the C++26 grammar and fmt's - and the two paths' disagreement |
 | 14 | [remaining-research.md](remaining-research.md) | the four questions that needed no compile: Intel's `stdx`, the logger's lifetime, `ut`'s module, the upstream watch |
+| 15 | [catalog-ids.md](catalog-ids.md) | are the catalog IDs the same under both compilers? - and why they are not the same between releases |
 | - | [upstream/](upstream/) | the upstream sources these parts quote, vendored so the review can be done offline |
 
 ## The defects this audit found
 
-There are five now. The first is the important one.
+There are six now. The first is the important one.
 
 **`set_level()` does not filter anything on the module path.** A message logged below the
 configured level is still emitted.
@@ -59,7 +60,7 @@ message *below* the threshold is suppressed. That assertion belongs in the cover
 
 **This is a bug, not a trade-off, and it should be fixed whatever else happens.**
 
-The other four, in the order they were found:
+The other five, in the order they were found:
 
 | # | The defect | Why it matters | Part |
 |---|---|---|---|
@@ -67,6 +68,7 @@ The other four, in the order they were found:
 | **DEF-3** | the repository's comments (and the root README) say a module's global module fragment "is copied into every importing translation unit" | that is the observed failure mode, not the standard's rule ([module.global.frag]/1, [std.modules]/4-5). The GCC failures are implementation deficiencies | 4 |
 | **DEF-4** | **the two logging paths do not share a format-string dialect**, and the differences are silent: `info("{:>06}", 42)` gives "000042" on the module path and "    42" on the catalog path | the same project, the same format string, two answers | 13 |
 | **DEF-5** | the module never validates the format specification against the argument's type, so `info("{:s}", 42)` compiles and is silently ignored | a format string that `std::format` and fmt reject is accepted here | 13 |
+| **DEF-6** | **the catalog IDs are renumbered on every regeneration** - the ID is the message's rank in text order, and the build does not use the tool's `STABLE_JSON` mechanism, so adding a message renumbers the ones after it | the XML is MIPI Sys-T deployment collateral, and the IDs are its wire identifiers | 15 |
 
 
 ## The verdict in one paragraph
@@ -241,7 +243,7 @@ In summary, and all of it needs a compile, a run, or an owner decision:
 
 | Area | Items | The load-bearing one |
 |---|---|---|
-| **The defects** | 5 | `DEF-1`: `set_level()` filters nothing on the module path - a bug, three lines at each of two call sites |
+| **The defects** | 6 | `DEF-1`: `set_level()` filters nothing on the module path - a bug, three lines at each of two call sites |
 | **fmt and `constexpr`** | 14 | `FMT-4` / `FMT-5`: can `format.hpp` be made `constexpr` wholesale, and does the `static_assert` pattern work? The compiler is the test |
 | **quill's runtime formatting** | 9 | `QUIL-1`: can a `quill::Codec` push three arguments from one pack element? It decides whether the 607-line formatter can shrink |
 | **The tooling** | 16 | `TOOL-6`: does GCC 16 emit arcs for uninstantiated templates and `consteval` bodies? It decides whether the coverage numbers can be trusted at all |
@@ -249,7 +251,7 @@ In summary, and all of it needs a compile, a run, or an owner decision:
 | **Static reflection** | 4 | `REFL-1`: do the two compilers' `members_of` forms compile the same source? |
 | **The macros** | 3 | `MAC-1`: does `std::source_location::current()` in a default argument return the *caller's* location through the `logging::log<Env>` template? It may be why the CIB macro cannot be dropped |
 | **Coverage to-dos** | 10 | the uncovered set, branch by branch - and the `constexpr` change removes half of it from the runtime problem |
-| **The build system** | 6 | `BUILD-1`: there are no compiler warning flags at all - not `-Wall`, not `-Wextra`. That is an owner decision, because adding them is a behavioural change |
+| **The build system** | 7 | `BUILD-1`: there are no compiler warning flags at all - not `-Wall`, not `-Wextra`. That is an owner decision, because adding them is a behavioural change. (`BUILD-6`, the catalog IDs, is answered - part 15) |
 | **The dependency tree** | 2 | `VCPKG-2`: do the five overlay ports shadow builtin vcpkg ports? `ut` is the likely one, and a shadowed port stops following the pinned baseline |
 | **The environment** | 3 | `ENV-1`: the two copies of fmt, and the rule that custom formatters are written for `fmt` only |
 

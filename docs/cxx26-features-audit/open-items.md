@@ -119,6 +119,37 @@ have to become a parser that is told the argument's type - and it is **FMT-14**'
 **The test it needs:** the negative compile-time cases - `{:s}` on an `int`, `{:d}` on a `double`,
 `{:d.3}` on an `int`, `{:0}` on a string - each of which must stop compiling.
 
+### DEF-6 - the catalog IDs are renumbered on every regeneration
+
+**The same message does not keep its ID between releases.** The catalog's IDs are its wire
+identifiers - the XML is MIPI Sys-T deployment collateral, and the `ID` attributes are what a
+consumer decodes against - so an ID that moves is a wire format that changed.
+
+**The cause.** The tool assigns the ID as the message's **rank among the messages, in text order**
+(`gen_str_catalog.py:300-304`, `:228-229`): the messages are sorted by their text and the free
+integers are handed out in that order. So a new message whose text sorts first takes ID 0 and
+every existing message shifts up by one.
+
+**Why it happens here.** The tool has a mechanism for exactly this, and the build does not use it.
+`gen_str_catalog()` takes a `STABLE_JSON` argument (`string_catalog.cmake:16`), passes it as
+`--stable_json` (`:85`), and the tool then keeps the ID of every message that already had one
+(`gen_str_catalog.py:307-337`) and re-emits the old entries in the output JSON (`:465-472`), so the
+JSON is its own stable file. `cmake/catalog.cmake` passes no `STABLE_JSON`, so the flag reaches
+argparse with an empty list (`--stable_json` is declared `nargs="*"`, `gen_str_catalog.py:707-713`),
+`read_stable([])` returns nothing, and **every regeneration renumbers from scratch**.
+
+**What it is *not*.** It is **not** a cross-compiler problem: the IDs are stable across the two
+compilers, and structurally so - the ID is a function of the message text, and the text is carried
+in the message's *type*, which both compilers spell the same way. All nine catalogs on disk (two
+compilers, four configurations, two build times) are byte-identical. Part 15 has the evidence and
+the mechanism.
+
+**The fix:** one line in `cmake/catalog.cmake` - pass the previous catalog as `STABLE_JSON`. Where
+that file lives is an owner decision, and it is **BUILD-7**.
+
+**The test it needs:** regenerate the catalog with one message added and check that the other
+messages keep their IDs.
+
 ## 2. fmt and `constexpr` (FMT)
 
 From [constexpr-and-fmt.md](constexpr-and-fmt.md) section 4.
@@ -257,7 +288,7 @@ compile-time-only code the coverage report cannot see gets verified instead.
 ## 9. The build system (BUILD)
 
 From [build-and-dependencies.md](build-and-dependencies.md). These are new: the features audit
-never treated the build as a subject.
+never treated the build as a subject. **BUILD-6 is answered - see section 12.**
 
 | # | Question | Settled by |
 |---|---|---|
@@ -266,7 +297,8 @@ never treated the build as a subject.
 | BUILD-3 | **What is the public header surface?** All three headers in `include/cpp-core/logging/` are published by `target_include_directories(... PUBLIC ...)`, and `quill_logger.hpp` includes `<quill/Logger.h>` - even though its own comment says it is "the implementation's business, not part of the module's public interface". With no install rules there is no install-time boundary either, so "public" is currently an accident | an owner decision, then an implementation |
 | BUILD-4 | **Is `clang23` kept?** The toolchain and `cmake/cpp-core-check.cmake` both accept it, with a full validation branch, but there is **no `clang23` triplet and no `clang23` preset** - so it cannot be reached through the supported path. Yet part 3's clang-tidy design needs Homebrew clang 23 to build a BMI with | an owner decision |
 | BUILD-5 | **Should there be CI?** There is no `.github/` directory and no git remote. The coverage gate, the format check and the clang-tidy check therefore have **no home** until CI exists - they would be local presets. This also makes `TOOL-16` moot | an owner decision |
-| BUILD-6 | **Are the catalog IDs stable across compilers?** `gen_str_catalog` derives them from `nm` output, and `nm` output depends on the compiler's mangling - so the same source may produce different IDs under gcc16 and p2996. If it does, the application and the tests disagree about which ID is which message. **This is a different question from `MAC-2` / `FMT-11`**, which ask whether the *macro* form changes the symbols | a run, and a comparison of the two catalogs |
+| BUILD-7 | **Where does the stable catalog live?** This is the decision **DEF-6** needs. Option (a): a committed file (for example `cmake/catalog-stable.json`) - the IDs survive a clean tree, a branch switch and a new machine, and an ID change shows up in a diff. Option (b): the build tree (`${CMAKE_CURRENT_BINARY_DIR}/cpp-core-catalog.json`) - **does not work**, because a clean build then renumbers everything, so it is the same defect with an extra step. Option (c): leave it alone - the IDs are a property of the current message set rather than of the project. The recommendation is (a) | an owner decision |
+| BUILD-8 | **Should the build check the catalog's message set against the call sites?** The catalog tooling's input regex (`gen_str_catalog.py:342`) drops a line that does not match, and the message set is deduplicated by a 64-bit hash (`:212-213`, `:352`), so a message can go missing from the catalog - silently, at the tool's level. The **link** catches it, because the application's `catalog<...>` symbol would stay undefined - but only a build that links. A dedicated check (the number of catalog entries against the number of `CIB_` call sites) would catch it earlier and name the message | an owner decision, then a script |
 
 ## 10. The dependency tree (VCPKG)
 
@@ -319,3 +351,5 @@ These were asked, answered and are recorded so nobody re-derives them.
 | Is DEF-1 a data race? | **No** - the threshold is atomic (`quill/core/LoggerBase.h:224`) and correct; the module path simply never asks. The *sink* threshold (default `TraceL3`) is what filters, so everything is written. It is a policy defect, not a race | part 14 |
 | Is fmt's constexpr support still pending? | **No** - fmt#3403 was **closed as completed** on 2023-06-17, and the installed 12.2.1 has it. The remaining blocker is the standard libraries' (llvm#171292, still open; and LWG4531, which settled the macro values at Brno in June 2026) | part 14 |
 | Where does the module path format its message? | **On the calling thread**, and then it is copied into a `std::string` - so each module-path message costs one heap allocation on the calling thread (`logging.cppm:112-114`, `quill_logger.cpp:118`). The catalog path queues the arguments and formats on the backend thread. The root README's "What the two paths share → Threading" said only the second | part 13; part 14 |
+| Are the catalog IDs stable across compilers? | **Yes - and structurally, not by luck.** The ID is a function of the **message text** (the rank among the messages, in text order), and the text is carried in the message's *type* (`sc::string<char...>`), which both compilers spell the same way. All nine catalogs on disk - two compilers, four configurations, two build times - are byte-identical. The *link* is the backstop: a message that the tool dropped or misread leaves an undefined `catalog<...>` symbol | part 15 |
+| Are the catalog IDs stable across *releases*? | **No** - and that is **DEF-6**. The ID is the rank in text order, so adding a message that sorts first renumbers every later one, and the build does not use the tool's `STABLE_JSON` mechanism that would prevent it. The XML is MIPI Sys-T deployment collateral, and the IDs are its wire identifiers | part 15 |

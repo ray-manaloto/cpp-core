@@ -35,7 +35,7 @@ possible**. What remains is the implementation, which is parked.
     shims fail with "No version is set" - it has to be found by path or a project `.mise.toml`
     added and trusted); `gcov-16` in `/opt/homebrew/opt/gcc/bin`; no `lcov`/`genhtml`.
 - `.editorconfig` made to agree with the formatter: `2ef42de`.
-- The features audit, in fourteen parts: `3d7e865`, `15be31c`, `0e414de`, plus the parts written since
+- The features audit, in fifteen parts: `3d7e865`, `15be31c`, `0e414de`, plus the parts written since
   (reflection, macro reduction, fmt and `constexpr`, the consolidated open-items list).
 - The SDLC subagent role definitions: `22b6a65`.
 
@@ -59,6 +59,7 @@ possible**. What remains is the implementation, which is parked.
 | 12 | [build-and-dependencies.md](docs/cxx26-features-audit/build-and-dependencies.md) | the vcpkg overlays, the triplets and the CMake - the build as a subject |
 | 13 | [format-dialect.md](docs/cxx26-features-audit/format-dialect.md) | the module path's format strings against the C++26 grammar and fmt's - and the two paths' disagreement |
 | 14 | [remaining-research.md](docs/cxx26-features-audit/remaining-research.md) | the four questions that needed no compile: Intel's `stdx`, the logger's lifetime, `ut`'s module, the upstream watch |
+| 15 | [catalog-ids.md](docs/cxx26-features-audit/catalog-ids.md) | are the catalog IDs the same under both compilers? - and why they are not the same between releases |
 
 The upstream sources those parts quote are vendored under
 [`docs/cxx26-features-audit/upstream/`](docs/cxx26-features-audit/upstream/README.md), so the review
@@ -192,8 +193,8 @@ When the build lane reopens:
 ## The open items, in one place
 
 **[docs/cxx26-features-audit/open-items.md](docs/cxx26-features-audit/open-items.md)** has all of
-them: 5 defects, 14 fmt/`constexpr` questions, 9 quill questions, 16 tooling questions, 9
-`import std;` questions, 4 reflection questions, 3 macro questions, 10 coverage to-dos, 6 build
+them: 6 defects, 14 fmt/`constexpr` questions, 9 quill questions, 16 tooling questions, 9
+`import std;` questions, 4 reflection questions, 3 macro questions, 10 coverage to-dos, 7 build
 questions and 2 dependency-tree questions - each with what settles it, plus a table of the
 questions that are **not** open because they have already been answered.
 
@@ -297,6 +298,39 @@ formatting.
 observed failure mode, not the standard's rule), the "the two paths share the same threading"
 claim (only the catalog path formats on the backend thread), the `ut` port's reason, and a pointer
 to the audit.
+
+## What part 15 changed
+
+**BUILD-6 is answered: the catalog IDs are the same under both compilers - and not by luck.** All
+nine catalogs on disk (two compilers, four build configurations, two build times) are
+**byte-identical**, and the mechanism says they have to be:
+
+- the message is carried in the message's **type** - `sc::string<char...>` - not in the mangling's
+  structure (`log_binary/catalog/catalog.hpp:7`);
+- the tool reconstructs the message **text** from the character codes
+  (`gen_str_catalog.py:175-177`);
+- the messages are sorted **by that text** (`:228-229`) and the IDs are handed out in that order
+  (`:300-304`).
+
+So **the ID is the message's rank among the messages, in text order** - and the mangling never
+enters the calculation. The one part of the symbol that could have carried a compiler-dependent
+type name is `sc::args<...>`, and cib's encoder only accepts **integral, float and enum** types
+(`arguments.hpp:31-33`), which both compilers spell the same way. The **link** is the backstop: a
+message the tool dropped or misread leaves an undefined `catalog<...>` symbol.
+
+**But the corollary is a new defect: the IDs are not stable across releases.** Because the ID is
+the rank in text order, adding a message that sorts first renumbers every message after it - and
+the XML is **MIPI Sys-T deployment collateral**, where the IDs are the wire identifiers. The tool
+has the mechanism that prevents this (`gen_str_catalog(STABLE_JSON ...)` → `--stable_json` →
+`read_stable` → `assign_ids`), and `cmake/catalog.cmake` does not use it: the flag reaches argparse
+with an empty list, so **every regeneration renumbers from scratch**. That is **DEF-6**, and where
+the stable catalog file should live is **BUILD-7** - an owner decision, with the recommendation
+being a committed file (a build-tree file does not survive a clean build, so it would not fix
+anything).
+
+**Two new owner decisions** came out of it: **BUILD-7** (where the stable catalog lives) and
+**BUILD-8** (whether the build should check the catalog's message set against the call sites - the
+link catches a dropped message today, but only a build that links).
 
 ## State of the working tree
 

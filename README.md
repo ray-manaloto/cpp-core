@@ -194,7 +194,11 @@ documentation](https://github.com/intel/compile-time-init-build/blob/main/docs/l
   compile-time arguments into the format string, and the format string becomes part of the
   message's *type*, so no string data ends up in the payload.
 - Each message and each module is identified by an ID from the string catalog, which cib's
-  `gen_str_catalog()` tooling assigns at build time.
+  `gen_str_catalog()` tooling assigns at build time. The ID is a function of the message text — it
+  is the message's rank among the messages, in text order — so the same message gets the same ID
+  under either compiler. It is **not** stable across releases: the build does not feed the previous
+  catalog back into the tool, so adding a message renumbers the ones after it. See
+  [DEF-6](docs/cxx26-features-audit/open-items.md).
 - The payload that goes onto quill's queue is therefore only the metadata of the message (the
   format string, the source location, the tags and the level — all compile-time data, referenced
   rather than copied) plus the runtime values.
