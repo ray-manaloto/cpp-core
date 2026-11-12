@@ -3,7 +3,7 @@
 **Date:** 2026-11-12
 **Status:** research. Nothing here is applied to the build.
 
-The audit has **82 open items**. Sixty-nine of them are settled by a compile, a run or a
+The audit has **83 open items**. Seventy of them are settled by a compile, a run or a
 preprocessor pass - they are questions, not decisions, and they unblock the moment the build lane
 reopens.
 
@@ -13,7 +13,7 @@ sheet, with a recommendation for each.
 
 (Three further items - `VCPKG-1`, `VCPKG-2` and `QUIL-8` - were answered by part 18, sections 2
 and 4, and are now in `open-items.md` section 12 rather than in the open list. The count was 83
-until then; part 18, section 5 added `FMT-15` and `MOD-10` of its own.)
+until then; part 18 then added `FMT-15`, `MOD-10` and `MOD-11` of its own.)
 
 ## The short version
 
@@ -54,14 +54,38 @@ fmt reject it at compile time. That is **DEF-5**.
 | | What it means | Cost |
 |---|---|---|
 | **(a) document** | write down the fifteen differences (D1-D15) and stop | one document |
-| **(b) validate** | move the check from `format_matches<arg_count>` into `format_string`'s constructor, which knows the argument **types** | the scanner needs the type set; a real behaviour change |
+| **(b) validate** | move the check from `format_matches<arg_count>` into `format_string`'s constructor, which knows the argument **types** | the scanner needs the type set; a real behaviour change. **And the renderer has to change with it** - see below |
 | **(c) move** | move the formatting out of the module interface, so one formatter serves both paths | the plan's last step; needs **QUIL-1** to succeed |
 
-**The recommendation: (a) now, (b) if the module's API is public, (c) only if the Codec experiment
+**The constraint part 18, section 6 added: (b) is only coherent if the module's *renderer* comes
+from the same library as the validator.** `std::basic_format_string` validates against the
+**standard's** grammar, and fmt validates against fmt's - so a module that validates with one and
+renders with the other accepts specifications it does not implement. `{:>06}` is the example: the
+standard means *right-align in a width of 6* (`"    42"`), and the module renders it as zero-pad
+(`"000042"`). **A check that is present and wrong is worse than no check at all**, so "validate
+with the standard, format with the module" is not one of the options - it is a new defect.
+
+**The consequence for each option:**
+
+- **(b) with `std::format_to`** would fix DEF-5 and make the two paths agree - but
+  `std::format_to` is **not `constexpr`** in libstdc++ 16 or libc++ 21, so it costs the
+  `constexpr` formatter (plan step 3) **and** the `static_assert` formatter tests.
+- **(b) with fmt** keeps the `constexpr` formatter - fmt's compile-time API is constexpr - and
+  fixes DEF-5 - but **fmt cannot enter the module interface** (a textual `#include` in a module
+  unit yields global-module declarations), so this needs fmt's *module*, which the pinned vcpkg
+  port does not build. It needs an overlay port with `FMT_MODULE=ON`.
+- **(c)** gets the same result through the implementation side, where `std::format` is available
+  today with no modules work at all - which is why the recommendation has not changed.
+
+**The recommendation: (a) now, (b) if the API is public, (c) only if the Codec experiment
 works.** The reasoning is in part 13: (c) is the only option that makes the two paths *agree*, and
 it is also the only one that needs a compile to know whether it is possible at all. Doing (c)
 first, or without the Codec result, risks a rewrite on a guess. (a) costs nothing and is
 prerequisite for reading (b) and (c) anyway.
+
+**One refinement from part 18, section 6:** (b) is no longer a cheap improvement over (a) - it is
+a *package* with a renderer change, and the renderer change is the expensive half. If (b) is
+wanted, (c) is the way to get it, and (c) is gated on QUIL-1.
 
 **What it gates.** Plan step 7 - the only step that changes the module's design. Steps 3-6 make
 the current design better whether or not (c) happens, so **steps 1-6 do not wait for this**.
@@ -297,7 +321,7 @@ ten steps is unblocked:
 | 7. Move the formatting out of the module interface | **FMT-14**, and QUIL-1 must succeed |
 | 8. Wire the formatting and the checks into CMake | **TOOL-13**, **TOOL-14** |
 | 9. The coverage gate | nothing - it is a separate track |
-| 10. The `import std;` decision | nothing - the recommendation is to keep the status quo |
+| 10. The `import std;` decision | nothing - the recommendation is to keep the status quo. **Part 18, section 6 priced it**: the four-file importer migration is the biggest item, the GCC blocker is unverified in the project's configuration (`MOD-11`), and the only things `import std;` uniquely buys are `std::source_location` (~10 lines) and the standard's format-string grammar - the latter of which needs the renderer to change with it |
 
 And if **FMT-14** is answered **(a)** - document the dialect - then step 7 is **deferred rather
 than blocked**, and steps 1-6 and 8-10 proceed without it.

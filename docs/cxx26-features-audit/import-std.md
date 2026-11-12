@@ -196,6 +196,18 @@ Sources: [CMake `CXX_MODULE_STD`](https://cmake.org/cmake/help/latest/prop_tgt/C
 
 ### The matrix that matters
 
+> **Correction, added by part 18, section 6.** The matrix below was measured with **`-fmodules`**
+> (see "The gate" above: *"`-fmodules` for GCC"*). **The project's own GCC 16 build uses
+> `-fmodules-ts`** - CMake 4.4.5's `Modules/Compiler/GNU-CXX.cmake` sets `CMAKE_CXX_MODULE_MAP_FLAG`
+> to `-fmodules-ts` for GCC >= 14, and `build/gcc16-debug/compile_commands.json` shows
+> `-std=c++26 -freflection -fmodules-ts -fmodule-mapper=...`. **And the project's own GCC 16 build
+> does the shape the last row says fails**: `tests/logging_test.cpp` imports the module and
+> includes `<cstdio>`, `<string>` and `<unistd.h>`, the module exports no standard-library types,
+> and `build/gcc16-debug/tests/cpp-core-tests` exists. So the matrix **does not price this
+> project's configuration**, and *"option (c) is blocked on GCC 16 today"* is an unverified claim
+> here. It is `MOD-11` in [open-items.md](open-items.md), and it is the one measurement that decides
+> the price of option (c). The readings below stand as readings of the `-fmodules` configuration.
+
 The same module was built three ways and imported four ways:
 
 | The importing translation unit | GCC 16.2 | clang-p2996 + libc++ 21 |
@@ -293,7 +305,10 @@ The 607-line `modules/logging/format.hpp` stays, and `std::source_location` stay
   would change.
 - **Con:** it turns on an experimental CMake feature for the whole project.
 - **Con:** it is **blocked on GCC 16 today** - any standard or system-header include in an importing
-  translation unit fails.
+  translation unit fails. **Corrected by part 18, section 6: the block is unverified in the
+  project's configuration** - the project compiles with `-fmodules-ts`, the matrix above was
+  measured with `-fmodules`, and the project's own GCC 16 build does the shape the matrix says
+  fails. See `MOD-11`.
 
 ## The recommendation
 

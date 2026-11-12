@@ -14,18 +14,18 @@ answers a different question: **what did the audit leave unasked?**
 
 ## The state this starts from
 
-The audit has **82 open items**, and they decompose exactly (verified by parsing the "settled by"
+The audit has **83 open items**, and they decompose exactly (verified by parsing the "settled by"
 column of every row, plus the six defect headings):
 
 | Kind | Count | What resolves it |
 |---|---|---|
 | Owner decisions | **13** | the owner's answer. Four of them gate the plan: `FMT-14`, `TOOL-13`, `TOOL-14`, `BUILD-7` |
-| Compile / run / preprocessor | **69** | the build lane reopening - mechanical, not research |
+| Compile / run / preprocessor | **70** | the build lane reopening - mechanical, not research |
 | Registry read | **0** | `VCPKG-1` and `VCPKG-2` were answered by section 2 below - the registry at the pinned baseline turned out to be readable after all |
 
 (It was 83 when this part opened; section 2 answered the two registry items and moved them to
-`open-items.md` section 12, section 4 answered `QUIL-8` the same way, and section 5 added
-`FMT-15` and `MOD-10` of its own.)
+`open-items.md` section 12, section 4 answered `QUIL-8` the same way, and sections 5 and 6 added
+`FMT-15`, `MOD-10` and `MOD-11` of their own.)
 
 **The audit's own research is complete.** Seventeen parts, the upstream sources all vendored
 (`upstream/`), the root README checked line by line (part 16), the owner decisions collected into
@@ -64,7 +64,7 @@ which is exactly what a research lane is for.
 | 3 | The public API has no contract | ☑ **done** | The contract, derived from the implementation: threading, start-up, flushing, levels, message handling and the error model - written out as prose for the module's header comment and the README. **The headline:** the level threshold is not consulted on the module path (DEF-1), so the contract cannot promise the filtering until the fix lands |
 | 4 | A benchmark harness | ☑ **done** | Six metrics (M1-M6), a five-step baseline ladder (B0-B5), the variables, and three traps the harness has to avoid - `high_resolution_clock` is the wall clock on libstdc++, the per-message allocation is 0 or 1 depending on the small-string threshold, and the clock reads are as expensive as the measurement. **And a correction:** `QUIL-8`'s premise is wrong - `<true>` means "honour the flush threshold", the threshold is 0 by default, and quill's own default is the same value |
 | 5 | A differential test between the two logging paths | ☑ **done** | The case list, classified: **11 of the 15 divergences are testable** as a runtime differential comparison; the other four are asymmetric compile-time rejections and need a "must not compile" mechanism the project does not have. The oracle is three columns - the standard, the catalog path, the module path - with the rule that the expectations come from the standard, not from the implementation. Two modes, switched by `FMT-14`. And the test would **trigger DEF-6**, so it needs its own catalog |
-| 6 | Costing the `import std;` option | ☐ **not started** | — |
+| 6 | Costing the `import std;` option | ☑ **done** | The row-by-row flip analysis of the twenty-row table: **five rows flip cleanly, one partly, three lossily, one only in combination, nine not at all.** Two results the audit did not have: **rows 19 and 7-9 are a package** (validating with the standard's grammar while formatting with the module's own is *worse* than not validating), and **the GCC 16 blocker is unverified in the project's configuration** - the project compiles with `-fmodules-ts`, the matrix was measured with `-fmodules`, and the project's own GCC 16 build does the shape the matrix says fails |
 | 7 | Four smaller questions | ☐ **not started** | — |
 | 8 | Re-validating the audit's time-sensitive claims | ☐ **not started** | — |
 
@@ -1158,6 +1158,294 @@ makes the case.
 
 **What is needed.** A row-by-row flip analysis, a work estimate, and a payoff statement.
 
+### The first thing to fix: the table asks the wrong question
+
+The table's rows are phrased conditionally - *"replace **if the module may use the standard
+library**"* - which is the right condition, but it hides three different outcomes under one
+verdict. **"The module may use the standard library" can mean three things**, and they have very
+different prices:
+
+| | What it means | What it costs |
+|---|---|---|
+| **B** | the module's *interface* names `std::` types - so `import std;` | the importer migration, the CMake gate, and the GCC question |
+| **B'** | the module's *implementation* names `std::` types - so the formatting moves behind `internal.hpp` | the type-erasure problem (**QUIL-1**) - **no modules work at all** |
+| **C** | the module names `fmt::` types - so fmt's own module is imported | a new overlay port, and fmt's global module fragment |
+
+**B' is the one the audit already recommends** (`import-std.md:300-315`: "keep the module's
+*interface* standard-library-free ... and put the standard-library-dependent work behind
+`include/cpp-core/logging/internal.hpp`"), and it needs **no `import std;` at all** - because
+`src/logging/quill_logger.cpp` is a plain translation unit and may use the standard library
+freely today. **That is the single most important fact in this section**, and the table's phrasing
+hides it.
+
+### The row-by-row flip analysis
+
+Twenty rows. Here is what each one does under the condition "the module may use the standard
+library", with the evidence for each verdict.
+
+| # | The hand-rolled thing | Flips? | The new verdict, and why |
+|---|---|---|---|
+| 1 | the type traits (`format.hpp:20-107`) | **yes, cleanly** | `std::remove_cvref_t` and the rest. 88 lines go. The blocker was never the traits - it was only the standard-library-free rule |
+| 2 | `convertible_to` (`format.hpp:109-113`) | **yes, cleanly** | `std::convertible_to`. 5 lines go |
+| 3 | `forward` (`format.hpp:126-136`) | **yes, cleanly** | `std::forward`. 11 lines go |
+| 4 | `message_buffer` (the 2,048-byte stack buffer, `format.hpp:154-210`) | **no** | `std::inplace_vector<char, 2048>` is **not available on libc++ 21** - there is no `<inplace_vector>` in the include tree at all, not merely a missing macro. libstdc++ 16 has it. Two compilers must keep working, so **57 lines stay** |
+| 5 | `scan_format` + `format_matches` (the consteval scanner, `format.hpp:220-298`) | **only with rows 7-9** | The scanner is the module's *dialect*. It stays unless the module stops doing its own formatting. But its **reason** changes: Intel's `stdx` is still ruled out (it pulls in the standard library), and `std::format_string` becomes available as the validation mechanism - which is row 19, and which is only correct **together with** rows 7-9 (below) |
+| 6 | `format_integer` (`format.hpp:329-422`, plus `digit_char` at `:323-327`) | **yes, cleanly** | `std::to_chars` **is** `constexpr` in both implementations: libstdc++ 16 `<charconv>:126,166,212,235,288,324`, libc++ 21 `<charconv>:34` (P2291R3). 99 lines go |
+| 7 | `format_value` (the per-type dispatch, `format.hpp:424-467`) | **yes, but lossily** | `std::formatter<T>` is the standard's extension point - but the renderer behind it, `std::format_to`, is **not `constexpr`** in either implementation on this machine (no `constexpr` on `format_to` or `format_to_n` in libstdc++ 16's `<format>` or libc++ 21's `<format>`). Taking this row **destroys the constexpr formatter** |
+| 8 | `parse_spec` (the runtime spec parser, `format.hpp:477-515`) | **yes, but lossily** | same: `std::format_to` parses the spec, and it is not `constexpr` |
+| 9 | `format_message` (the field loop, `format.hpp:532-602`) | **yes, but lossily** | same |
+| 10 | `format_double` (`snprintf` with `%g`, `quill_logger.cpp:121-167`) | **no** | It is **already** in a plain translation unit that may use the standard library, so the replacement (fmt) is reachable **today**, with no modules work. The row was already "replace" |
+| 11 | `to_quill_level` / `from_quill_level` | **no** | The two mappings cannot be merged: **MIPI Sys-T's 0 is the most severe level and the module's 0 is the least severe**, so they point in opposite directions. `import std;` gives no shared enum. The row's "shrink" verdict **does not flip** |
+| 12 | `decay_enum_value` (`cib_quill.hpp:53-61`) | **no** | `std::to_underlying` is already available - that header is not standard-library-free. The row was already "replace" |
+| 13 | the cib tag string (`cib_quill.hpp:143-149`) | **no** | same - and it needs `"fmt"` in `vcpkg.json`, which is plan step 2, not a modules change |
+| 14 | `stdx::ct_conversions::type_as_string` | **no** | reflection still cannot do it (no constexpr allocation) |
+| 15 | the `CIB_*` macros | **no** | unchanged |
+| 16 | the `__builtin_FILE` / `__builtin_LINE` / `__builtin_FUNCTION` default arguments (`logging.cppm:67-69`, `:104-105`) | **partly** | The **module** half becomes `std::source_location::current()`. The **cib** half is already free to use it - that header is not standard-library-free. This is the only payoff that does not depend on the formatter's fate |
+| 17 | the source-location capture itself | **no** | already macro-free; `std::source_location` is the same idiom |
+| 18 | the standard-library-free module rule | **the decision** | see below |
+| 19 | the `format_string` class's compile-time check (`logging.cppm:64-84`) | **yes, cleanly - but not on its own** | `std::basic_format_string<char, Types...>`'s constructor is `consteval` and validates the specification against the class's **type** parameters (libstdc++ 16 `<format>:168-186`, the definition at `:5430`). So DEF-5 goes away. **But see the package rule below** |
+| 20 | `std::meta::nonstatic_data_members_of` | **no** | already the C++26 facility |
+
+**The tally.**
+
+| Outcome | Rows |
+|---|---|
+| flip cleanly | **1, 2, 3, 6, 19** (five) |
+| flip partly | **16** (one) |
+| flip lossily | **7, 8, 9** (three) |
+| flip only in combination | **5** (one) |
+| do not flip | **4, 10, 11, 12, 13, 14, 15, 17, 20** (nine) |
+| the decision itself | **18** (one) |
+
+**Five rows flip cleanly, and only one of the five (row 16) is worth anything on its own.**
+
+### The package rule: rows 19 and 7-9 are not separable
+
+This is the sharpest result, and it corrects the audit's table.
+
+**Row 19 on its own is a defect.** `std::basic_format_string` validates the specification against
+the **standard's** grammar and the argument's type. If the module keeps its own runtime formatter
+(row 5 stays, rows 7-9 do not flip), the module would then **validate with one grammar and format
+with another**. The example is D2:
+
+```cpp
+com::rsm::logging::info("{:>06}", 42);
+```
+
+`std::basic_format_string` accepts it - the syntax is valid, and `42` is formattable as an
+integer. The standard's meaning is *right-align in a width of 6*, so `std::format` gives
+`"    42"`. The module's renderer gives `"000042"` - it treats the `0` as zero-padding and ignores
+the alignment. So the module would **accept a specification whose meaning it does not implement**,
+and the compile-time check would certify it.
+
+**That is a worse failure than DEF-5**, because the check would be *there* and *wrong* rather than
+absent. DEF-5 is "the module never validates"; this would be "the module validates against a
+grammar it does not implement".
+
+**So the rule is: either the module uses the standard's validator *and* the standard's renderer,
+or it uses neither.** Rows 19 and 7-9 are one decision, and the audit's table lists them as two.
+
+**And the same rule applies to fmt.** fmt 12.2.1 implements the C++26 format-spec grammar, so a
+fmt-based validator and a fmt-based renderer agree with each other - but fmt's `fmt::format` is
+**not** `constexpr` either, unless the compile-time API is used (`FMT_COMPILE` /
+`FMT_STATIC_FORMAT`, `fmt/compile.h`). So the fmt route has the same shape: the validator and the
+renderer must come from the same library.
+
+### Three outcomes, three prices
+
+| | **A - the module keeps its own formatter** | **B - the module uses the standard's** | **C - the module uses fmt's** |
+|---|---|---|---|
+| **rows that flip** | 1, 2, 3, 6, 16 | 1, 2, 3, 6, 7, 8, 9, 16, 19 | 7, 8, 9, 16, 19 (to fmt) |
+| **how** | `import std;` in the purview, **the module's scanner stays** | `import std;` + `std::format_to` | `import fmt;` |
+| **`format.hpp`** | 603 -> **~400 lines** | 603 -> **~120-150 lines** | 603 -> **~120-150 lines** |
+| **the dialect** | the module's own - **DEF-4 stays** | the standard's - DEF-4's structural cause goes | fmt's (the standard's grammar) - same |
+| **DEF-5** | **goes** (row 19) - but see the package rule | **goes** | **goes** |
+| **constexpr formatting** | **kept** | **LOST** - `std::format_to` is not `constexpr` in either implementation | **kept**, if the compile-time API is used |
+| **the `static_assert` formatter tests** (item 1, Route B) | **kept** | **destroyed** | **kept** |
+| **the GCC migration** | yes | yes | maybe (see the `FMT_IMPORT_STD` switch) |
+| **the CMake gate** | yes | yes | no |
+
+**Outcome A is the interesting one.** It is the only outcome where the module keeps its
+`constexpr` formatter *and* its `static_assert` tests *and* gets the traits and `std::to_chars`
+from the standard library. But it keeps the module's own dialect, so **DEF-4 stays** - and, worse,
+row 19 turns the missing validation into a *wrong* validation unless the module also drops the
+standard's validator. So **A is only coherent without row 19**: `import std;` for the traits and
+`std::to_chars`, the module's own scanner, and the module's own dialect.
+
+And then A buys 203 lines for the whole GCC migration and the experimental CMake gate. **That is a
+bad trade, and it is the reason the recommendation below is not "adopt `import std;`".**
+
+### The fmt module: the option the audit never considered
+
+**fmt 12.2.1 ships a C++20 module.** Upstream's `src/fmt.cc` is:
+
+```cpp
+module;
+#define FMT_MODULE
+#ifndef FMT_IMPORT_STD
+#  include <algorithm>
+#  include <bitset>
+...
+#endif
+export module fmt;
+#ifdef FMT_IMPORT_STD
+import std;
+#endif
+```
+
+and upstream's `CMakeLists.txt` has `option(FMT_MODULE "Build a module library." ${FMT_USE_CMAKE_MODULES})`,
+where `FMT_USE_CMAKE_MODULES` is TRUE only if CMake >= 3.28, `CMAKE_CXX_STANDARD >= 20`, Ninja
+>= 1.11, and GCC >= 15 / Clang >= 16 / MSVC >= 1934 (`CMakeLists.txt:55-86`).
+
+**The project's own environment clears every one of those gates**: CMake 4.4.5, Ninja 1.13.2, GCC
+16.2.0, clang-p2996 21.0.0git, and `CMAKE_CXX_STANDARD 26` (`cmake/toolchains/cpp-core.cmake:70-72`).
+
+**But the vcpkg port at the pinned baseline does not build it.** The baseline's `ports/fmt`
+portfile passes only three options - `-DFMT_CMAKE_DIR`, `-DFMT_TEST=OFF`, `-DFMT_DOC=OFF` - and
+does **not** set `CMAKE_CXX_STANDARD`, so `FMT_USE_CMAKE_MODULES` is FALSE and `FMT_MODULE`
+defaults to FALSE. The installed tree confirms it: fmt 12.2.1 (`FMT_VERSION 120201`), **no module
+interface, no BMI, no `.cppm`**.
+
+**So Outcome C needs an overlay port for fmt** - and the project already has the mechanism and the
+pattern: five overlay ports under `ports/`, each a `vcpkg.json` plus a `portfile.cmake`, with a
+`REF` and a `HEAD_REF`. The port would pass `-DFMT_MODULE=ON` and `-DCMAKE_CXX_STANDARD=20`.
+
+**And the `FMT_IMPORT_STD` switch is the same decision again, in miniature.** With it, fmt's
+module does `import std;` - which works on clang-p2996 and is subject to the GCC question below.
+Without it, fmt's module textually includes the standard headers into its **global module
+fragment** - one copy - which is the same coupling the project's own module avoids, and the same
+collision risk the `logging.cppm:9-19` comment describes. **There is no setting of
+`FMT_IMPORT_STD` that is free of the question.**
+
+One more cost for Outcome C: **the project would then have three copies of fmt in play** - quill's
+bundled `fmtquill` (which VCPKG-1 answered is structural), the standalone fmt 12.2.1, and fmt's
+module.
+
+### The GCC question is not priced - and the matrix that priced it is not the project's configuration
+
+This is the other sharp result, and it corrects the audit's cost model.
+
+**The audit's GCC matrix says option (c) is blocked.** `import-std.md:295` - *"it is **blocked on
+GCC 16 today** - any standard or system-header include in an importing translation unit fails"* -
+and the matrix at `:201-206` shows three GCC 16 failures, including the last row: *"the module
+exports no std types, importer + `#include <cstdio>`" -> **fails***.
+
+**But the project's own GCC 16 build does exactly that row.** `tests/logging_test.cpp` imports the
+module and includes `<cstdio>`, `<string>` and `<unistd.h>`; the module's interface exports no
+standard-library types; and `build/gcc16-debug/tests/cpp-core-tests` exists. The project's GCC 16
+build works.
+
+**The two configurations differ in the dialect flag, and nobody noticed.**
+
+| | The dialect | Where it comes from |
+|---|---|---|
+| the audit's matrix | `-fmodules` | `import-std.md:188` - *"`-fmodules` for GCC (not implied by `-std=c++26`)"* |
+| **the project** | **`-fmodules-ts`** | `build/gcc16-debug/compile_commands.json`: `-std=c++26 -freflection -fmodules-ts -fmodule-mapper=...`. CMake 4.4.5's `Modules/Compiler/GNU-CXX.cmake` sets `CMAKE_CXX_MODULE_MAP_FLAG` to `-fmodules-ts` for GCC >= 14 |
+
+The p2996 path has **no** modules flag at all on the command line - CMake's clang path uses the
+response-file modmap - so clang is in the C++23 dialect either way.
+
+**So the matrix does not price the project's configuration, and "blocked on GCC 16" is an
+unverified claim for this project.** It is a question, not a finding. That is **MOD-11**, and it is
+the one measurement that decides the price of option (c).
+
+**What is *not* in doubt** is the finding that the matrix was right to reach for the standard
+library-free rule in the first place, and that the rule is load-bearing in **some** dialect: the
+audit's own `logging.cppm:9-19` comment quotes a **GCC** error -
+`redefinition of 'constexpr bool std::__is_constant_evaluated()'` - and a **Clang** error with a
+*different* shape (`type alias template redefinition with different types`). Two different
+mechanisms, and `import-std.md:112-119` explains the clang one as a **merge deficiency** rather
+than a textual copy. So the two compilers differ, and the project is currently in the
+configuration where they happen to agree.
+
+### The work estimate
+
+Nothing here can be built or measured - the build lane is parked - so this is an estimate in
+**files and shape**, with the measurement that decides each one named.
+
+| # | The work | Files | Shape | Decided by |
+|---|---|---|---|---|
+| 1 | **settle the GCC dialect question** | 0 | one compile | the build lane (**MOD-11**) |
+| 2 | the CMake `import std;` gate | `cmake/toolchains/cpp-core.cmake` | ~5 lines: the experimental UUID (or CMake >= 4.5) and `CMAKE_CXX_MODULE_STD ON` | nothing - but it is **version-specific** and the UUID has to be looked up per CMake |
+| 3 | the module's purview | `modules/logging/logging.cppm` | ~3 lines: `import std;` after `export module` (it must sit there - [module.import]/1) | work 1 |
+| 4 | **the importer migration** | `src/app.cpp`, `src/main.cpp`, `src/reflection_demo.cpp`, `tests/logging_test.cpp` | **every `#include` in four files reviewed.** They include quill's headers, cib's headers, `<unistd.h>` and the standard headers | work 1; and whether `<unistd.h>` survives the mix (**MOD-4**) |
+| 5 | the formatter's replacement | `modules/logging/format.hpp` | 603 -> ~400 (Outcome A) or ~120-150 (Outcome B) | the outcome chosen |
+| 6 | `format_string`'s replacement | `modules/logging/logging.cppm:64-84` | ~20 lines: hold a `std::basic_format_string<char, Types...>` instead of the hand-rolled check - **and only together with work 5** | the package rule |
+| 7 | `std::source_location` | `modules/logging/logging.cppm:67-69`, `:104-105` | ~10 lines: the `__builtin_*` triple becomes one default argument | work 3 |
+| 8 | the fmt overlay port (Outcome C only) | `ports/fmt/vcppkg.json`, `ports/fmt/portfile.cmake` | **two new files**, following the pattern of the five existing overlays; `-DFMT_MODULE=ON`, `-DCMAKE_CXX_STANDARD=20` | nothing |
+| 9 | `"fmt"` in the manifest | `vcpkg.json` | 1 line | nothing - and it is **plan step 2** regardless, because rows 10 and 13 need it |
+
+**The critical path is work 1.** Everything in column "Decided by" that says "work 1" is blocked
+on it, and it is the cheapest of the nine - one compile.
+
+**And the biggest single item is not a compile at all: work 4.** Four files, every include
+reviewed, and the include set includes **third-party headers** (quill's, cib's, `ut`'s) that the
+project does not control. The audit's open question 8 asks whether quill's, cib's and ut's headers
+compile in a translation unit that imports `std` on clang-p2996 - and libc++'s own documentation
+warns that *"Including headers after importing the `std` module **may fail**"*.
+
+### The payoff
+
+**What `import std;` uniquely buys.** This is the question the table's phrasing hides. Of the five
+rows that flip cleanly, **four are reachable without `import std;` at all** - the traits, the
+concept, `std::forward` and `std::to_chars` all live on the *implementation* side of the
+`internal.hpp` boundary, and `src/logging/quill_logger.cpp` is a plain translation unit that may
+use the standard library freely **today**.
+
+So the *unique* payoff of `import std;` is:
+
+| | what only `import std;` gives |
+|---|---|
+| **row 16** | `std::source_location::current()` in the module's default arguments - about **10 lines** and three `__builtin_*`s |
+| **row 19** | the standard's own compile-time format-string validation, in the module's interface |
+
+**And row 19 is only correct together with rows 7-9** (the package rule) - which the
+implementation-side route (B') delivers *anyway*, because the implementation can use
+`std::format_to` freely.
+
+**So the honest payoff statement is:**
+
+> `import std;` buys the module's interface the **standard's format-string grammar** - about 80
+> lines of scanner and parser - and `std::source_location` - about 10 lines. Everything else it
+> appears to buy is reachable behind `internal.hpp` with no modules work at all.
+
+**And what it costs** is the four-file importer migration, the experimental CMake gate, the
+loss of the `constexpr` formatter (Outcome B), the risk that the module's global module fragment
+re-introduces the collision the standard-library-free rule exists to prevent, and a
+**GCC-16 question that has not actually been asked in the project's configuration**.
+
+**And what it does not buy at all**, even with everything working: `std::inplace_vector` (row 4 -
+libc++ has none), the level-enum merge (row 11 - the two enums point in opposite directions), the
+`format_double` fix (row 10 - already reachable), the cib tag string (row 13 - already reachable).
+
+### The recommendation
+
+**Do not adopt `import std;` now, and do not adopt it in the shape the audit's table implies.**
+
+1. **Adopt B' - the implementation-side route - as the plan's step 7.** It gets the traits,
+   `std::to_chars` and `std::format_to` **without any modules work**, and it is already the
+   audit's recommendation (`import-std.md:300-315`). It depends on **QUIL-1** (the Codec
+   experiment), which is the one open question that decides whether it is possible at all.
+2. **Do not take row 19 without rows 7-9.** The package rule above is a **new** finding and it
+   changes `FMT-14`'s option (b): validating with the standard's grammar while formatting with the
+   module's own is *worse* than not validating at all.
+3. **Do not adopt Outcome A.** `import std;` for 203 lines, with the module's dialect unchanged and
+   DEF-4 still there, is the worst of the three.
+4. **Keep the standard-library-free rule, but correct its reason.** The rule stays - it is what
+   makes the two compilers work today - but `logging.cppm:9-19` and `internal.hpp:3-6` state the
+   standard's rule wrongly (the global module fragment is **not** copied into every importer; it is
+   *attached to the global module*, and the collisions are merge deficiencies - `import-std.md:112-119`
+   has the full argument). That correction is worth making on its own: the comment currently
+   teaches the wrong model.
+5. **Measure MOD-11 before costing option (c) again.** The audit's blocker is unverified in the
+   project's configuration, and it is one compile.
+
+**And the fmt module (Outcome C) is the option worth keeping open.** It is the only route that
+gives the standard's grammar **and** keeps the `constexpr` formatter **and** the `static_assert`
+tests **and** does not require the importer migration. Its price is one overlay port - a shape the
+project already has five of - plus the `FMT_IMPORT_STD` question, which is the same question one
+level down.
+
 ---
 
 ## 7. Four smaller questions
@@ -1203,11 +1491,11 @@ decay, and what is their state now?
 
 ## What was checked
 
-- The **state table** (82 items, 13 / 0 / 69): parsed from the "settled by" column of every row of
+- The **state table** (83 items, 13 / 0 / 70): parsed from the "settled by" column of every row of
   [open-items.md](open-items.md) plus its six defect headings. The 13 owner decisions match the
   thirteen headings in [decisions.md](decisions.md) exactly - none missing, none extra. The two
   registry items were removed from the open list when section 2 answered them, `QUIL-8` when
-  section 4 did, and section 5 added `FMT-15` and `MOD-10`.
+  section 4 did, and sections 5 and 6 added `FMT-15`, `MOD-10` and `MOD-11`.
 - The **evidence quoted in each section** was read from the files it names.
 - **Nothing was built, configured, run or regenerated.** Every claim is a restatement of a
   finding recorded in an earlier part, or a reading recorded here.
