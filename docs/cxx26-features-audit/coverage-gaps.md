@@ -9,6 +9,14 @@ coverage gate that reports "100%" over a denominator that silently excludes the 
 worse than no gate. So the uncovered surface is written down first, item by item, with the reason
 each item is uncovered and whether it is reachable at all.
 
+**One item on this list is not a gap but a defect.** The level filtering does not work: a message
+logged below the configured level is still emitted, because `emit()` never asks the logger whether
+the statement should be logged and the backend filters against the sink's threshold, which stays at
+its default. The chain is in
+[quill-runtime-formatting.md](quill-runtime-formatting.md). The test that would have caught it -
+"a message below the configured level is not emitted" - has to be written as part of the coverage
+work, and it will fail until the defect is fixed.
+
 The three test files' worth of behaviour today is small. `tests/logging_test.cpp` has eight tests
 and exercises: `set_level` / `current_level`, the ordering of the levels, `setup`, `flush`,
 `info`, `warning`, `error`, `log_raw`, the integer / negative integer / boolean / character /

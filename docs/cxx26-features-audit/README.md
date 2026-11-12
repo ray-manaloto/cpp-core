@@ -20,6 +20,36 @@ recommendations for the three questions the owner asked:
 | 5 | [reflection.md](reflection.md) | C++26 static reflection (P2996) against the C++26 text |
 | 6 | [macro-reduction.md](macro-reduction.md) | what each macro does and whether a template can do it |
 | 7 | [coverage-gaps.md](coverage-gaps.md) | what the tests do not reach today, branch by branch |
+| 8 | [quill-runtime-formatting.md](quill-runtime-formatting.md) | whether quill can format from a runtime format string, the type-erasure boundary, and a live defect |
+
+## The defect this audit found
+
+**`set_level()` does not filter anything on the module path.** A message logged below the
+configured level is still emitted.
+
+Read from the installed quill 13.1.0 headers:
+
+- `Logger::set_log_level` stores the threshold in the **logger**'s `_log_level`
+  (`quill/core/LoggerBase.h:142-150`);
+- the only reader of that threshold is `should_log_statement`
+  (`quill/core/LoggerBase.h:178, 188`), and quill's own wrappers call it - the macro wrapper at
+  `LogMacros.h:404`, the function wrapper at `LogFunctions.h:75`;
+- **cpp-core's `emit()` calls `log_statement_runtime_metadata` directly, with no check**
+  (`src/logging/quill_logger.cpp:113`), and so does the cib path
+  (`include/cpp-core/logging/cib_quill.hpp:157`);
+- the backend filters against each **sink**'s threshold, not the logger's
+  (`quill/backend/BackendWorker.h:1500`), and the sink's default is `TraceL3` - everything passes
+  (`quill/sinks/Sink.h:279`).
+
+The logger threshold that `set_level()` sets is therefore read by nobody on this path, and the
+sink's threshold stays at its default. The fix is three lines in each of the two call sites, and
+`quill::detail::log` (`LogFunctions.h:63-83`) is the reference implementation to copy.
+
+The test suite cannot catch this: it sets the level and reads it back, but never asserts that a
+message *below* the threshold is suppressed. That assertion belongs in the coverage work.
+
+**This is a bug, not a trade-off, and it should be fixed whatever else happens.**
+
 
 ## The verdict in one paragraph
 
@@ -47,6 +77,13 @@ therefore:
 - **The Intel `stdx` constexpr facilities (`ct_format`, `ct_string`) are the most promising
   replacement** for the module's hand-rolled compile-time scanner, *provided* they do not pull in
   the standard library - which part 6 checks.
+- **Quill can format from a runtime format string** - `log_statement_runtime_metadata` takes a
+  plain `char const*` (`quill/Logger.h:426-431`) - and quill has **no compile-time format-string
+  check to lose** (it never uses fmt's compile-time checker), so cpp-core's own `consteval` check
+  is strictly stronger and survives either way. The type-erasure boundary is already half built in
+  `format.hpp:537-540`; the missing piece is a custom `quill::Codec` that pushes *N* arguments
+  from one pack element, which the sources say works and which is the one thing that needs a
+  compile to confirm. Part 8.
 
 ## The table
 
