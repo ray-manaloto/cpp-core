@@ -30,6 +30,7 @@ recommendations for the three questions the owner asked:
 | 15 | [catalog-ids.md](catalog-ids.md) | are the catalog IDs the same under both compilers? - and why they are not the same between releases |
 | 16 | [readme-check.md](readme-check.md) | the root `README.md`, checked line by line - and the proof that the committed tree is the tree that built |
 | 17 | [decisions.md](decisions.md) | the thirteen decisions the owner has to make, with a recommendation for each |
+| 18 | [followup-research.md](followup-research.md) | **the eight things the audit never asked** - and the answers |
 | - | [upstream/](upstream/) | the upstream sources these parts quote, vendored so the review can be done offline |
 
 ## The defects this audit found
