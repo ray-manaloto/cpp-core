@@ -3,7 +3,7 @@
 **Status:** decision taken (option E). The leak check is now enabled for `p2996-asan` with
 `cmake/lsan.supp`; `gcc16-asan` keeps `detect_leaks=0` with the reason recorded in the preset and
 in the README. The `clang23-asan` preset (option C) is a planned follow-up - see
-[Follow-up](#follow-up).
+[Follow-up](#7-follow-up).
 **Scope:** item 1 of the two flagged items. Item 2 (the module path reports no source location) is
 untouched.
 
@@ -21,9 +21,9 @@ which is our code:
 
 Homebrew **clang 23.1.5** has a working leak check with no false positives, but it cannot build this
 project today (no `<meta>` in any installed macOS SDK). The options are in
-[What we can do](#what-we-can-do).
+[What we can do](#5-what-we-can-do).
 
-Everything below is reproducible from this directory; see [Reproducing](#reproducing).
+Everything below is reproducible from this directory; see [Reproducing](#8-reproducing).
 
 ---
 

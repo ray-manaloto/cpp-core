@@ -67,13 +67,21 @@ violation would be the project's own fault.
 
 **The fix:** reword both comments. A comment-only change; no compile needed to know it is right.
 
-**Also:** the same claim is in the root `README.md` - at the top ("The logging module's interface is
-deliberately free of the standard library, because a module's global module fragment is copied into
-every translation unit that imports it") and in the Logging section ("A module's global module
-fragment is copied into every translation unit that imports it, so a standard header that the
-interface depends on ends up next to the standard headers of any translation unit that includes
-them"). **The README was corrected** when part 13 was written; the two source comments are still
-to do, because they are source changes and the build lane is parked.
+**Also:** the same claim is in the root `README.md`, and it was in **three** places there:
+
+1. at the top ("The logging module's interface is deliberately free of the standard library, because
+   a module's global module fragment is copied into every translation unit that imports it");
+2. in the Logging section ("A module's global module fragment is copied into every translation unit
+   that imports it, so a standard header that the interface depends on ends up next to the standard
+   headers of any translation unit that includes them");
+3. in the Logging section's macro paragraph ("the module cannot include a header that its importers
+   include, because the global module fragment is copied into every importer and the two copies of
+   the header would collide").
+
+**The README was corrected** when part 13 was written - which caught the first two and **missed the
+third**. Part 16's line-by-line pass found the third and corrected it as well, so **the README is
+now correct in all three places**; the two **source** comments are still to do, because they are
+source changes and the build lane is parked.
 
 ### DEF-4 - the two logging paths do not share a format-string dialect
 

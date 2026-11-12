@@ -123,7 +123,9 @@ The module's interface is the whole API: `setup`, `flush`, `set_level`, `current
 `log_raw`, `log`, and the level shortcuts `trace`, `debug`, `info`, `warning`, `error` and
 `critical`. The format string is checked at compile time: `format_string<>`'s constructor is
 `consteval` and throws (a compile-time error) when the format string is malformed or does not
-match the arguments.
+match the **number** of arguments. (It does not check the *type* of each argument against the
+format specification — see the
+[features audit](docs/cxx26-features-audit/format-dialect.md).)
 
 The module path reports the call site's file and line, like the catalog path does, and it does it
 without a macro. `format_string<>`'s constructor takes the location as defaulted parameters:
@@ -143,9 +145,10 @@ hands it to the implementation, and quill prints it in the `%(short_source_locat
 A macro is the usual way to capture a call site, and it does not work here. A macro defined in
 the module's global module fragment does not reach the importing translation units — neither in
 clang nor in GCC, both of which drop it — and the module cannot include a header that its
-importers include, because the global module fragment is copied into every importer and the two
-copies of the header would collide. The default-argument trick needs neither a macro nor a
-header, and it works the same way on both compilers.
+importers include: on both compilers today, the header's declarations and the importer's own
+standard headers end up with conflicting attachments (see [Logging](#logging) below). The
+default-argument trick needs neither a macro nor a header, and it works the same way on both
+compilers.
 
 The alternatives that were measured, the reproductions and the upstream sources are in
 [`docs/module-source-location/`](docs/module-source-location/README.md).
@@ -212,12 +215,39 @@ holds three messages (IDs 0 to 2) and one module (`cpp_core`, ID 0):
 
 ```json
 {
-  "messages": [
-    { "msg": "cib levels map onto quill levels: INFO -> Info, WARN -> Warning", "id": 0 },
-    { "msg": "compile-time formatted: the answer is 42", "id": 1 },
-    { "msg": "errors are logged too, at quill's Error level", "id": 2 }
-  ],
-  "modules": [ { "string": "cpp_core", "id": 0 } ]
+    "messages": [
+        {
+            "msg": "cib levels map onto quill levels: INFO -> Info, WARN -> Warning",
+            "type": "msg",
+            "arg_types": [],
+            "id": 0,
+            "args": [],
+            "tags": []
+        },
+        {
+            "msg": "compile-time formatted: the answer is 42",
+            "type": "msg",
+            "arg_types": [],
+            "id": 1,
+            "args": [],
+            "tags": []
+        },
+        {
+            "msg": "errors are logged too, at quill's Error level",
+            "type": "msg",
+            "arg_types": [],
+            "id": 2,
+            "args": [],
+            "tags": []
+        }
+    ],
+    "modules": [
+        {
+            "string": "cpp_core",
+            "id": 0
+        }
+    ],
+    "enums": {}
 }
 ```
 
@@ -346,8 +376,16 @@ The reflection demo needs `<meta>`, which is not part of Homebrew's libc++ yet.
 
 ## Without vcpkg
 
-To configure without vcpkg, override the toolchain:
+To configure without vcpkg's manifest mode, override the toolchain — and point the search path at
+an already-installed vcpkg tree, because that is what vcpkg's own toolchain does
+(`vcpkg.cmake:452`). Without the prefix path, `find_package(intel-cib CONFIG REQUIRED)` has nowhere
+to look:
 
 ```sh
-cmake --preset gcc16-release -B build/nv-gcc16-release -DCMAKE_TOOLCHAIN_FILE=$PWD/cmake/toolchains/cpp-core.cmake
+cmake --preset gcc16-release -B build/nv-gcc16-release \
+  -DCMAKE_TOOLCHAIN_FILE=$PWD/cmake/toolchains/cpp-core.cmake \
+  -DCMAKE_PREFIX_PATH=$PWD/build/p2996-debug/vcpkg_installed/arm64-osx-p2996
 ```
+
+Use the triplet that matches the compiler: `arm64-osx-p2996` for the `p2996-*` presets and
+`arm64-osx-gcc16` for the `gcc16-*` ones.

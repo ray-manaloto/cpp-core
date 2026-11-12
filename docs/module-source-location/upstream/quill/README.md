@@ -12,4 +12,4 @@ path's log line looks like:
 
 `Logger.h`, with `log_statement_runtime_metadata` (the function the module's implementation calls),
 is in the leak-check bundle, because it was needed there as well:
-[`../../asan-leak-check/upstream/quill/Logger.h`](../../asan-leak-check/upstream/quill/Logger.h).
+[`../../../asan-leak-check/upstream/quill/Logger.h`](../../../asan-leak-check/upstream/quill/Logger.h).

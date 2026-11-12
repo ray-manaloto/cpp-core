@@ -35,8 +35,8 @@ possible**. What remains is the implementation, which is parked.
     shims fail with "No version is set" - it has to be found by path or a project `.mise.toml`
     added and trusted); `gcov-16` in `/opt/homebrew/opt/gcc/bin`; no `lcov`/`genhtml`.
 - `.editorconfig` made to agree with the formatter: `2ef42de`.
-- The features audit, in fifteen parts: `3d7e865`, `15be31c`, `0e414de`, plus the parts written since
-  (reflection, macro reduction, fmt and `constexpr`, the consolidated open-items list).
+- The features audit, in sixteen parts: `3d7e865`, `15be31c`, `0e414de`, plus the parts written
+  since (reflection, macro reduction, fmt and `constexpr`, the consolidated open-items list).
 - The SDLC subagent role definitions: `22b6a65`.
 
 ## The research lane - complete
@@ -60,6 +60,7 @@ possible**. What remains is the implementation, which is parked.
 | 13 | [format-dialect.md](docs/cxx26-features-audit/format-dialect.md) | the module path's format strings against the C++26 grammar and fmt's - and the two paths' disagreement |
 | 14 | [remaining-research.md](docs/cxx26-features-audit/remaining-research.md) | the four questions that needed no compile: Intel's `stdx`, the logger's lifetime, `ut`'s module, the upstream watch |
 | 15 | [catalog-ids.md](docs/cxx26-features-audit/catalog-ids.md) | are the catalog IDs the same under both compilers? - and why they are not the same between releases |
+| 16 | [readme-check.md](docs/cxx26-features-audit/readme-check.md) | the root `README.md`, checked line by line - and the proof that the committed tree is the tree that built |
 
 The upstream sources those parts quote are vendored under
 [`docs/cxx26-features-audit/upstream/`](docs/cxx26-features-audit/upstream/README.md), so the review
@@ -195,8 +196,9 @@ When the build lane reopens:
 **[docs/cxx26-features-audit/open-items.md](docs/cxx26-features-audit/open-items.md)** has all of
 them: 6 defects, 14 fmt/`constexpr` questions, 9 quill questions, 16 tooling questions, 9
 `import std;` questions, 4 reflection questions, 3 macro questions, 10 coverage to-dos, 7 build
-questions and 2 dependency-tree questions - each with what settles it, plus a table of the
-questions that are **not** open because they have already been answered.
+questions, 2 dependency-tree questions and 3 environment questions - **83 in all** - each with what
+settles it, plus a table of the questions that are **not** open because they have already been
+answered.
 
 ## What parts 11 and 12 changed
 
@@ -331,6 +333,75 @@ anything).
 **Two new owner decisions** came out of it: **BUILD-7** (where the stable catalog lives) and
 **BUILD-8** (whether the build should check the catalog's message set against the call sites - the
 link catches a dropped message today, but only a build that links).
+
+## What part 16 changed
+
+**Part 16 - the root README, checked line by line.** Every factual claim in `README.md` was checked
+against the file it describes. Four were wrong; the README is now corrected.
+
+- **The global-module-fragment claim was in the README three times**, and part 13's fix had
+  corrected only two of them. The third is in the Logging section's macro paragraph. All three now
+  say what the standard says and what the compilers do (the collision is an **implementation
+  deficiency**, not the rule - [module.global.frag]/1, [std.modules]/4-5). The two **source**
+  comments are still deferred.
+- **"does not match the arguments"** was ambiguous in the wrong direction: the module checks the
+  **number** of arguments, not their types. The README now says "the **number** of arguments" and
+  points at DEF-5.
+- **The catalog JSON block was abridged without saying so.** It is now the **generated file
+  verbatim** (the only difference is the trailing newline a fenced block needs).
+- **The "Without vcpkg" command could not work.** Overriding the toolchain also removes vcpkg's
+  **search path** - vcpkg's own toolchain is what puts the installed tree on `CMAKE_PREFIX_PATH`
+  (`vcpkg.cmake:452`) - so `find_package(intel-cib CONFIG REQUIRED)` had nowhere to look. The
+  command now passes the prefix path, with a note about which triplet to use.
+
+**The README's main build claim holds, and now rests on a check.** The committed tree has **never
+been rebuilt**: the formatter-conformance commit `61ba2da` landed **90 seconds after** the last
+build. But the change is **provably semantics-preserving** - the eight files it touched were
+compared by **token stream** (comments, string and character literals, raw string literals and
+escapes recognised), and all eight are **identical**:
+
+| File | tokens | identical? |
+|---|---|---|
+| `include/cpp-core/logging/cib_quill.hpp` | 1106 | **yes** |
+| `include/cpp-core/logging/internal.hpp` | 148 | **yes** |
+| `include/cpp-core/logging/quill_logger.hpp` | 41 | **yes** |
+| `modules/logging/format.hpp` | 3939 | **yes** |
+| `modules/logging/logging.cppm` | 838 | **yes** |
+| `src/logging/quill_logger.cpp` | 1001 | **yes** |
+| `src/reflection_demo.cpp` | 95 | **yes** |
+| `tests/logging_test.cpp` | 1233 | **yes** |
+
+Whitespace outside literals is not significant in C++, and the punctuators that *are* significant
+inside macros - `#` and `##` - are tokens, so they are compared too. **The committed tree is the
+same program as the tree that built and passed the tests.** Everything else in the README checks
+out - the module's API list, the verbatim `format_string<>` signature, the IWYU scope table, the
+preset, sanitizer, hardening, triplet and port claims - and **all five overlay ports are pinned to
+their upstream HEAD** (checked against the GitHub API on 2026-11-12).
+
+**The fmt sources are now vendored** - the last major upstream dependency without a local copy -
+and the vendoring turned up something worth recording: **the installed fmt is not pristine upstream
+12.2.1**. vcpkg applies a patch of its own to the release tarball, backporting upstream PR **#4813**
+("Fix fallback uint128 bitwise not") - three lines in `include/fmt/format.h`. So **every `format.h`
+line number after 328 is three higher in the installed file than in pristine upstream**, and the
+audit's citations (which are to the installed file) would have been three lines out for a reviewer
+checking against upstream. The patch is vendored beside the header, the three-line insertion was
+verified by applying it to a pristine upstream checkout, and the result is byte-identical to the
+installed header.
+
+| file | provenance | git blob |
+|---|---|---|
+| `fmt/base.h` | byte-identical to upstream 12.2.1 | `9df283418079f4745f2120e8647a447f4836ac30` |
+| `fmt/compile.h` | byte-identical to upstream 12.2.1 | `f05d8426c680eada6bb1270c009a6e06038096f6` |
+| `fmt/format.h` | upstream 12.2.1 **+ the #4813 backport** | `0bff24a6bfec476daa63976db457b439431e58ac` |
+| `fmt/LICENSE` | byte-identical to upstream 12.2.1 | `795fdaec8f2ce6fcc97bbb15d1a6ac073af7bd17` |
+
+Every fmt citation in the audit was checked against the vendored files: `base.h:1440`,
+`base.h:1473-1477`, `base.h:1503-1512`, `base.h:1530-1558`, `format.h:2991-3005`, `format.h:3496`,
+`compile.h:55-60`, `compile.h:565-578` and `compile.h:594` - **all of them resolve to what the audit
+says they resolve to**.
+
+**Nothing new was built, configured, run or regenerated.** Part 16 closes the last of the
+no-compile research: what remains is the implementation (parked) and the owner decisions.
 
 ## State of the working tree
 

@@ -28,6 +28,7 @@ recommendations for the three questions the owner asked:
 | 13 | [format-dialect.md](format-dialect.md) | the module path's format strings against the C++26 grammar and fmt's - and the two paths' disagreement |
 | 14 | [remaining-research.md](remaining-research.md) | the four questions that needed no compile: Intel's `stdx`, the logger's lifetime, `ut`'s module, the upstream watch |
 | 15 | [catalog-ids.md](catalog-ids.md) | are the catalog IDs the same under both compilers? - and why they are not the same between releases |
+| 16 | [readme-check.md](readme-check.md) | the root `README.md`, checked line by line - and the proof that the committed tree is the tree that built |
 | - | [upstream/](upstream/) | the upstream sources these parts quote, vendored so the review can be done offline |
 
 ## The defects this audit found
