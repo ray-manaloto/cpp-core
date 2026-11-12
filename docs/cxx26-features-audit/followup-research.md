@@ -55,7 +55,7 @@ which is exactly what a research lane is for.
 
 | # | Item | Status | Finding |
 |---|---|---|---|
-| 1 | The `static_assert` formatter tests cannot reach the code they test | ☐ **not started** | — |
+| 1 | The `static_assert` formatter tests cannot reach the code they test | ☑ **done** | **Route B** - a private `format_tests.hpp` included by the module, so the asserts test the module's own copy. The plan's `tests/format_static_asserts.cpp` would compile a second copy and inflate the coverage union |
 | 2 | Build reproducibility and upstream drift | ☐ **not started** | — |
 | 3 | The public API has no contract | ☐ **not started** | — |
 | 4 | A benchmark harness | ☐ **not started** | — |
@@ -94,7 +94,133 @@ target_include_directories(cpp-core-logging PUBLIC "${PROJECT_SOURCE_DIR}/includ
 And the module includes it in its **private implementation section** - after `export module`
 (`modules/logging/logging.cppm:33`), so it is not reachable by `import` either.
 
-**Three routes, and what each one actually proves.** To be worked through in this section.
+**Three routes, and what each one actually proves.**
+
+### Route A - a new test translation unit (what the plan says)
+
+`tests/format_static_asserts.cpp` would have to reach `modules/logging/format.hpp`. It cannot
+`import` it - it is not exported. It is not on any include path - the module publishes only
+`include/`. So it needs a **relative path across the source tree**:
+
+```cpp
+#include "../../modules/logging/format.hpp"
+```
+
+That compiles, because `format.hpp` is standard-library-free by design and `#pragma once` makes
+the double include harmless. But it compiles a **second copy** of the formatter, in the test TU's
+global module, and that copy is not the one the module uses.
+
+What does a second copy prove? **The rules, but not the module.** The source text is identical, so
+a `static_assert` over the second copy does verify the formatting rules. But:
+
+- it says nothing about whether the **module's** copy is `constexpr`. If the `constexpr` sweep
+  (plan step 3) were applied to the test's copy and not the module's - or forgotten in the module -
+  the test would still pass, while the thing the sweep is *for* (the module constant-evaluating its
+  own formatter) would not hold;
+- it creates a **source-layout dependency** from `tests/` to `modules/logging/`, which breaks if
+  the module moves;
+- and it interacts badly with the coverage gate. The formatter's templates are emitted into the
+  **importing** translation units (the project's own comment says so: `format.hpp:5-6` - *"the
+  compiler emits them into the translation units that instantiate the module's templates"*), so
+  `format.hpp`'s lines are already reported from several TUs. The gate merges per file by union
+  (`TOOL-11`: *"any count > 0 means covered"*). A second copy in `tests/` joins that union, and a
+  line executed **only** in the test's copy would count as covered for the module's.
+
+### Route B - a private test header, included by the module
+
+```cpp
+// modules/logging/logging.cppm, private implementation section
+
+#include "format.hpp"
+#include "format_tests.hpp"
+```
+
+`format_tests.hpp` holds the `static_assert`s and the `constexpr` helper. They are compiled as part
+of the module interface unit, **against the module's own copy of the formatter**, on both
+compilers, in every build that compiles the module - which is every build.
+
+This is the only route that tests the actual code. It also needs **no CMake change** (the header
+is a private source of the same target), **no include-path change** (nothing outside `modules/`
+sees it), and creates no second copy, so the coverage union is untouched.
+
+The cost is one thing: the `static_assert`s are compile-time-only, so `format_equals` is never
+instantiated at runtime and its lines would show as **zero-count** in the coverage report. That is
+the same category the audit already identified - `scan_format` and `format_matches` are `consteval`
+and *"produce no runtime arcs"* (`coverage-gaps.md` §1.2) - so it needs one entry in the reviewed
+exclusion list, with the justification *"compile-time only; verified by the compiler"*.
+
+### Route C - export a test entry point from the module
+
+`import com.rsm.logging;` and call an exported `constexpr` function. This works, but it
+**exports the formatter's internals through the module's public interface** - and the module's
+interface *is* the whole API (`README.md:120`). It would widen the public surface to make a test
+possible, which is backwards. **Rejected.**
+
+### The recommendation
+
+**Route B.** The shape:
+
+```cpp
+// modules/logging/format_tests.hpp
+#pragma once
+
+#include "format.hpp"
+
+namespace com::rsm::logging::detail {
+
+// Formats a message into a fixed buffer and compares it with the expected text.
+// The arguments must be constexpr objects of static storage duration: format_message takes
+// their addresses, so a temporary cannot be constant-evaluated (part 9, caveat 2).
+template <unsigned long N, typename... Args>
+[[nodiscard]] constexpr auto format_equals(char const (&expected)[N], char const *text,
+                                           unsigned long length, Args &&...args) -> bool {
+  message_buffer buffer;
+  format_message(buffer, text, length, forward<Args>(args)...);
+  if (buffer.size() != N - 1U) {
+    return false;
+  }
+  for (unsigned long i = 0U; i < N - 1U; ++i) {
+    if (buffer.data()[i] != expected[i]) {
+      return false;
+    }
+  }
+  return true;
+}
+
+}  // namespace com::rsm::logging::detail
+
+namespace com::rsm::logging::detail::tests {
+
+// Namespace-scope constexpr variables have static storage duration, which is what
+// format_message's address-taking requires.
+constexpr int answer = 42;
+
+static_assert(format_equals("the answer is 42", "the answer is {}", 16, answer));
+
+}  // namespace com::rsm::logging::detail::tests
+```
+
+Three details make it work, and each was checked:
+
+- `message_buffer` is **default-constructible in a constant expression**: it has no user-provided
+  constructor, `char chars[capacity]{}` and `unsigned long used = 0U` are constant initialisers
+  (`format.hpp:204-205`), so the implicit default constructor is `constexpr`.
+- `forward` is the header's **own** `forward` (`format.hpp:126-136`), not `std::forward` - the
+  module may not use the standard library.
+- The test arguments are **namespace-scope `constexpr` variables**, which have static storage
+  duration, which is exactly what part 9's caveat 2 requires (`format_message` takes the
+  addresses of its arguments, so a temporary cannot be constant-evaluated).
+
+### What it changes in the plan
+
+Plan step 4 becomes *"add `modules/logging/format_tests.hpp`, included by the module's private
+implementation section"* instead of *"add `tests/format_static_asserts.cpp`"*. The coverage gate
+gains one exclusion entry.
+
+**This does not remove a compile question.** `FMT-5` already asks whether the `static_assert`
+pattern constant-evaluates on both toolchains, and that is still open - the build lane has to
+settle it. What this section settles is **where the asserts live and what they prove**, which no
+compile would have told us.
 
 ---
 
