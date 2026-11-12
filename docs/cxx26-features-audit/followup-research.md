@@ -65,7 +65,7 @@ which is exactly what a research lane is for.
 | 4 | A benchmark harness | ☑ **done** | Six metrics (M1-M6), a five-step baseline ladder (B0-B5), the variables, and three traps the harness has to avoid - `high_resolution_clock` is the wall clock on libstdc++, the per-message allocation is 0 or 1 depending on the small-string threshold, and the clock reads are as expensive as the measurement. **And a correction:** `QUIL-8`'s premise is wrong - `<true>` means "honour the flush threshold", the threshold is 0 by default, and quill's own default is the same value |
 | 5 | A differential test between the two logging paths | ☑ **done** | The case list, classified: **11 of the 15 divergences are testable** as a runtime differential comparison; the other four are asymmetric compile-time rejections and need a "must not compile" mechanism the project does not have. The oracle is three columns - the standard, the catalog path, the module path - with the rule that the expectations come from the standard, not from the implementation. Two modes, switched by `FMT-14`. And the test would **trigger DEF-6**, so it needs its own catalog |
 | 6 | Costing the `import std;` option | ☑ **done** | The row-by-row flip analysis of the twenty-row table: **five rows flip cleanly, one partly, three lossily, one only in combination, nine not at all.** Two results the audit did not have: **rows 19 and 7-9 are a package** (validating with the standard's grammar while formatting with the module's own is *worse* than not validating), and **the GCC 16 blocker is unverified in the project's configuration** - the project compiles with `-fmodules-ts`, the matrix was measured with `-fmodules`, and the project's own GCC 16 build does the shape the matrix says fails |
-| 7 | Four smaller questions | ☐ **not started** | — |
+| 7 | Four smaller questions | ☑ **done** | **7.1** consuming the module from another project: CMake's `install(EXPORT ... CXX_MODULES_DIRECTORY ...)` is the load-bearing piece, and the project's own obstacles are named - `format.hpp` is a `PRIVATE` source but a **public build-time dependency** of the installed module, `internal.hpp` is in the global module fragment, and the export publishes quill's and cib's whole closure. **7.2 MemorySanitizer: no** - two independent blockers (GCC 16 has no `memory` sanitizer; clang's MSan supports only Linux/NetBSD/FreeBSD) and the installed libc++ has no MSan support at all. **7.3 `ut`'s supply chain:** good and unchanged - an immutable released tag, a SHA512, a byte-identical installed tree, 419 lines, two contributors, and **no vcpkg registry port**, so the baseline gives it no protection. **7.4 quill:** keep it - current (13.1.0, 2026-10-17), MIT, and `quill::Codec<Arg>` is the *supported* extension point `QUIL-1` depends on |
 | 8 | Re-validating the audit's time-sensitive claims | ☐ **not started** | — |
 
 ---
@@ -1467,6 +1467,182 @@ shadows a builtin vcpkg port. No risk assessment exists.
 **7.4 - Is quill 13.1.0 still the right backend?** The audit never asks. It examined quill's
 headers to answer specific questions, not to ask whether the dependency should stay. Now that fmt
 is the formatter and the module path does its own formatting, the hybrid is worth a look.
+
+### 7.1 - Can another project consume a C++ module?
+
+**The state, first.** There is **not one `install()` call and no `export()` set** in any of the
+project's CMake files, so another project cannot `find_package(cpp-core)` and cannot import the
+module. (A correction while checking: `BUILD-2` says *"any of the five `CMakeLists.txt` files"* -
+there are **four**: `CMakeLists.txt`, `modules/CMakeLists.txt`, `modules/logging/CMakeLists.txt`,
+`tests/CMakeLists.txt`. The number does not change the answer, but the file should be right.)
+
+**What CMake requires.** Three things, and the middle one is the one that is easy to miss:
+
+| # | What | Since |
+|---|---|---|
+| 1 | `install(TARGETS cpp-core-logging EXPORT ... FILE_SET CXX_MODULES DESTINATION ...)` - installs the module's **source**, not a binary | 3.23 (file sets), 3.28 (`CXX_MODULES`) |
+| 2 | `install(EXPORT cpp-core-targets ... CXX_MODULES_DIRECTORY ...)` | **3.28** |
+| 3 | the consumer calls `find_package(cpp-core CONFIG REQUIRED)` and links `cpp-core::logging` | 3.28 for the module import to work at all |
+
+The middle one is not optional. CMake's own words: *"without this information, **none of the C++
+modules which are part of the targets in the export set will support being imported in consuming
+targets**"*. A `cpp-core-config.cmake` without a `CXX_MODULES_DIRECTORY` would install the static
+library, the headers and the target - and the consumer's `import com.rsm.logging;` would fail.
+
+**And the project-specific obstacles, which are the interesting part.**
+
+| # | The obstacle | Why it matters |
+|---|---|---|
+| **A** | **`format.hpp` is a textual dependency of the module's interface unit, but it is a `PRIVATE` source** | `logging.cppm:33` does `#include "format.hpp"` **in the module's purview**, and `modules/logging/CMakeLists.txt:19` lists `format.hpp` under `PRIVATE`. A consumer that rebuilds the module from source **needs that file installed and on the include path**. So the module's *private* implementation is a **public build-time dependency** of the installed module - and `PRIVATE` says it is not |
+| **B** | **`internal.hpp` is in the global module fragment** | `logging.cppm:28` does `#include <cpp-core/logging/internal.hpp>` before `export module`. It is also a textual dependency. It lives under `include/cpp-core/logging/` and is published by `target_include_directories(... PUBLIC ...)`, but it is **not in a file set**, so an install would have to add it as one |
+| **C** | **the target's public link closure** | `modules/logging/CMakeLists.txt:23` links `PUBLIC intel::cib quill::quill`. The exported config must `find_dependency(intel-cib)` and `find_dependency(quill)` - so the **consumer** must have those ports, at the same triplet, with the same `intel-cib` **overlay** port. Publishing the module publishes the whole dependency closure |
+| **D** | **the catalog is separable - good** | `cpp-core-catalog` is a separate target, and the test executable links it explicitly (`tests/CMakeLists.txt:12`), so the module's consumers would not be forced to carry the string catalog |
+| **E** | **a BMI is compiler- and flag-specific** | `CXX_MODULES_BMI` would install a prebuilt module interface - but the BMI embeds the `-std=c++26 -freflection` flags and the module mapper, so the consumer's flags have to match. **CMake's default is source-based** (the consumer rebuilds the module), which is the right choice here, and it is what makes obstacles A and B load-bearing |
+
+**The verdict.** It is **doable**, and the shape is about **six lines of CMake plus two file-set
+decisions** - but it publishes the dependency closure and freezes the API. So `BUILD-2`'s
+recommendation to defer stands, and now there is a reason for it that is more concrete than
+"the API is still moving": **the install set has to include a file the project currently calls
+private**, and that is a decision about the module's structure, not about its packaging.
+
+### 7.2 - What about MemorySanitizer?
+
+**The answer is no, and there are two independent blockers - so this is not an open question.**
+
+| | The blocker | The evidence |
+|---|---|---|
+| **1** | **GCC 16 does not implement MSan at all** | GCC 16's `-fsanitize=` options are: address, thread, hwaddress, memtag, kernel, pointer, shadow, leak, undefined, shift, integer, unreachable, vla, null, return, signed, bounds, alignment, object, float, nonnull, returns, bool, enum, vptr, builtin, all. **There is no `memory`** |
+| **2** | **clang's MSan does not support macOS** | Clang's own documentation: *"MemorySanitizer is supported on the following OS: **Linux, NetBSD, FreeBSD**"*. macOS is not among them |
+| **3** | **and it would need an instrumented C++ standard library** | the installed libc++ 21 snapshot has **no MSan support at all** - no `__msan` directory in the include tree, and not one "MemorySanitizer" mention anywhere in it. Clang's doc notes that MSan "makes it possible to run MemorySanitizer-instrumented programs linked with **uninstrumented libc**" - the C library, not the C++ one |
+
+**So the preset table is complete as it stands.** `cc-asan` and `cc-tsan` cover the two sanitizers
+that can run here, and the missing one is missing for a structural reason, not an oversight. The
+project's preset file already says the same thing about TSan on GCC ("GCC 16 has no TSan runtime on
+macOS") - MSan is the same story one step further.
+
+**And the loss is small.** MSan detects uninitialised reads; the project has no report of one, and
+the leak question - the one the sanitizers *can* answer here - is already covered by
+[docs/asan-leak-check/README.md](../../docs/asan-leak-check/README.md). **This question is
+answered.**
+
+### 7.3 - What is the supply-chain posture of `ut`?
+
+**The facts, all checked against the upstream and the installed tree.**
+
+| | |
+|---|---|
+| **licence** | MIT (1,065-byte LICENSE) |
+| **the whole dependency** | **419 lines**, in one header |
+| **contributors** | **two** - `stephenberry` (106 commits) and `DockedFerret800` (17) |
+| **reach** | 12 stars, 4 forks, 4 watchers, 3 open issues |
+| **history** | created 2024-05-15; **v1.2.1 released 2026-07-31**; last push 2026-09-01 |
+| **the overlay's `REF`** | `dc65567be78febd265ca36c324e1c504512d4d74` - **upstream's `v1.2.1` tag, exactly** |
+| **the overlay's download pin** | a **SHA512** (`e02212527bc75...`) in the `vcpkg_from_github` call |
+| **the installed tree** | **byte-identical** to upstream at the pinned SHA: `ut.hpp` sha256 `a13d227884641d2b871076f576abcc27ce8bc90b8163f248916bb2fdfeb12604`, matching upstream's `include/ut/ut.hpp` at that SHA |
+| **the vendored copy in the repo** | also byte-identical: `ut.ixx` `1e6f3d40...`, `CMakeLists.txt` `bd631a84...` |
+| **the vcpkg registry** | **no `ut` port** - not at the pinned baseline **and not on `master` today**. The overlay shadows nothing, and `VCPKG-2`'s answer holds against the current registry, not just the pinned one |
+
+**What that assessment says.**
+
+- **The mitigations are already in place, and they are the right ones.** An immutable **released
+  tag** rather than a branch tip; a **SHA512** on the download; a **hash-verified installed tree**
+  (verified above, not assumed); and **419 lines** of code as the entire blast radius.
+- **The bus factor is one.** One maintainer holds 86% of the commits, on a library that every
+  build of this project links into its test binary.
+- **The one dependency that does not follow the baseline.** Everything else in `vcpkg.json` is
+  pinned by the `builtin-baseline` commit; `ut` is pinned by its overlay's `REF` instead, because
+  the registry does not have it. So **the baseline gives no protection for `ut`**, and a future
+  bump is a manual act on the portfile. That is deliberate - there is no alternative - but it
+  should be named.
+- **There is no vcpkg security-audit pipeline for it.** vcpkg's audit tooling works on the
+  registry's ports; an overlay port that has no registry counterpart gets none of it. The
+  substitute is the SHA512, and it is a good one: a compromised upstream cannot get in without
+  also changing the portfile.
+- **The one loose end** is `HEAD_REF main` in the portfile. `HEAD_REF` is what `vcpkg` follows
+  when it wants the newest commit, and it is **not** what the build uses - the build uses `REF`.
+  But it is a standing invitation to bump `REF` to a branch tip. The recommendation is to bump
+  only to a **tag**, and to change the `REF` and the `SHA512` **together** - they are one change.
+
+**The verdict: the posture is good for 419 lines of a test framework, and it should stay as it
+is.** No change is needed. The upstream has moved about five weeks past the pinned tag (last push
+2026-09-01 against v1.2.1 on 2026-07-31), so a bump is *available* - but there is no reason to take
+it, and taking it would mean re-verifying the SHA512 for no gain.
+
+**One thing worth noting.** `ut` **has** a module variant (`modules/ut.ixx`), and the overlay
+port's own comment says why it is not used: *"The module variant needs `import std`, which CMake
+only supports behind an experimental gate, so this port ships the header-only form."* So the
+dependency the project already has has already answered the `import std;` question for itself -
+and the answer it chose is the same one the audit reached.
+
+### 7.4 - Is quill 13.1.0 still the right backend?
+
+**Is it current? Yes.** quill 13.1.0 was released **2026-10-17**, it is the latest release, and
+the vcpkg registry's `quill` port is **13.1.0 at both the pinned baseline and `master` today**. The
+project is 3,084 stars, 275 forks, 10 open issues, MIT, last push 2026-10-30.
+
+**What the project actually uses of it.** Eight distinct symbols and nine header includes across
+three files:
+
+| The symbol | Used |
+|---|---|
+| `quill::LogLevel` | 32 times |
+| `quill::MacroMetadata`, `quill::Logger` | 4 times each |
+| `quill::Frontend` | twice |
+| `quill::quill`, `quill::PatternFormatterOptions`, `quill::ConsoleSink`, `quill::Backend` | once each |
+
+So the project uses quill for exactly four things: **a lock-free queue, a backend thread, a
+pattern formatter and a console sink**.
+
+**What quill offers that the project does not use** - thirteen sinks (File, RotatingFile, Json,
+RotatingJson, Syslog, Systemd, Android, Stream, Null, ...), the `RdtscClock` /
+`BackendTscClock` / `UserClockSource` clock sources, `SignalHandler`, `BacktraceStorage`,
+`CsvWriter`, the `DeferredFormatCodec` / `DirectFormatCodec` /
+`BinaryDataDeferredFormatCodec` family, `filters/`, `std/`, `HelperMacros`, `SimpleSetup`,
+`ManualBackendWorker`, `BackendManager`, `BackendMdcState` and `BackendOptions`.
+
+**Two of the unused pieces are the ones that matter to the project's own open questions.**
+
+- **`quill::Codec<Arg>` is an open specialisation point** - `template <typename Arg, typename = void>
+  struct Codec` (`quill/core/Codec.h:164-165`), with a documented contract (`:150-161`: the size
+  computation may throw, the encode must not, and the decoders must consume their payload without
+  throwing). **That is exactly the extension point `QUIL-1` is about** - a custom codec for the
+  module's own argument-pack type that pushes *N* arguments from one pack element. So the
+  mechanism the plan's last step depends on is a *supported* extension point, not a hack into
+  quill's internals. That is a point in quill's favour, and it is a fact the audit did not record.
+- **`quill::NullSink` exists** (`quill/sinks/NullSink.h`, header-only, its `write_log` is an inline
+  no-op) - which is the **S2** shape from item 4's benchmark design. The benchmark's "isolate the
+  producer" option needs a source change only to add the *seam*, not to add the sink.
+
+**And one thing that is quill's cost.** quill **bundles its own fmt** (`quill/bundled/fmt`, in the
+namespace `fmtquill`), so the project carries **two copies of fmt**: the bundled one and the
+standalone 12.2.1 that arrives through `intel-cpp-std-extensions`. `VCPKG-1` answered that the
+upstream quill port has **no fmt feature** and that quill 13.1.0's `CMakeLists.txt` has no fmt
+switch among its 26 `option()` calls, so this is **structural**, not a configuration mistake.
+
+**The alternatives, and why they lose.** Writing the queue and the backend by hand would be a few
+hundred lines - and then the project would own the correctness of a lock-free queue, the backend's
+shutdown protocol, the clock and the pattern formatter. quill supplies all of it, MIT-licensed and
+maintained, and the project uses eight symbols of it. `spdlog` formats on the calling thread by
+default and has no equivalent of quill's runtime-metadata path. `Boost.Log` is a much larger
+dependency with a different model.
+
+**The verdict: keep quill.** It is current, MIT, actively maintained, and the surface the project
+uses is eight symbols against a library of three thousand stars.
+
+**One observation worth recording.** The project uses quill for a *narrow* slice of it, and **the
+narrowing is why the module path grew a hand-rolled formatter.** quill's own mechanism for
+"queue something the backend will deal with" is `log_statement_runtime_metadata`, which the module
+path already uses - but it takes a **pre-formatted** message plus runtime metadata, so the module
+still has to format. The mechanism that would let the backend do the formatting is the codec
+extension point, and that is `QUIL-1`. So the narrowness is not a quill deficiency; it is the
+**one open question the plan's last step is waiting on**.
+
+**And a correction to a plausible misreading.** quill's `TransitEvent` looks like it might be the
+mechanism for sending structured data to the backend - it is quill's internal record type between
+the frontend queue and the backend. But its payload is `std::variant<std::monostate,
+std::atomic<bool>*, double>` (`quill/backend/TransitEvent.h:333`) - a flush flag and a metric
+value. **It is not a user-facing extension point**, and it cannot carry the module's arguments.
+`quill::Codec` is the extension point.
 
 ---
 
