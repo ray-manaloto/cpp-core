@@ -61,6 +61,7 @@ possible**. What remains is the implementation, which is parked.
 | 14 | [remaining-research.md](docs/cxx26-features-audit/remaining-research.md) | the four questions that needed no compile: Intel's `stdx`, the logger's lifetime, `ut`'s module, the upstream watch |
 | 15 | [catalog-ids.md](docs/cxx26-features-audit/catalog-ids.md) | are the catalog IDs the same under both compilers? - and why they are not the same between releases |
 | 16 | [readme-check.md](docs/cxx26-features-audit/readme-check.md) | the root `README.md`, checked line by line - and the proof that the committed tree is the tree that built |
+| 17 | [decisions.md](docs/cxx26-features-audit/decisions.md) | the thirteen decisions the owner has to make, with a recommendation for each |
 
 The upstream sources those parts quote are vendored under
 [`docs/cxx26-features-audit/upstream/`](docs/cxx26-features-audit/upstream/README.md), so the review
@@ -402,6 +403,44 @@ says they resolve to**.
 
 **Nothing new was built, configured, run or regenerated.** Part 16 closes the last of the
 no-compile research: what remains is the implementation (parked) and the owner decisions.
+
+## What part 17 changed
+
+**Part 17 - the decisions, collected.** The audit has **83 open items**. Seventy of them are
+settled by a compile, a run or a preprocessor pass - they are *questions*, and they unblock the
+moment the build lane reopens. **Thirteen are decisions**, because the answer is a judgement about
+what the project should be rather than a fact about the world. They were scattered across
+`open-items.md`; part 17 gathers them into one sheet, with a recommendation for each.
+
+**Four of them gate the implementation:**
+
+| # | Decision | Recommendation |
+|---|---|---|
+| **FMT-14** | the module path's format dialect | (a) document it now, (b) validate it if the API is public, (c) move it only if the Codec experiment works |
+| **TOOL-13** | `.cmake-format.yaml` or `.cmake-format.json` | **JSON** - YAML needs a new dependency *and* a pinning decision, and the project has neither |
+| **TOOL-14** | a one-shot `cmake-format -i` sweep? | **accept the canonical layout** - the project's configuration should describe the project, not reconstruct a past hand-layout |
+| **BUILD-7** | where the stable catalog lives | **a committed file** - the IDs are wire identifiers, and a wire identifier that changes when a message is added is not an identifier |
+
+**The other nine shape the project but do not gate it:** `BUILD-1` (warning flags - the
+recommendation is `-Wall -Wextra` now and the rest measured later, so the compiler's warnings and
+clang-tidy's checks do not arrive in the same diff), `BUILD-2` (consumability - defer until the API
+stops moving), `BUILD-3` (the public header surface - make `quill_logger.hpp` private, which is
+what its own comment already says), `BUILD-4` (`clang23` - keep the acceptance branch, add no
+preset, because Homebrew's libc++ has no `<meta>` and it cannot build the project), `BUILD-5` (CI
+- none yet; there is no remote, so CI cannot run), `BUILD-8` (a catalog message-set check - yes,
+as part of the coverage work), `QUIL-9` (`flush()` - document quill's static-destructor caveat),
+`ENV-2` (delete the abandoned `build/coverage-clang/`) and `ENV-3` (`ZAI_API_KEY` - not a cpp-core
+decision at all).
+
+**The cheapest path:** if the owner answers only those four, **every one of the plan's ten steps
+is unblocked** - and if **FMT-14** is answered **(a)**, then step 7 is *deferred* rather than
+blocked, and steps 1-6 and 8-10 proceed without it.
+
+**One correction to a list that was circulating:** **VCPKG-2** (do the overlay ports shadow builtin
+vcpkg ports?) is **not** an owner decision - it is a research step, answered by reading the vcpkg
+registry at the pinned baseline `245d37306671ea67d8f313081a81aae8079f8916`, and it is blocked only
+because `$VCPKG_ROOT` here is the vcpkg *tool*, with no `ports` tree and no `.git`. The same read
+answers **VCPKG-1**. Neither needs the owner: they need a checkout of the registry.
 
 ## State of the working tree
 
