@@ -102,7 +102,7 @@ The full analysis, the stack traces and the measurements behind this are in
 
 ## Requirements
 
-- `VCPKG_ROOT` in the environment (dotfiles sets it through mise), pointing at a vcpkg checkout with `scripts/buildsystems/vcpkg.cmake`.
+- `VCPKG_ROOT` in the environment (the machine setup sets it through mise), pointing at a vcpkg checkout with `scripts/buildsystems/vcpkg.cmake`.
 - CMake ≥ 3.31, Ninja.
 - `gcc-16`, `g++-16`, `clang-p2996` and `clang++-p2996` on PATH under those names, or named through the environment variables `CPP_CORE_CXX` and `CPP_CORE_CC` (for example in the `environment` of a preset in a gitignored `CMakeUserPresets.json`). The triplets pass both through to vcpkg (`VCPKG_ENV_PASSTHROUGH`), so the ports get the same compiler.
 - `include-what-you-use` on PATH, for the `p2996-iwyu` preset only.
