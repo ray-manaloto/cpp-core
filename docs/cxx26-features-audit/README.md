@@ -19,6 +19,7 @@ recommendations for the three questions the owner asked:
 | 4 | [import-std.md](import-std.md) | `import std;` and the standard-library-free module rule, against the C++26 text |
 | 5 | [reflection.md](reflection.md) | C++26 static reflection (P2996) against the C++26 text |
 | 6 | [macro-reduction.md](macro-reduction.md) | what each macro does and whether a template can do it |
+| 7 | [coverage-gaps.md](coverage-gaps.md) | what the tests do not reach today, branch by branch |
 
 ## The verdict in one paragraph
 
@@ -63,7 +64,7 @@ therefore:
 | 10 | `format_double` (`snprintf` with `%g`) | `quill_logger.cpp:118-164` | `std::format` / `std::to_chars` | **replace - and fix a divergence** | this translation unit already uses the standard library. The hand-rolled version treats `'f'` and the default type alike, so an explicit `{:f}` gives `3.5` where `std::format` gives `3.500000` |
 | 11 | `to_quill_level` / `from_quill_level` | `quill_logger.cpp:37-79` and `cib_quill.hpp:63-88` | a single shared mapping | **shrink** | the two mappings are written twice, in two files, in two different type systems (an `int` and cib's `::logging::level`). They cannot be merged as they stand |
 | 12 | `decay_enum_value` | `cib_quill.hpp:53-61` | `std::to_underlying` (C++23) | **replace** | `std::to_underlying` is in libstdc++ and libc++ alike; this header is not standard-library-free |
-| 13 | the cib tag string built with `std::string` concatenation | `cib_quill.hpp:143-149` | `fmt::format` | **replace** | fmt is already a dependency (quill uses it) and this is a plain format call |
+| 13 | the cib tag string built with `std::string` concatenation | `cib_quill.hpp:143-149` | `std::format` | **replace** | this header is not standard-library-free, `std::format` is in both standard libraries, and it is a plain format call. (`fmt::format` would also work, but fmt is only a **transitive** dependency here - quill 13.1.0 *bundles* its own copy under `quill/bundled/fmt` in the namespace `fmtquill`, and the standalone fmt 12.2.1 in the include tree comes in through `intel-cpp-std-extensions`. Using it directly would mean declaring it in `vcpkg.json` first.) |
 | 14 | `stdx::ct_conversions::type_as_string` / `enum_as_string` | used by nothing today | static reflection, or `stdx::ct_conversions` | **keep `stdx`** | Intel's version is `constexpr` and already a dependency; reflection cannot do it yet (no constexpr allocation) |
 | 15 | the `CIB_LOG_MODULE` / `CIB_INFO` / `CIB_WARN` / `CIB_ERROR` macros | `src/app.cpp:21-30` | - | **keep** | part 6: the macros capture the call site, fold the compile-time arguments and install the compile-time environment; no template-only equivalent exists |
 | 16 | the `__builtin_FILE` / `__builtin_LINE` / `__builtin_FUNCTION` default arguments | `logging.cppm:68-70`, `:104-105` | `std::source_location::current()` | **keep, or replace if #4 below is adopted** | `std::source_location::current()` as a default argument is the same idiom, canonicalised. The hand-rolled version exists only because the module may not name `<source_location>` |
