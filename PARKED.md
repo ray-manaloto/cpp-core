@@ -62,6 +62,7 @@ possible**. What remains is the implementation, which is parked.
 | 15 | [catalog-ids.md](docs/cxx26-features-audit/catalog-ids.md) | are the catalog IDs the same under both compilers? - and why they are not the same between releases |
 | 16 | [readme-check.md](docs/cxx26-features-audit/readme-check.md) | the root `README.md`, checked line by line - and the proof that the committed tree is the tree that built |
 | 17 | [decisions.md](docs/cxx26-features-audit/decisions.md) | the thirteen decisions the owner has to make, with a recommendation for each |
+| 18 | [followup-research.md](docs/cxx26-features-audit/followup-research.md) | **the eight things the audit never asked** - and the answers |
 
 The upstream sources those parts quote are vendored under
 [`docs/cxx26-features-audit/upstream/`](docs/cxx26-features-audit/upstream/README.md), so the review
@@ -453,11 +454,77 @@ against that commit, without a checkout. The same read answers **VCPKG-1**.
 copies of fmt are structural; and **none** of the five overlay ports shadows a builtin vcpkg port
 at the pinned baseline - so all five track upstream rather than the pinned baseline.
 
+## What part 18 changed
+
+**Part 18 - the eight things the audit never asked.** A new part, in one document, with a
+checklist that was ticked item by item. It is research-only: **nothing was built, configured, run
+or regenerated**, and every finding was reached by reading - the project's own files, the
+installed headers, or upstream. Anything that would need a compile is written down as a
+question.
+
+| # | The item | The answer, in one line |
+|---|---|---|
+| 1 | the `static_assert` formatter tests cannot reach the code they test | **Route B** - a private `format_tests.hpp` included by the module, so the asserts test the module's own copy. The plan's `tests/format_static_asserts.cpp` would compile a *second* copy and inflate the coverage union |
+| 2 | build reproducibility and upstream drift | the pin inventory, what each compiler bump breaks, and a three-layer drift mechanism - **and a correction:** the two "registry read" items were never blocked; the registry at the pinned baseline is readable over HTTP |
+| 3 | the public API has no contract | the contract, derived from the implementation - threading, start-up, flushing, levels, message handling, the error model. **The headline:** the level threshold is not consulted on the module path (DEF-1) |
+| 4 | a benchmark harness | six metrics (M1-M6), a five-step baseline ladder (B0-B5), the variables, and three traps the harness has to avoid - **and a correction:** `QUIL-8`'s premise was wrong |
+| 5 | a differential test between the two logging paths | the case list: **11 of the 15 divergences are testable** as a runtime differential comparison; the other four are asymmetric compile-time rejections and need a "must not compile" mechanism the project does not have |
+| 6 | costing the `import std;` option | the row-by-row flip analysis of the twenty-row table - **five flip cleanly, one partly, three lossily, one only in combination, nine not at all** |
+| 7 | four smaller questions | module consumption, MemorySanitizer, `ut`'s supply chain, and quill - all four answered |
+| 8 | re-validating the time-sensitive claims | **two things moved**, and neither was on the audit's watch list |
+
+**Three findings change what the audit said.**
+
+- **The `import std;` price just dropped.** **CMake 4.5.0 was released on 2026-11-12** and
+  graduated `import std;` to a **supported** feature: the `CMAKE_EXPERIMENTAL_CXX_IMPORT_STD` UUID
+  gate is gone from CMake's experimental guide and from the cxxmodules manual, the section is
+  marked `.. versionadded:: 4.5`, and the switch is the `CXX_SCAN_FOR_MODULES` target property -
+  which this project already has. CMake 4.5.0's toolchain matrix also adds **"GCC 16 and newer
+  on MacOS"**, the project's exact configuration, which 4.4.5 did not list. The audit's part 4 had
+  already predicted the graduation in prose; what it did not have was the date.
+- **The fmt-over-`std::format` argument weakens.** **GCC 17's libstdc++ has implemented
+  P3391R2**: `__cpp_lib_constexpr_format 202511L` and a `constexpr` `std::format` family. The
+  case for fmt was *"neither library implements it"*; when libstdc++ 17 ships it becomes *"libc++
+  does not"* - a weaker argument, and one that leaves the project's two compilers **disagreeing**
+  about whether the standard's formatter is constexpr. **fmt stays the right answer; the reason
+  changes** to "the standard is not there **on both compilers**". And the hand-rolled `constexpr`
+  formatter cannot be retired until libc++ catches up. GCC 17 is **not released** - the horizon is
+  2027.
+- **The `static_assert` tests need a private header, not a test file.** And the differential test
+  would **trigger DEF-6**, so it needs its own catalog.
+
+**And three corrections to the audit's own files**, made in place:
+
+- `import-std.md` named `set(CMAKE_CXX_MODULE_STD ON)` as the per-target switch.
+  **`CMAKE_CXX_MODULE_STD` does not exist in CMake at all** - the documented switch is the
+  `CXX_SCAN_FOR_MODULES` target property.
+- `open-items.md`'s `BUILD-2` said "any of the five `CMakeLists.txt` files". There are **four**.
+- The "one heap allocation per message" claim was wrong for short messages: `std::string{message,
+  length}` uses the small-string buffer - 22 characters on libc++ 21, 15 on libstdc++ 16 - so a
+  shorter message never touches the heap. Corrected in the root README and five audit documents.
+
+**Two new watch rows** (part 18, section 8): **CMake 4.5.0** and **GCC 17's libstdc++** - the two
+things that moved, and neither of them existed when the watch list was written. The five original
+watch rows are **unchanged**, and three of the seven *cited* clang-tidy issues are now recorded
+with their states (all three closed; the two that matter are still open).
+
+**The counts did not move.** The audit still has **83 open items**: 13 owner decisions, 0 registry
+reads, 70 settled by a compile, a run or a preprocessor pass. Part 18 answered **three** of them
+by reading - **`VCPKG-1`** and **`VCPKG-2`** (section 2) and **`QUIL-8`** (section 4) - and added
+**three** of its own (`FMT-15`, `MOD-10`, `MOD-11`), so the total is unchanged from the 83 that
+part 17 recorded. Part 18 also added **seven** new rows to `open-items.md` section 12 for
+questions that were **never** open-list items - MemorySanitizer, module consumption, `ut`'s
+supply chain, quill, CMake 4.5.0, GCC 17's constexpr format, and the overlay pins - so that
+nobody re-derives them.
+
 ## State of the working tree
 
 - Committed and clean.
 - `build/coverage-clang/` - an abandoned experiment (clang source-based coverage); the raw-profile
   version mismatch makes it unusable, it can be deleted.
+- **No source file was changed by part 18.** Every one of the eighteen parts is documentation, and
+  the build lane stays parked: no builds, no compiler or toolchain installs or configuration, no
+  CMake or preset build runs, no test or ASan runs.
 
 ## Open question for the owner (answered, not acted on)
 
