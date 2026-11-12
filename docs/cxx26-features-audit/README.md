@@ -21,6 +21,8 @@ recommendations for the three questions the owner asked:
 | 6 | [macro-reduction.md](macro-reduction.md) | what each macro does and whether a template can do it |
 | 7 | [coverage-gaps.md](coverage-gaps.md) | what the tests do not reach today, branch by branch |
 | 8 | [quill-runtime-formatting.md](quill-runtime-formatting.md) | whether quill can format from a runtime format string, the type-erasure boundary, and a live defect |
+| 9 | [constexpr-and-fmt.md](constexpr-and-fmt.md) | fmt over `std::format`, and the per-function `constexpr` / `consteval` inventory |
+| 10 | [open-items.md](open-items.md) | **every open question, defect and to-do, in one list** |
 
 ## The defect this audit found
 
@@ -73,8 +75,23 @@ therefore:
   does the same (llvm#171292 is still open). The underlying reason is that `std::string` is not
   constexpr in either library yet either. So the conclusion stands and the reason changes: **wait
   for the libraries, not for the standard.**
-- **The formatter can be replaced by `std::format` at runtime**, with `std::format_string<Args...>`
-  keeping the compile-time check, *if* the module is allowed to reach the standard library.
+- **The formatter can be replaced at runtime** - by **fmt**, not by `std::format` - with
+  `fmt::format_string<Args...>` keeping the compile-time check, *if* the module is allowed to reach
+  the library. But fmt cannot enter the module interface either (part 9), so this is a decision
+  about the *rest* of the project, not about the module.
+- **The project's formatting library is fmt, and `std::format` stays out of the project entirely.**
+  The owner's premise is correct and stronger than expected: fmt's compile-time API
+  (`FMT_COMPILE`, the `"..."_cf` literal, `FMT_STATIC_FORMAT`) is `constexpr` **including floating
+  point**, and `FMT_STATIC_FORMAT` returns a `char[N]`-backed `static_format_result` - so it needs
+  **no** constexpr `std::string`, which neither standard library has. C++26's `std::format` excludes
+  floats from constant evaluation. fmt cannot enter the module interface (a textual `#include` in a
+  module unit yields global-module declarations), so the module keeps its own formatter - but that
+  formatter can and should be **`constexpr` throughout**. Part 9.
+- **Every function in the module's own formatter can be `constexpr`** - all fifteen of them, and the
+  two `consteval` ones stay `consteval`. That turns the formatting rules into `static_assert`s the
+  compiler checks on both compilers, with no test binary and no coverage instrumentation - which is
+  exactly what the 100% coverage target wants, because it verifies the code the coverage report
+  cannot see. Part 9.
 - **Static reflection cannot replace anything today**: every `std::meta` range-returning
   metafunction allocates, and neither compiler implements constexpr allocation (P2680 / P1974), so
   a reflection range cannot be walked in a constant expression.
@@ -109,10 +126,10 @@ therefore:
 | 7 | `format_value` (the per-type dispatch) | `format.hpp:428-468` | `std::formatter<T>` / `fmt::formatter<T>` | **replace if the module may use the standard library** | the hand-rolled version is a closed set of `if constexpr` branches; the standard has an extensible `formatter` specialisation point |
 | 8 | `parse_spec` (the runtime format-spec parser) | `format.hpp:481-519` | `std::format_to` / `fmt::format_to` | **replace if the module may use the standard library** | 39 lines re-implementing `[[fill]align][sign][#][0][width][.prec][type]` |
 | 9 | `format_message` (the field loop) | `format.hpp:536-605` | `std::format_to` / `fmt::format_to` | **replace if the module may use the standard library** | this is the engine the whole file exists for |
-| 10 | `format_double` (`snprintf` with `%g`) | `quill_logger.cpp:118-164` | `std::format` / `std::to_chars` | **replace - and fix a divergence** | this translation unit already uses the standard library. The hand-rolled version treats `'f'` and the default type alike, so an explicit `{:f}` gives `3.5` where `std::format` gives `3.500000` |
+| 10 | `format_double` (`snprintf` with `%g`) | `quill_logger.cpp:118-164` | `fmt::format_to_n` | **replace - and fix a divergence** | this translation unit already uses the standard library, so fmt is available here. The hand-rolled version treats `'f'` and the default type alike, so an explicit `{:f}` gives `3.5` where fmt (like `std::format`) gives `3.500000` |
 | 11 | `to_quill_level` / `from_quill_level` | `quill_logger.cpp:37-79` and `cib_quill.hpp:63-88` | a single shared mapping | **shrink** | the two mappings are written twice, in two files, in two different type systems (an `int` and cib's `::logging::level`). They cannot be merged as they stand |
 | 12 | `decay_enum_value` | `cib_quill.hpp:53-61` | `std::to_underlying` (C++23) | **replace** | `std::to_underlying` is in libstdc++ and libc++ alike; this header is not standard-library-free |
-| 13 | the cib tag string built with `std::string` concatenation | `cib_quill.hpp:143-149` | `std::format` | **replace** | this header is not standard-library-free, `std::format` is in both standard libraries, and it is a plain format call. (`fmt::format` would also work, but fmt is only a **transitive** dependency here - quill 13.1.0 *bundles* its own copy under `quill/bundled/fmt` in the namespace `fmtquill`, and the standalone fmt 12.2.1 in the include tree comes in through `intel-cpp-std-extensions`. Using it directly would mean declaring it in `vcpkg.json` first.) |
+| 13 | the cib tag string built with `std::string` concatenation | `cib_quill.hpp:143-149` | `fmt::format` | **replace** | this header is not standard-library-free, and it is a plain format call. fmt is currently only a **transitive** dependency here - quill 13.1.0 *bundles* its own copy under `quill/bundled/fmt` in the namespace `fmtquill`, and the standalone fmt 12.2.1 in the include tree comes in through `intel-cpp-std-extensions`. Using it directly means declaring `"fmt"` in `vcpkg.json` first - which is step 2 of the plan |
 | 14 | `stdx::ct_conversions::type_as_string` / `enum_as_string` | used by nothing today | static reflection, or `stdx::ct_conversions` | **keep `stdx`** | Intel's version is `constexpr` and already a dependency; reflection cannot do it yet (no constexpr allocation) |
 | 15 | the `CIB_LOG_MODULE` / `CIB_INFO` / `CIB_WARN` / `CIB_ERROR` macros | `src/app.cpp:21-30` | - | **keep** | part 6: the mechanism underneath is already macro-free (`logging::log<Env>` is a function template, `stdx::ct_format<Fmt>` is a variable template) and every macro has a macro-free equivalent, but each one costs verbosity at the call site and buys nothing. The project uses four macro invocations, all in one file |
 | 16 | the `__builtin_FILE` / `__builtin_LINE` / `__builtin_FUNCTION` default arguments | `logging.cppm:68-70`, `:104-105` | `std::source_location::current()` | **keep in the module; use it in the cib path** | `std::source_location::current()` as a default argument is the same idiom, canonicalised. The module may not name `<source_location>`, but the **cib path may** - it already includes `<string>`, `<string_view>` and `<type_traits>`. Part 6, option (e) |
@@ -121,6 +138,34 @@ therefore:
 | 19 | the `format_string` class's compile-time check | `logging.cppm:64-84` | `std::format_string<Args...>` | **replace if #18 is adopted** | `std::format_string` is constexpr-constructible, so the compile-time check survives even though `std::format` itself is not `constexpr` **in either implementation on this machine** |
 | 20 | `std::meta::nonstatic_data_members_of` | `src/reflection_demo.cpp:23-24` | - | **keep** | it is already the C++26 facility, used for what it is for |
 
+### The formatting library: fmt, and where it can and cannot go
+
+**`std::format` is not used anywhere in this project.** fmt is used everywhere the standard library
+is allowed, and the module's own formatter is made `constexpr` instead. Part 9 has the evidence;
+the short version:
+
+| | `std::format` (C++26) | fmt 12.2.1 |
+|---|---|---|
+| constexpr formatting | yes in the standard (P3391R2), **not implemented** in libstdc++ 16 or libc++ 21 | yes, via `fmt/compile.h` |
+| **floats at compile time** | **no** - only the integral `std::to_chars` overloads are `constexpr` | **yes** |
+| needs a constexpr `std::string` | yes | **no** - `FMT_STATIC_FORMAT` returns a `char[N]`-backed result |
+| can it enter the module interface? | no | **no** - a textual `#include` in a module unit yields global-module declarations |
+
+**fmt cannot be `#include`d inside `modules/logging/`** - not even in the purview - on either
+compiler. It would need `import std;` (clang-p2996 only) or a fmt module (there is none). So the
+module keeps its hand-rolled formatter, and the payoff of fmt is:
+
+1. **outside the module**, fmt replaces `snprintf` in `format_double` (which fixes the `{:f}`
+   divergence) and builds the cib tag string;
+2. **inside the module**, the hand-rolled formatter becomes fully `constexpr`, which is a
+   compile-time guarantee the standard library cannot currently give at all.
+
+**Two copies of fmt coexist.** quill 13.1.0 bundles fmt **12.2.0** in the namespace `fmtquill`
+and has no `QUILL_USE_EXTERNAL_FMT` option; the standalone fmt **12.2.1** is in the namespace
+`fmt`. The project rule is that **custom formatters are written for `fmt` only** - the cib path
+formats primitives and decays its one project type to its underlying integer
+(`decay_enum_value`, `cib_quill.hpp:55-61`), so it does not need them.
+
 ## What the standard library gives today, on both compilers
 
 Verified on both toolchains (GCC 16.2.0 / libstdc++ and clang-p2996 21.0.0git / libc++):
@@ -128,7 +173,8 @@ Verified on both toolchains (GCC 16.2.0 / libstdc++ and clang-p2996 21.0.0git / 
 | Facility | Usable in shared code? | Note |
 |---|---|---|
 | `std::source_location` | yes | the canonical call-site capture |
-| `std::format`, `std::vformat`, `std::print`, `std::println` | yes | usable at runtime; **not** `constexpr` in either implementation on this machine. C++26 *does* make them `constexpr` (**P3391R2**, `__cpp_lib_constexpr_format 202511L`), but libstdc++ 16 and libc++ 21 have not implemented it - and neither has constexpr `std::string` |
+| `std::format`, `std::vformat`, `std::print`, `std::println` | yes | usable at runtime; **not** `constexpr` in either implementation on this machine. C++26 *does* make them `constexpr` (**P3391R2**, `__cpp_lib_constexpr_format 202511L`), but libstdc++ 16 and libc++ 21 have not implemented it - and neither has constexpr `std::string`. **Not used by this project**: fmt is the project's formatter (part 9) |
+| `fmt::format`, `fmt::compile`, `fmt::format_to_n` | yes - outside the module | fmt 12.2.1; **not** usable inside the module interface. `FMT_STATIC_FORMAT` is `constexpr` and needs no constexpr `std::string` |
 | `std::expected`, `std::optional`, `std::ranges` | yes | `constexpr` |
 | `std::to_underlying`, `std::byteswap` | yes | `constexpr` |
 | `constexpr std::string_view` | yes | `constexpr` |
@@ -166,30 +212,30 @@ empty.
 
 ## The open questions
 
-These need a compile to settle, and they are the first thing to run when the build lane reopens:
+**They are all in one place now: [open-items.md](open-items.md)** - part 10. It has every open
+question, every known defect and every to-do, grouped and numbered (`DEF-`, `FMT-`, `QUIL-`,
+`TOOL-`, `MOD-`, `REFL-`, `MAC-`, `COV-`, `ENV-`), each with what settles it.
 
-1. Does the proposed `.clang-tidy` configuration pass `--verify-config`, and does it parse a
-   clang-p2996 `compile_commands.json`?
-2. Can Homebrew clang-tidy 23.1.5 parse `logging.cppm` standalone, and does it contain the
-   `SkipDeclsInModules` fix (PR #145630)?
-3. Where do the `.gcno` / `.gcda` files of a `CXX_MODULES` member land, and what paths does GCC
-   record in the gcov JSON for a module interface unit?
-4. Does GCC 16 emit arcs - and zero-count arcs - for a template that is never instantiated and for
-   a `consteval` body? A never-instantiated template that emits no arc would make the denominator
-   dishonest; a zero-count arc would fail the gate honestly. Which one happens decides whether the
-   coverage numbers can be trusted at all.
-5. How large is the migration if `import std;` is adopted everywhere (part 4)?
-6. Does `std::meta::identifier_of` work on a plain type reflection in either implementation? GCC
-   throws `std::meta::exception` ("reflection with has_identifier false").
-7. Does `std::source_location::current()` return a non-empty `function_name()` in a `constexpr`
-   context? It came back empty in an earlier probe.
-8. Does a `quill::Codec` that pushes three arguments from one pack element satisfy a `"{} {} {}"`
-   statement? This is the load-bearing unknown for the formatter rewrite (part 8).
-9. Does `std::source_location::current()` in a default argument on `quill_config::logger::log`
-   return the *caller's* location, given that the call goes through the `logging::log<Env>`
-   template? If it does not, that is the reason the CIB macro cannot be dropped (part 6).
-10. When libstdc++ and libc++ implement P3391R2, does `std::format_string<Args...>` accept every
-    format string the project's own scanner accepts? The two dialects are not identical.
+In summary, and all of it needs a compile, a run, or an owner decision:
+
+| Area | Items | The load-bearing one |
+|---|---|---|
+| **The defects** | 3 | `DEF-1`: `set_level()` filters nothing on the module path - a bug, three lines at each of two call sites |
+| **fmt and `constexpr`** | 12 | `FMT-4` / `FMT-5`: can `format.hpp` be made `constexpr` wholesale, and does the `static_assert` pattern work? The compiler is the test |
+| **quill's runtime formatting** | 8 | `QUIL-1`: can a `quill::Codec` push three arguments from one pack element? It decides whether the 607-line formatter can shrink |
+| **The tooling** | 16 | `TOOL-6`: does GCC 16 emit arcs for uninstantiated templates and `consteval` bodies? It decides whether the coverage numbers can be trusted at all |
+| **`import std;`** | 9 | `MOD-6`: is the GCC 16 failure an artefact of CMake not building header units, or a merge deficiency? |
+| **Static reflection** | 4 | `REFL-1`: do the two compilers' `members_of` forms compile the same source? |
+| **The macros** | 3 | `MAC-1`: does `std::source_location::current()` in a default argument return the *caller's* location through the `logging::log<Env>` template? It may be why the CIB macro cannot be dropped |
+| **Coverage to-dos** | 10 | the uncovered set, branch by branch - and the `constexpr` change removes half of it from the runtime problem |
+| **The environment** | 3 | `ENV-1`: the two copies of fmt, and the rule that custom formatters are written for `fmt` only |
+
+Two more that were answered in the first draft and are recorded in part 10, section 10: GCC throws
+`std::meta::exception` ("reflection with has_identifier false") for `std::meta::identifier_of` on a
+plain type reflection, and `std::source_location::current()` returns an empty `function_name()` in a
+`constexpr` context.
+
+The first thing to run when the build lane reopens is in [PARKED.md](../../PARKED.md).
 
 ## The corrections this audit made to itself
 
