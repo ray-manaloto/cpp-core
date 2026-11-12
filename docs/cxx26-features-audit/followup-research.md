@@ -14,17 +14,18 @@ answers a different question: **what did the audit leave unasked?**
 
 ## The state this starts from
 
-The audit has **80 open items**, and they decompose exactly (verified by parsing the "settled by"
+The audit has **82 open items**, and they decompose exactly (verified by parsing the "settled by"
 column of every row, plus the six defect headings):
 
 | Kind | Count | What resolves it |
 |---|---|---|
 | Owner decisions | **13** | the owner's answer. Four of them gate the plan: `FMT-14`, `TOOL-13`, `TOOL-14`, `BUILD-7` |
-| Compile / run / preprocessor | **67** | the build lane reopening - mechanical, not research |
+| Compile / run / preprocessor | **69** | the build lane reopening - mechanical, not research |
 | Registry read | **0** | `VCPKG-1` and `VCPKG-2` were answered by section 2 below - the registry at the pinned baseline turned out to be readable after all |
 
 (It was 83 when this part opened; section 2 answered the two registry items and moved them to
-`open-items.md` section 12, and section 4 answered `QUIL-8` the same way.)
+`open-items.md` section 12, section 4 answered `QUIL-8` the same way, and section 5 added
+`FMT-15` and `MOD-10` of its own.)
 
 **The audit's own research is complete.** Seventeen parts, the upstream sources all vendored
 (`upstream/`), the root README checked line by line (part 16), the owner decisions collected into
@@ -62,7 +63,7 @@ which is exactly what a research lane is for.
 | 2 | Build reproducibility and upstream drift | ☑ **done** | The pin inventory, what each compiler bump breaks, and a three-layer drift mechanism. **And a correction:** the two "registry read" items were never blocked - the registry at the pinned baseline is readable over HTTP, and it answers both |
 | 3 | The public API has no contract | ☑ **done** | The contract, derived from the implementation: threading, start-up, flushing, levels, message handling and the error model - written out as prose for the module's header comment and the README. **The headline:** the level threshold is not consulted on the module path (DEF-1), so the contract cannot promise the filtering until the fix lands |
 | 4 | A benchmark harness | ☑ **done** | Six metrics (M1-M6), a five-step baseline ladder (B0-B5), the variables, and three traps the harness has to avoid - `high_resolution_clock` is the wall clock on libstdc++, the per-message allocation is 0 or 1 depending on the small-string threshold, and the clock reads are as expensive as the measurement. **And a correction:** `QUIL-8`'s premise is wrong - `<true>` means "honour the flush threshold", the threshold is 0 by default, and quill's own default is the same value |
-| 5 | A differential test between the two logging paths | ☐ **not started** | — |
+| 5 | A differential test between the two logging paths | ☑ **done** | The case list, classified: **11 of the 15 divergences are testable** as a runtime differential comparison; the other four are asymmetric compile-time rejections and need a "must not compile" mechanism the project does not have. The oracle is three columns - the standard, the catalog path, the module path - with the rule that the expectations come from the standard, not from the implementation. Two modes, switched by `FMT-14`. And the test would **trigger DEF-6**, so it needs its own catalog |
 | 6 | Costing the `import std;` option | ☐ **not started** | — |
 | 7 | Four smaller questions | ☐ **not started** | — |
 | 8 | Re-validating the audit's time-sensitive claims | ☐ **not started** | — |
@@ -907,6 +908,239 @@ specification**, so `info("{:s}", 42)` compiles and is silently ignored (DEF-5).
 which would make the finding permanent instead of historical, and is the test that would fail if
 `FMT-14` is answered (c).
 
+### The first question: what would the test actually observe?
+
+**Not the formatter.** Both paths end at the same sink, and the sink is between the formatter and
+anything the test can see. The project's sink is a `quill::ConsoleSink` on stdout, and its pattern
+is fixed (`quill_logger.cpp:33-35`):
+
+```
+%(time) [%(thread_id)] %(short_source_location:<28) LOG_%(log_level:<9) %(logger:<12) [%(tags)] %(message)
+```
+
+So the test observes **formatter + sink**, and three things sit between the formatter and the
+observation:
+
+| Confound | What it does | How the design handles it |
+|---|---|---|
+| the **multi-line split** | quill formats **each line of a multi-line message separately, with the full prefix** (`quill/backend/PatternFormatter.h:128-160`). A message containing a real newline becomes several prefixed lines | the case list avoids real newlines in the *expected* output, and D15's case is handled explicitly (below) |
+| the **2,048-byte buffer** | the module path truncates silently at the buffer's capacity (`format.hpp:163-165`); the catalog path does not | every case's payload stays well under 2,048 bytes, so the buffer is not part of any comparison |
+| the **pattern's field widths** | `%(short_source_location:<28)` and `%(logger:<12)` are padded | the test extracts only the payload, so the widths do not matter - but the *extraction rule* does depend on the pattern's shape, and the test must assert that shape |
+
+**The honest consequence: this is a test of the two paths as the user sees them, not a test of the
+two formatters.** That is the right level for a *differential* test - the user sees the sink - but
+it means the expectations are "what the sink prints", and any change to the pattern changes them.
+**The test must therefore assert the pattern's shape as well as the payloads**, so a pattern change
+fails loudly instead of silently mis-extracting.
+
+### The case list: four of the fifteen cannot be tested this way
+
+This is the first hard result, and it is not obvious until the compile-time behaviour is taken
+into account.
+
+| # | The format string | the argument | the standard / fmt | the module path | testable? |
+|---|---|---|---|---|---|
+| **D1** | `"{:s}"` | `42` (an `int`) | **a compile-time error** | compiles, and prints `42` | **no** - the catalog path does not compile |
+| **D2** | `"{:>06}"` | `42` | `"    42"` | `"000042"` | **yes** |
+| **D3** | `"{}"` | `1234567.0` | `"1234567"` | `"1.23457e+06"` | **yes** |
+| **D4** | `"{:f}"` | `3.5` | `"3.500000"` | `"3.5"` | **yes** |
+| **D5** | `"{:+}"` | `3.5` | `"+3.5"` | `"3.5"` | **yes** |
+| **D6** | `"{:#g}"` | `3.0` | `"3.00000"` | `"3"` | **yes** |
+| **D7** | `"{:L}"` | `1234` | `"1,234"` (fmt's locale form) | `"1234"` | **yes**, but it needs fmt's locale feature enabled - otherwise fmt's answer is `"1234"` too and the case says nothing |
+| **D8** | `"{:{}}"` | - | valid | **a compile-time error** | **no** - the module path does not compile |
+| **D9** | `"{0} {0}"` | `"first"` | valid | **a compile-time error** | **no** - the module path does not compile |
+| **D10** | `"{:B}"` | `42` | `"101010"` | `"42"` | **yes** |
+| **D11** | `"{:c}"` | `65` | `"A"` | `"65"` | **yes** |
+| **D12** | `"{:d}"` | `'x'` | `"120"` | `"x"` | **yes** |
+| **D13** | `"{:#o}"` | `0` | `"0"` | `"00"` | **yes** |
+| **D14** | `"{:d.3}"` | `42` | **a compile-time error** | `"42"` | **no** - the catalog path does not compile |
+| **D15** | `"{:?}"` | `"a\n"` | `"a\\n"` | `"a"` + a real newline | **yes**, with a caveat (below) |
+
+**Eleven of the fifteen are testable as a runtime differential comparison.** The other four are
+**asymmetric compile-time rejections**, and a runtime test cannot compare two programs when one of
+them does not compile.
+
+**The four need a different mechanism entirely: a "must not compile" test.** The project has none.
+CMake's `try_compile` returns a boolean, but it cannot `import com.rsm.logging;` - the module has
+to be built first, and the import path is CMake-internal. The workable route is a ctest fixture
+that reads the compile command out of `compile_commands.json` (the project already generates it,
+`cmake/presets/cpp-core.json`), substitutes the source file, runs the compiler and asserts that it
+**fails**. That is a build-system change, so it waits for the build lane - but **the four cases are
+the most important ones** (D1 is the difference between a checked and an unchecked format string),
+and a design that quietly drops them would be a design that drops the point.
+
+**D15's caveat.** The module path's output is `"a"` followed by a **real** newline, and quill's
+multi-line handling turns that into a second prefixed line - and then **drops the empty tail**,
+because the loop ends when `start == log_msg.size()` (`PatternFormatter.h:133-159`). So the module
+path's sink output for D15 is the single line `... a`, and the trailing newline never reaches the
+sink at all. That is a *sink* behaviour, not a formatter behaviour, and the expectation must say
+so - otherwise the test looks like it is testing the formatter when it is testing the sink.
+
+### The oracle: three columns, and the rule that keeps it honest
+
+Every case needs three answers, not two:
+
+| Column | Where it comes from | What it is for |
+|---|---|---|
+| **the standard** | [format.string.std](https://eel.is/c++draft/format.string) and Table 104-110 | the **normative** answer - what the dialect is supposed to produce |
+| **the catalog path** | fmt 12.2.1, running | the implementation under test, on the other path |
+| **the module path** | the module's formatter, running | the implementation under test, on this path |
+
+**The rule: the expected values are written from the standard, not copied from the
+implementation.** If the module's expected value is copied from what the module prints today, the
+test freezes the bug and calls it a specification. So for each case the table records what the
+standard says, and the module's value is compared against it - which means **the module's column
+starts out as a list of failures**, and the test has two possible shapes.
+
+### The two modes, and what decides between them
+
+| Mode | The assertion | When it applies |
+|---|---|---|
+| **A - divergence characterisation** | `module == <the module's current value>` **and** `catalog == <the standard's value>` | **today**, while `FMT-14` is undecided |
+| **B - agreement** | `module == catalog` **and** `catalog == <the standard's value>` | after `FMT-14` is answered (b) or (c) |
+
+**Mode A is the default, and it is not a compromise.** It says: *"the module path prints `000042`
+here and the catalog path prints `    42`, and that is what both of them do today."* That makes the
+divergence **permanent and visible** instead of historical - which is exactly what part 13 asked
+for - and it turns any change to either formatter into a test failure that names the case.
+
+**Mode B is what `FMT-14` (b) or (c) buys**, and it is the test that would fail if the fix is
+incomplete. The switch is one line in the case table: a column that says *"agree"* or *"diverge"*.
+
+**And the cases where the module is wrong (D3, D4, and the ones step 5 of the plan fixes) are
+already labelled.** Step 5 replaces `snprintf` with fmt in `format_double`
+(`quill_logger.cpp:121-167`), which changes the module path's float output - so D3 and D4 stop
+being divergences at all, and the case table's expectation for them changes from *"diverge"* to
+*"agree"*. **The table is the place where the plan's steps and the test meet**, and it should be
+edited when each step lands.
+
+### The harness
+
+The shape is a macro, because each case has a different argument *type*, and the same arguments
+have to go to both paths.
+
+```cpp
+// One case. The format string is a literal, because both paths require a compile-time one:
+// the module's format_string constructor is consteval, and cib's is a ct_string.
+#define DIFFERENTIAL_CASE(ID, FORMAT, MODULE_TEXT, CATALOG_TEXT, ...)                  \
+  do {                                                                                 \
+    stdout_capture capture;                                                            \
+    expect(capture.ok()) << "could not capture stdout";                                \
+    com::rsm::logging::info(FORMAT, __VA_ARGS__);                                      \
+    CIB_INFO(FORMAT, __VA_ARGS__);                                                     \
+    com::rsm::logging::flush();                                                        \
+    auto const output = capture.contents();                                            \
+    /* extract the two payloads and compare them with the two expectations */           \
+  } while (false)
+```
+
+Three things about that sketch that the design has to get right.
+
+**The arguments are expanded twice**, once per path. For the case list's literals that is
+harmless, but it is a trap: **the arguments must be side-effect-free**, and the macro should say
+so.
+
+**The extraction needs a sentinel.** The pattern's last field is the message, but the prefix
+contains two bracketed groups - `[%(thread_id)]` and `[%(tags)]` - and the *tags* differ between
+the paths (the module path sends `""`, `quill_logger.cpp:117`; the catalog path sends
+`"cpp_core id=N mod=M"`, `cib_quill.hpp:147-148`). So the payload is **everything after the second
+`]`** on the line - which works, but couples the test to the pattern's shape.
+
+The robust version is a **sentinel in the format string**: the case's format string is prefixed
+with a token that contains no `]`, say `"#D02# {:>06}"`, and the test finds the sentinel and takes
+what follows it. The sentinel is part of the format string, so it becomes part of the message
+text and therefore part of the catalog ID - which is harmless, and the reason for the next section.
+
+**The extraction must assert the pattern's shape.** The test should count the `]` before the
+payload and require exactly two, and fail with a clear message if the pattern changes. Otherwise a
+pattern change turns every case into a false pass or a false failure, silently.
+
+### The catalog: the differential test triggers DEF-6
+
+**This is the one part of the design with a consequence outside the test.**
+
+The catalog path's message is identified by `catalog<Message>()`
+(`cib_quill.hpp:139`), and the catalog is built from the **undefined symbols** of the object
+libraries that log (`cmake/catalog.cmake:17-20`). The test's object library is already one of
+them:
+
+```cmake
+set(cpp_core_catalog_inputs cpp-core-app)
+if(TARGET cpp-core-test-code)
+  list(APPEND cpp_core_catalog_inputs cpp-core-test-code)
+endif()
+```
+
+So the differential test's `CIB_INFO` calls would go into **the application's catalog** - and the
+catalog's IDs are the **rank in text order** (`gen_str_catalog.py:228-229`, `Message.__lt__`),
+assigned fresh on every run because the build passes no `STABLE_JSON`
+(`cmake/catalog.cmake:22-39`; the mechanism is in `string_catalog.cmake:16`, `:85` and
+`gen_str_catalog.py:307-337`, `:492-506`). **Adding the test's messages would renumber the
+application's messages.** That is **DEF-6**, triggered by a test.
+
+Two ways out:
+
+| Shape | What it does | Cost |
+|---|---|---|
+| **C1 - a separate catalog for the test** | a second `gen_str_catalog` call with its own `CLIENT_NAME`, its own output and its own object library; the test executable links the test catalog instead of the application one | a second catalog invocation in `cmake/catalog.cmake`, and the test's object library must be removed from the application catalog's inputs |
+| **C2 - use the stable-ID mechanism** | pass the previous catalog as `STABLE_JSON`, so existing messages keep their IDs and new ones take the free ones | this is **BUILD-7 option (a)**, and it does not keep the test's messages *out* of the application's catalog - it only stops them from renumbering the application's messages |
+
+**C1 is the right shape**, because the application's catalog is deployment collateral
+(`catalog-ids.md`) and the test's messages are not part of the application. **C2 is worth doing
+anyway** - it is the fix for DEF-6, it is one line plus a committed file, and it is `BUILD-7` - but
+it does not replace C1.
+
+**The generated file supports C1.** The catalog's entries are explicit template specialisations
+keyed by the message's exact type (`cpp-core-catalog.cpp`: `template<> auto catalog<sc::message<...>>()`),
+so two catalogs can coexist as long as their message types differ - and the test's and the
+application's do.
+
+### One thing nobody has compiled
+
+**The differential test needs a translation unit that does both: `import com.rsm.logging;` *and*
+`#include <cpp-core/logging/cib_quill.hpp>`.** No such translation unit exists today:
+
+- `tests/logging_test.cpp` imports the module and includes `<cstdio>`, `<string>` and `<unistd.h>`
+  - but **not** `cib_quill.hpp`;
+- `src/app.cpp` includes `cib_quill.hpp` - but does **not** import the module;
+- `src/main.cpp` imports the module - and includes nothing.
+
+`cib_quill.hpp` pulls in `<string>`, `<string_view>`, `<type_traits>`, `<cstdint>`, `<utility>`,
+quill's headers, cib's `<log/log.hpp>` and `<stdx/*>` (`cib_quill.hpp:24-40`).
+
+**And the audit's own matrix says that on GCC 16 this may not compile**: the row *"the module
+exports no std types, importer + `#include <cstdio>`"* is marked **fails** on GCC 16.2
+(`import-std.md:206`). The project's test file appears to contradict that - it does exactly that
+and builds - so either the matrix's row describes a different configuration or the two cases differ
+in some way the audit did not isolate.
+
+**Either way this is the differential test's first open question, and it must be settled by a
+compile before any of the test is written.** The question is precise:
+
+> Does a translation unit that imports `com.rsm.logging` and then includes
+> `cpp-core/logging/cib_quill.hpp` compile on GCC 16 and on clang-p2996?
+
+If it does not, the differential test needs a **different shape**: the two paths in **separate**
+translation units, with the comparison done by the test process over the captured output. That is
+strictly more work - the two paths cannot share a macro - but it is a fallback that works.
+
+### What the test would protect
+
+| The test protects | From |
+|---|---|
+| the two paths' dialects | a change to either formatter that is not a decision - the mode-A expectations fail and name the case |
+| the plan's step 5 | when `format_double` moves to fmt, D3 and D4's expectations change from *"diverge"* to *"agree"*, and the table has to be edited - which is the point |
+| `FMT-14` | the moment the owner answers (b) or (c), the table's mode flips and the test becomes the acceptance criterion |
+| the **application's** catalog | C1 keeps the test's messages out of the deployment collateral, and C2 stops them renumbering it |
+| a future third path | the case table is the specification of the dialect; a new path is checked against it |
+
+**And it is not a coverage substitute.** The differential test exercises **one** format string per
+case - eleven of them - while the formatter has **15 functions** and the audit's coverage inventory
+(`constexpr-and-fmt.md`) lists the branches that need covering. The differential test is the
+*oracle* for the formatter's behaviour; the coverage work still has to write the branch tests.
+The two are complementary, and the differential test is the one that tells the branch tests **what
+the right answer is**.
+
 ---
 
 ## 6. Costing the `import std;` option
@@ -969,11 +1203,11 @@ decay, and what is their state now?
 
 ## What was checked
 
-- The **state table** (80 items, 13 / 0 / 67): parsed from the "settled by" column of every row of
+- The **state table** (82 items, 13 / 0 / 69): parsed from the "settled by" column of every row of
   [open-items.md](open-items.md) plus its six defect headings. The 13 owner decisions match the
   thirteen headings in [decisions.md](decisions.md) exactly - none missing, none extra. The two
-  registry items were removed from the open list when section 2 answered them, and `QUIL-8` when
-  section 4 did.
+  registry items were removed from the open list when section 2 answered them, `QUIL-8` when
+  section 4 did, and section 5 added `FMT-15` and `MOD-10`.
 - The **evidence quoted in each section** was read from the files it names.
 - **Nothing was built, configured, run or regenerated.** Every claim is a restatement of a
   finding recorded in an earlier part, or a reading recorded here.

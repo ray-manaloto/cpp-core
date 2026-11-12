@@ -241,17 +241,17 @@ empty.
 **They are all in one place now: [open-items.md](open-items.md)** - part 10. It has every open
 question, every known defect and every to-do, grouped and numbered (`DEF-`, `FMT-`, `QUIL-`,
 `TOOL-`, `MOD-`, `REFL-`, `MAC-`, `COV-`, `BUILD-`, `VCPKG-`, `ENV-`), each with what settles it.
-**80 in all** - 13 need an owner decision and 67 need a compile, a run or a preprocessor pass.
+**82 in all** - 13 need an owner decision and 69 need a compile, a run or a preprocessor pass.
 
 In summary, and all of it needs a compile, a run, or an owner decision:
 
 | Area | Items | The load-bearing one |
 |---|---|---|
 | **The defects** | 6 | `DEF-1`: `set_level()` filters nothing on the module path - a bug, three lines at each of two call sites |
-| **fmt and `constexpr`** | 14 | `FMT-4` / `FMT-5`: can `format.hpp` be made `constexpr` wholesale, and does the `static_assert` pattern work? The compiler is the test |
+| **fmt and `constexpr`** | 15 | `FMT-4` / `FMT-5`: can `format.hpp` be made `constexpr` wholesale, and does the `static_assert` pattern work? The compiler is the test. (`FMT-15`, the "must not compile" mechanism for the four asymmetric divergences, was added by part 18, section 5) |
 | **quill's runtime formatting** | 8 | `QUIL-1`: can a `quill::Codec` push three arguments from one pack element? It decides whether the 607-line formatter can shrink. (`QUIL-8` was answered by part 18, section 4 - the module path does **not** flush on every message, and already matches quill's own default) |
 | **The tooling** | 16 | `TOOL-6`: does GCC 16 emit arcs for uninstantiated templates and `consteval` bodies? It decides whether the coverage numbers can be trusted at all |
-| **`import std;`** | 9 | `MOD-6`: is the GCC 16 failure an artefact of CMake not building header units, or a merge deficiency? |
+| **`import std;`** | 10 | `MOD-6`: is the GCC 16 failure an artefact of CMake not building header units, or a merge deficiency? (`MOD-10`, the importing-translation-unit that also includes `cib_quill.hpp`, was added by part 18, section 5) |
 | **Static reflection** | 4 | `REFL-1`: do the two compilers' `members_of` forms compile the same source? |
 | **The macros** | 3 | `MAC-1`: does `std::source_location::current()` in a default argument return the *caller's* location through the `logging::log<Env>` template? It may be why the CIB macro cannot be dropped |
 | **Coverage to-dos** | 10 | the uncovered set, branch by branch - and the `constexpr` change removes half of it from the runtime problem |
