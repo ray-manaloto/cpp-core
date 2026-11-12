@@ -60,7 +60,7 @@ which is exactly what a research lane is for.
 |---|---|---|---|
 | 1 | The `static_assert` formatter tests cannot reach the code they test | ☑ **done** | **Route B** - a private `format_tests.hpp` included by the module, so the asserts test the module's own copy. The plan's `tests/format_static_asserts.cpp` would compile a second copy and inflate the coverage union |
 | 2 | Build reproducibility and upstream drift | ☑ **done** | The pin inventory, what each compiler bump breaks, and a three-layer drift mechanism. **And a correction:** the two "registry read" items were never blocked - the registry at the pinned baseline is readable over HTTP, and it answers both |
-| 3 | The public API has no contract | ☐ **not started** | — |
+| 3 | The public API has no contract | ☑ **done** | The contract, derived from the implementation: threading, start-up, flushing, levels, message handling and the error model - written out as prose for the module's header comment and the README. **The headline:** the level threshold is not consulted on the module path (DEF-1), so the contract cannot promise the filtering until the fix lands |
 | 4 | A benchmark harness | ☐ **not started** | — |
 | 5 | A differential test between the two logging paths | ☐ **not started** | — |
 | 6 | Costing the `import std;` option | ☐ **not started** | — |
@@ -470,6 +470,167 @@ atomic - but that is two facts about the implementation, not a contract for the 
 
 **Why this matters now.** The coverage work is about to write tests. Tests written against an
 undefined contract either test the implementation by accident or encode a behaviour nobody chose.
+
+### The contract, derived from the implementation
+
+Every claim below is read from the source, not assumed. Where the implementation and the comment
+disagree, both are given.
+
+#### `setup()` - starts the backend, and is idempotent
+
+`logging.cppm:86` is `auto setup() -> void { detail::start_logger(); }`, and the comment says
+*"Idempotent: the first log call starts it too."* Both halves are true:
+
+- **Idempotent**, because `quill_logger()` (`quill_logger.cpp:83-91`) holds the logger in a
+  function-local static with an initializer. C++ guarantees that initializer runs exactly once
+  ([stmt.dcl]/8-9), and concurrent callers block until it completes. So `setup()` twice is one
+  start.
+- **Optional**, because `emit()` (`quill_logger.cpp:105-119`) calls `quill_logger()` too, so the
+  first log call starts the backend whether or not `setup()` was called. **`log()` before
+  `setup()` is valid** and is not an error.
+- **It starts quill's backend, which registers a `std::atexit` handler** (`quill/Backend.h:70-74`).
+  That handler stops the backend and drains the queues, so messages queued before `main` returns
+  are not lost. The project's own `main()` does not need to stop anything.
+
+**The one thing `setup()` does not do:** it does not make the *first* log call cheaper or
+different. It only moves the backend's start earlier. The contract should say that, because
+"setup() prepares the logger" invites a reader to expect more.
+
+#### `flush()` - blocks until the queue is written, and has a real precondition
+
+`logging.cppm:89` is `auto flush() -> void { detail::flush_logger(); }`, which calls
+`quill::Logger::flush_log()` (`quill_logger.cpp:95-99`).
+
+- **It blocks the calling thread** until the messages queued so far have been written
+  (`quill/Logger.h:604`).
+- **It must not be called from the destructor of a static object.** Quill says so explicitly
+  (`quill/Logger.h:613`): *"Do not call this function from the destructor of a static object. This
+  may lead to application crashes if the thread-local ThreadContext is destroyed before the static
+  object invoking `flush_log`."* The project's public API says nothing about it. **This is
+  `QUIL-9`, and it is a documentation defect, not a bug** - the project's own `main()` calls
+  `flush()` from `main` (`src/main.cpp:15`), not from a destructor.
+- **It throws if called from quill's backend thread** (`quill/Logger.h:623-629`:
+  `QuillError{"logger->flush_log() cannot be called from the backend worker thread"}`). A consumer
+  cannot normally reach the backend thread, so this is a formality - but it means `flush()` is
+  **not** `noexcept`.
+- **`flush_logger()` null-checks the logger** (`quill_logger.cpp:96`) - but `quill_logger()` never
+  returns null, so the check is dead code today. It is defensive, not a behaviour.
+
+#### `set_level()` / `current_level()` - atomic, and **the level does not filter**
+
+`set_level()` writes the **logger's** threshold (`quill_logger.cpp:101`); `current_level()` reads
+it back (`quill_logger.cpp:103`).
+
+- **The read and the write are atomic.** Quill's `_log_level` is a `std::atomic<LogLevel>`
+  (`quill/core/LoggerBase.h:135`, `:149`), read and written with `memory_order_relaxed`. So
+  `set_level()` racing with `log()` is **not a data race** - it is a benign race with an
+  unspecified winner, like `std::cout` from two threads. The contract can say *"the level may be
+  changed concurrently with logging; a message may or may not be filtered according to the order
+  the two operations happen in."*
+- **`current_level()` round-trips exactly.** The module's six levels map onto quill's six
+  distinct ones (`quill_logger.cpp:37-55`), and back (`quill_logger.cpp:57-79`). The audit
+  confirmed this in part 14.
+- **But setting the level does not filter anything on the module path.** This is **DEF-1**: the
+  project's `emit()` calls `log_statement_runtime_metadata` directly (`quill_logger.cpp:117`), and
+  that function **never calls `should_log_statement`** - it goes straight to the queue
+  (`quill/Logger.h:427-476`). The filtering happens later, in the backend, against each **sink's**
+  threshold (`quill/backend/BackendWorker.h:1500`), and the sink's default is `TraceL3`
+  (`quill/sinks/Sink.h:279`) - the least severe level, so everything passes.
+
+**So the contract cannot say "messages below the level are not logged" - that is false today.**
+It has to say what is true: *"`set_level()` sets the logger's threshold. Until DEF-1 is fixed, that
+threshold is not consulted on the module path, so every message is emitted."* A contract that
+promised the filtering would be a contract the implementation does not keep.
+
+#### The log functions - what they do with the arguments
+
+- **`log()` formats on the calling thread**, into a **fixed 2,048-byte stack buffer**
+  (`logging.cppm:112-114`, `format.hpp:154-156`), then copies the result into a `std::string`
+  (`quill_logger.cpp:118`). So **each module-path message costs one heap allocation on the calling
+  thread**, and a message longer than 2,047 bytes is **silently truncated** at the buffer's
+  capacity (`format.hpp:163-165`).
+- **`log_raw()` takes an already-formatted message** and a length, and passes them through
+  unchanged (`logging.cppm:101-105`). It does **not** copy into the 2,048-byte buffer - it goes
+  straight to `emit()`.
+- **The format string is checked at compile time, but only for the *number* of arguments.**
+  `format_string`'s constructor is `consteval` and calls `format_matches<sizeof...(Wrapped)>`
+  (`logging.cppm:71`), which counts the replacement fields. It does **not** check each argument's
+  *type* against the format specification - so `info("{:s}", 42)` compiles and the specification is
+  ignored. **This is DEF-5.**
+- **The source location is the call site's**, captured by the `format_string` constructor's
+  defaulted parameters (`logging.cppm:67-69`). A default argument is evaluated at the call site, so
+  `__builtin_FILE()` names the caller, not the module.
+
+#### The error model - there isn't one, and that is the finding
+
+**None of the public functions is `noexcept`, and none documents what it does on failure.**
+
+| Function | Can it throw? | What would throw |
+|---|---|---|
+| `setup()` | yes | quill's `Backend::start()` validates its options and starts a thread; `create_or_get_sink`/`create_or_get_logger` can throw `QuillError`; a thread-creation failure throws `std::system_error` |
+| `log()`, `log_raw()`, the shortcuts | yes | `std::bad_alloc` from the `std::string` copy (`quill_logger.cpp:118`) or from the queue's growth; `QuillError` from quill's internals |
+| `flush()` | yes | `QuillError` if called from the backend thread (`quill/Logger.h:627`) |
+| `set_level()` | yes | `std::bad_alloc` - the logger's first use allocates the sink and the backend's structures |
+| `current_level()` | effectively no | it reads an atomic; but its *first* call creates the logger, which can throw |
+
+**The honest contract is therefore a "may throw, and the caller is expected to handle it" one** -
+which is the C++ default and needs no `noexcept` on the API. But it should be **stated**, because
+a logging call that can throw is a real design decision: a caller logging from a destructor, or
+from a `noexcept` function, has to know.
+
+There is also a **latent** issue worth naming: the queue is `UnboundedBlocking` by default
+(`quill/core/FrontendOptions.h:53`), so a slow backend makes the *producer* block rather than drop.
+That is a deliberate choice, but it is invisible from the API.
+
+#### The contract, written out
+
+This is the shape the documentation should take - as prose in the module's header comment and in
+the README, not as a new file (the module's interface **is** the API, so the contract belongs
+there):
+
+> **Threading.** Every function is safe to call from any thread. The logger is created once,
+> lazily, and shared. `set_level()` may be called concurrently with logging; the threshold is
+> atomic, so a message logged at the same moment as a level change may or may not be filtered.
+>
+> **Start-up.** `setup()` is optional - the first log call starts the backend too - and
+> idempotent. It exists to start the backend before any work happens, so that a log call from a
+> static initialiser cannot race the backend's own start-up.
+>
+> **Flushing.** `flush()` blocks until the messages queued so far have been written. It must not
+> be called from the destructor of a static object. Messages queued before the process exits are
+> drained by quill's own exit handler, so `flush()` is only needed when the output must be on the
+> console before `main` returns.
+>
+> **Levels.** `set_level()` sets the logger's threshold; `current_level()` reads it back
+> exactly. *Until the level-filtering defect (DEF-1) is fixed, the threshold is not consulted on
+> the module path, so every message is emitted.*
+>
+> **Messages.** The module path formats on the calling thread into a fixed 2,048-byte buffer, so
+> a longer message is silently truncated, and each message costs one heap allocation. The format
+> string is checked at compile time for the *number* of arguments only, not for the type of each
+> argument against the format specification.
+>
+> **Errors.** No function is `noexcept`. Logging can fail to allocate, and `flush()` throws if it
+> is called from the logger's backend thread. A caller in a `noexcept` context must catch.
+
+#### What this changes
+
+Two of the audit's items become **documentation work rather than research**:
+
+- **`QUIL-9`** - the public `flush()` needs quill's static-destructor caveat. It is already an
+  owner decision followed by an edit; the *content* of the caveat is now written, so the decision
+  is only about where the text goes (the module's header comment, the README, or both).
+- **DEF-1** - the contract must either promise the filtering (and the fix must land first) or
+  state that the threshold is not consulted. **The recommendation is to fix DEF-1 and write the
+  promise**, because a public API whose level setting does nothing is worse than one that says so
+  plainly - and DEF-1 is already plan step 1.
+
+And one **new** item falls out of it:
+
+- **A test for the contract itself.** `tests/logging_test.cpp` today asserts that the level round-trips
+  (`:74-81`) and that logging does not throw (`:92-98`). It does **not** assert that a message
+  below the threshold is suppressed - because that is DEF-1's test and DEF-1 is unfixed. So the
+  suite currently *passes* while the API's most important promise is false.
 
 ---
 
