@@ -345,10 +345,10 @@ def check_links() -> list[str]:
             target = match.group(2)
             if target.startswith(("http://", "https://", "#", "mailto:")):
                 continue
-            relative = target.split("#")[0]
-            if not relative:
+            target_path = target.split("#")[0]
+            if not target_path:
                 continue
-            if not (base / relative).exists():
+            if not (base / target_path).exists():
                 problems.append(
                     f"{relative(path)} links to {target}, which does not exist"
                 )
@@ -497,7 +497,12 @@ def main(argv: list[str] | None = None) -> int:
 
     failures = 0
     for name, function in CHECKS:
-        problems = function()
+        # A check that raises is a failure, not a reason to stop: the rest of the sweep still has
+        # something to say.
+        try:
+            problems = function()
+        except Exception as error:  # noqa: BLE001 - the point is to report, not to crash
+            problems = [f"the check raised {type(error).__name__}: {error}"]
         if problems:
             failures += 1
             print(f"  FAIL  {name}")

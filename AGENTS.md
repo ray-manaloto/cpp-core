@@ -100,9 +100,15 @@ All of them are stdlib-only Python, and none of them invokes a compiler.
 |---|---|
 | `scripts/audit_index.py` | parses `open-items.md` into the registry (`--write`, `--check`) |
 | `scripts/verify_audit.py` | every check that does not need a compiler |
+| `scripts/test_verify_audit.py` | breaks the tree 11 ways and asserts that the checker catches each one |
 | `scripts/audit_summary.py` | the registry, sliced - the answer without the reading |
+| `scripts/audit_metrics.py` | what the automation is worth, measured rather than asserted |
 | `scripts/verify_upstream.py` | the vendored upstream copies against `upstream/manifest.json` |
 | `scripts/check_overlay_drift.py` | the overlay ports' pins against their upstreams' tips (`--network`) |
+
+**Run `mise run audit:test` before you trust the checker.** A check that never fails is not a
+check; the test breaks the tree eleven ways and asserts that each one is caught. If you add a
+check, add a mutation for it.
 
 ## Agent skills
 

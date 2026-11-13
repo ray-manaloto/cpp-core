@@ -564,6 +564,35 @@ something. The count went from 83 to 81 for that reason.
 **Nothing here builds.** Every script is stdlib-only Python, and none of them invokes a compiler,
 CMake or a test. The build lane stays parked.
 
+**And the checker is itself checked.** `scripts/test_verify_audit.py` breaks the tree eleven ways
+- a wrong count, a dangling ID, a missing decision heading, a table split by a paragraph, an
+unbalanced fence, a broken link, a home path in a tracked file, a stale registry, two parts
+tables that disagree, a modified vendored file, and an item that is open *and* answered - and
+asserts that the right check fires and that the tree is restored afterwards. `mise run audit:test`.
+
+That test earned its place immediately: it found a **name shadowing bug in the checker itself**
+(a local variable named `relative` hid the path helper, so the link check crashed rather than
+reported), and it found that the first version of the test itself used `git checkout -- .` to
+restore - which reverted every uncommitted change in the tree, including the fix being tested.
+Both are fixed, and the checker now reports a check that raises as a failure instead of aborting
+the sweep.
+
+**And the effect is measured, not asserted.** `mise run audit:metrics` prints what the automation
+is worth, with the "before" figures read from the tree at the commit before it landed:
+
+| | before | after |
+|---|---|---|
+| what a session reads to know where things stand | 538 lines (hurried) / 1,664 lines (thorough) | 128 lines - `AGENTS.md` plus one command |
+| what it costs to verify a change | ~120 lines of Python, re-typed 8 times | one command, 4 lines of output |
+| subagent files carrying the lane | 0 of 5 | **5 of 5** |
+| subagent files carrying the privacy rule | 0 of 5 | **5 of 5** |
+| a drifted overlay pin | **never noticed** - nothing checked it | one command |
+
+And the metric that matters most, because it is the honest one: **the library is byte-identical
+to the baseline.** This work moved the process, not the code. `DEF-1` to `DEF-6` are all still
+there, the four owner decisions still gate the implementation, and the coverage gate is still a
+run away. What improved is the cost of getting to those answers.
+
 ## State of the working tree
 
 - Committed and clean.
