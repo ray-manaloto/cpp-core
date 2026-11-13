@@ -64,6 +64,7 @@ possible**. What remains is the implementation, which is parked.
 | 17 | [decisions.md](docs/cxx26-features-audit/decisions.md) | the thirteen decisions the owner has to make, with a recommendation for each |
 | 18 | [followup-research.md](docs/cxx26-features-audit/followup-research.md) | **the eight things the audit never asked** - and the answers |
 | 19 | [measurements.md](docs/cxx26-features-audit/measurements.md) | **what the project actually is, in numbers** - the shape, the discipline, the API, the dependency closure, and what cannot be measured |
+| - | [decision-brief.md](docs/cxx26-features-audit/decision-brief.md) | the owner's thirteen decisions on one page - pre-filled, marked by strength, and answerable in a sitting |
 
 The upstream sources those parts quote are vendored under
 [`docs/cxx26-features-audit/upstream/`](docs/cxx26-features-audit/upstream/README.md), so the review

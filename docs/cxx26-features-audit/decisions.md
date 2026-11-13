@@ -3,7 +3,7 @@
 **Date:** 2026-11-12
 **Status:** research. Nothing here is applied to the build.
 
-The audit has **83 open items**. Seventy of them are settled by a compile, a run or a
+The audit has **81 open items**. Sixty-eight of them are settled by a compile, a run or a
 preprocessor pass - they are questions, not decisions, and they unblock the moment the build lane
 reopens.
 
@@ -13,7 +13,8 @@ sheet, with a recommendation for each.
 
 (Three further items - `VCPKG-1`, `VCPKG-2` and `QUIL-8` - were answered by part 18, sections 2
 and 4, and are now in `open-items.md` section 12 rather than in the open list. The count was 83
-until then; part 18 then added `FMT-15`, `MOD-10` and `MOD-11` of its own.)
+until then; part 18 then added `FMT-15`, `MOD-10` and `MOD-11` of its own. It is **81** today,
+because `FMT-9` and `TOOL-16` were answered and moved to section 13 as well.)
 
 ## The short version
 

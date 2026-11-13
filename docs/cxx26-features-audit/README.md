@@ -33,6 +33,7 @@ recommendations for the three questions the owner asked:
 | 18 | [followup-research.md](followup-research.md) | **the eight things the audit never asked** - and the answers |
 | 19 | [measurements.md](measurements.md) | **what the project actually is, in numbers** - the shape, the discipline, the API, the dependency closure, and what cannot be measured |
 | - | [upstream/](upstream/) | the upstream sources these parts quote, vendored so the review can be done offline |
+| - | [decision-brief.md](decision-brief.md) | the owner's thirteen decisions on one page - pre-filled, marked by strength, and answerable in a sitting |
 
 **The audit has a machine-readable side.** `open-items.md` is the source of truth for the items;
 `scripts/audit_index.py` parses it into `audit-index.json`, and `scripts/audit_summary.py` prints
