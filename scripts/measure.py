@@ -665,6 +665,22 @@ def print_summary(current: dict) -> None:
     for relative in never:
         print(f"    {relative:<45} never cited")
 
+    # The read gap: the lines the audit has looked at - by naming the file - but not read at line
+    # granularity. This is the list of where the next research goes, and it is sorted by size so
+    # the biggest gap is first.
+    gaps = []
+    for relative, entry in sorted(coverage["per_file"].items()):
+        if relative not in library_set:
+            continue
+        total = entry["source_lines"] or 1
+        gap = total - entry["cited_lines"]
+        if gap > 0:
+            gaps.append((relative, gap, total))
+    if gaps:
+        print("    the read gap - looked at, but not read at line granularity:")
+        for relative, gap, total in sorted(gaps, key=lambda item: -item[1]):
+            print(f"      {relative:<45} {gap:4d} of {total:4d} lines")
+
     print("\nTHE DEPENDENCY CLOSURE")
     if dependencies.get("available"):
         print(f"  source: {dependencies['source']}")
