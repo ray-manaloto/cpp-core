@@ -57,6 +57,12 @@ surface, how much of it the audit has actually read, and its dependency closure.
 in [measurements.md](measurements.md); the baseline is committed, so a change is visible as a
 delta.
 
+**And there is a bar the measurements are held to.** `acceptance.json` states what the project
+must not lose, what it is heading towards, and what cannot be measured yet. It is **authored,
+not derived** - a standard, not a snapshot - so the harness reads it and never edits it.
+`mise run audit:acceptance` checks the tree against it, and `mise run audit:verify` fails when
+it is violated.
+
 ## The defects this audit found
 
 There are six now. The first is the important one.

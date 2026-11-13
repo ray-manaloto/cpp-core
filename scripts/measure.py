@@ -248,17 +248,22 @@ def depfile_closure(tree: Path) -> dict | None:
 
     roots = sorted(install.glob("*/include"))
     installed = 0
+    installed_packages: list[str] = []
     if roots:
         installed = sum(
             1
             for path in roots[0].rglob("*")
             if path.is_file() and path.suffix.lower() in HEADER_SUFFIXES
         )
+        installed_packages = sorted(
+            path.name for path in roots[0].iterdir() if path.is_dir()
+        )
     return {
         "tree": tree.name,
         "translation_units": len(depfiles),
         "reached_headers": len(reached),
         "installed_headers": installed,
+        "installed_packages": installed_packages,
         "packages": dict(sorted(packages.items(), key=lambda item: -item[1])),
     }
 
@@ -377,6 +382,12 @@ def include_closure() -> dict:
     # Not every build tree carries an install tree - the clang coverage tree does not - so the
     # installed count is the largest one any tree can see.
     installed = max((closure["installed_headers"] for closure in closures), default=0)
+    installed_packages = max(
+        (closure["installed_packages"] for closure in closures),
+        key=len,
+        default=[],
+    )
+    unreached = sorted(set(installed_packages) - set(packages))
     if not installed and resolved is not None:
         installed = resolved["installed_headers"]
     return {
@@ -385,8 +396,11 @@ def include_closure() -> dict:
         "per_tree": closures,
         "trees_measured": len(closures),
         "trees_agreeing": len(counts) == 1,
+        "distinct_closure_sizes": len(counts),
         "reached_headers": closures[0]["reached_headers"],
         "installed_headers": installed,
+        "installed_packages": installed_packages,
+        "unreached_packages": unreached,
         "packages": packages,
         "resolved_fallback": resolved,
     }
@@ -527,6 +541,142 @@ def flatten(value, prefix: str = "") -> dict:
     return out
 
 
+# ------------------------------------------------------------------------------------- the bar
+
+ACCEPTANCE = AUDIT_DIR / "acceptance.json"
+
+
+def acceptance_metrics(current: dict) -> dict:
+    """The metrics the acceptance bar names, read out of the measurement.
+
+    The bar holds thresholds, never observations, so every value here comes from the tree.
+    """
+    library = current["library"]
+    interface = current["interface"]
+    api = current["api"]
+    coverage = current["audit_coverage"]
+    dependencies = current["dependencies"]
+    macros = current["macros"]
+
+    metrics = {
+        "interface.standard_library_includes": interface["standard_library_includes"],
+        "macros.defined_by_the_project": len(macros["defined_by_the_project"]),
+        "api.exported_functions": api["public_functions"],
+        "api.exported_functions_untested": len(api["not_tested_at_source_level"]),
+        "audit.read_coverage_share": coverage["specific_share"],
+        "audit.seen_coverage_share": coverage["seen_share"],
+        "library.hand_rolled_formatter_share": library["hand_rolled_formatter_share"],
+        "library.hand_rolled_formatter_lines": library["hand_rolled_formatter_lines"],
+        "library.test_to_library_ratio": library["test_to_library_ratio"],
+        "library.code_lines": library["code_lines"],
+    }
+    if dependencies.get("available"):
+        metrics["dependencies.reached_headers"] = dependencies["reached_headers"]
+        metrics["dependencies.installed_headers"] = dependencies["installed_headers"]
+        metrics["dependencies.unreached_packages"] = len(dependencies["unreached_packages"])
+        metrics["dependencies.build_trees_measured"] = dependencies["trees_measured"]
+        metrics["dependencies.distinct_closure_sizes"] = dependencies["distinct_closure_sizes"]
+    return metrics
+
+
+def check_acceptance(current: dict) -> dict:
+    """Evaluate the acceptance bar against the tree.
+
+    A violation is a constraint that is measurable and not met. A deferred metric is one that
+    cannot be measured here; it is reported, never failed.
+    """
+    if not ACCEPTANCE.exists():
+        return {
+            "violations": [
+                f"missing {relative_to_repo(ACCEPTANCE)} - the bar is a standard; write it down"
+            ],
+            "satisfied": [],
+            "targets": [],
+            "deferred": [],
+        }
+    bar = json.loads(ACCEPTANCE.read_text(encoding="utf-8"))
+    metrics = acceptance_metrics(current)
+
+    violations: list[str] = []
+    satisfied: list[str] = []
+    targets: list[str] = []
+    deferred: list[str] = []
+
+    for constraint in bar.get("constraints", []):
+        name = constraint["metric"]
+        kind = constraint["kind"]
+        threshold = constraint["threshold"]
+        if name not in metrics:
+            deferred.append(
+                f"{name:<40} not measurable here (it depends on build artifacts)"
+            )
+            continue
+        observed = metrics[name]
+        if kind == "floor" and observed < threshold:
+            violations.append(
+                f"{name}: {observed} is below the floor of {threshold}"
+            )
+        elif kind == "ceiling" and observed > threshold:
+            violations.append(
+                f"{name}: {observed} is above the ceiling of {threshold}"
+            )
+        else:
+            satisfied.append(
+                f"{name:<40} {observed} {kind} {threshold} - met"
+            )
+
+    for target in bar.get("targets", []):
+        name = target["metric"]
+        if name not in metrics:
+            targets.append(f"{name:<40} not measurable here")
+            continue
+        observed = metrics[name]
+        direction = target["direction"]
+        if direction == "down":
+            mark = "ok" if observed <= target["value"] else "worse"
+        else:
+            mark = "ok" if observed >= target["value"] else "worse"
+        targets.append(
+            f"{name:<40} {observed} (target: {direction} from {target['value']}) - {mark}"
+        )
+
+    for entry in bar.get("deferred", []):
+        deferred.append(
+            f"{entry['metric']:<40} not measurable here - {entry['command']}"
+        )
+
+    return {
+        "violations": violations,
+        "satisfied": satisfied,
+        "targets": targets,
+        "deferred": deferred,
+    }
+
+
+def relative_to_repo(path: Path) -> str:
+    return str(path.relative_to(REPO_ROOT))
+
+
+def print_acceptance(current: dict) -> None:
+    report = check_acceptance(current)
+    print("\nTHE ACCEPTANCE BAR - what the project must not lose, and where it is headed")
+    if report["violations"]:
+        print(f"  {len(report['violations'])} VIOLATION(S):")
+        for violation in report["violations"]:
+            print(f"    {violation}")
+    else:
+        print("  every constraint holds")
+    print("  the constraints:")
+    for entry in report["satisfied"]:
+        print(f"    {entry}")
+    print("  the targets - direction of travel, not gates:")
+    for target in report["targets"]:
+        print(f"    {target}")
+    print("  the deferred metrics - named with the command that would produce each:")
+    for entry in report["deferred"]:
+        print(f"    {entry}")
+
+
 # The sections that are derived from the source tree alone. They are the same on every machine,
 # so they are the ones a staleness check may assert.
 SOURCE_DERIVED = ["library", "interface", "api", "audit_coverage", "macros"]
@@ -540,10 +690,37 @@ def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__.split("\n")[0])
     parser.add_argument("--write", action="store_true", help="write the baseline")
     parser.add_argument("--check", action="store_true", help="exit non-zero if the baseline is stale")
+    parser.add_argument(
+        "--acceptance",
+        action="store_true",
+        help="exit non-zero if the acceptance bar is violated",
+    )
     args = parser.parse_args(argv)
 
     current = measure()
     rendered = json.dumps(current, indent=2, sort_keys=True, ensure_ascii=False) + "\n"
+
+    # The bar is evaluated on its own, and it does not need the baseline to exist: a standard is
+    # checked against the tree, not against a snapshot of the tree.
+    if args.acceptance:
+        report = check_acceptance(current)
+        print("THE ACCEPTANCE BAR - what the project must not lose, and where it is headed")
+        if report["violations"]:
+            print(f"  {len(report['violations'])} VIOLATION(S):")
+            for violation in report["violations"]:
+                print(f"    violation: {violation}")
+        else:
+            print("  every constraint holds")
+        print("  the constraints:")
+        for entry in report["satisfied"]:
+            print(f"    {entry}")
+        print("  the targets - direction of travel, not gates:")
+        for target in report["targets"]:
+            print(f"    {target}")
+        print("  the deferred metrics - named with the command that would produce each:")
+        for entry in report["deferred"]:
+            print(f"    {entry}")
+        return 1 if report["violations"] else 0
 
     if args.write:
         MEASUREMENTS.write_text(rendered, encoding="utf-8")

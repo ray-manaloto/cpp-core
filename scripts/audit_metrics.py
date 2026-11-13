@@ -164,7 +164,7 @@ def main() -> int:
     )
     last = result.stdout.strip().split("\n")[-1]
     print(f"  {last}")
-    print("  the checker is tested by breaking the tree 12 ways and asserting that each one is caught")
+    print("  the checker is tested by breaking the tree 13 ways and asserting that each one is caught")
 
     print("\nTHE MEASUREMENTS - what the project is, in numbers")
     measurements = REPO_ROOT / "docs" / "cxx26-features-audit" / "measurements.json"
@@ -193,6 +193,29 @@ def main() -> int:
               " `mise run audit:measure`")
     else:
         print("  not measured: no baseline")
+
+    print("\nTHE ACCEPTANCE BAR - what the project must not lose, and where it is headed")
+    acceptance = REPO_ROOT / "docs" / "cxx26-features-audit" / "acceptance.json"
+    if acceptance.exists():
+        import json
+
+        bar = json.loads(acceptance.read_text())
+        constraints = len(bar.get("constraints", []))
+        targets = len(bar.get("targets", []))
+        deferred = len(bar.get("deferred", []))
+        result = subprocess.run(
+            [sys.executable, str(REPO_ROOT / "scripts" / "measure.py"), "--acceptance"],
+            cwd=REPO_ROOT,
+            capture_output=True,
+            text=True,
+            check=False,
+        )
+        verdict = "every constraint holds" if result.returncode == 0 else "VIOLATED"
+        print(f"  {constraints} constraints, {targets} targets, {deferred} deferred"
+              f" - {verdict}")
+        print("  the bar is authored, not derived: the harness reads it and never edits it")
+    else:
+        print("  no bar")
 
     print("\nTHE RULES - are they where a subagent will actually see them")
     agents = sorted((REPO_ROOT / ".opencode" / "agents" / "sdlc").glob("*.md"))

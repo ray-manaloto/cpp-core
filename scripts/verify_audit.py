@@ -35,6 +35,7 @@ DECISIONS = AUDIT_DIR / "decisions.md"
 AUDIT_README = AUDIT_DIR / "README.md"
 INDEX_PATH = AUDIT_DIR / "audit-index.json"
 MEASUREMENTS_PATH = AUDIT_DIR / "measurements.json"
+ACCEPTANCE_PATH = AUDIT_DIR / "acceptance.json"
 UPSTREAM_MANIFEST = AUDIT_DIR / "upstream" / "manifest.json"
 PARKED = REPO_ROOT / "PARKED.md"
 ROOT_README = REPO_ROOT / "README.md"
@@ -150,6 +151,31 @@ def check_measurements_fresh() -> list[str]:
         f"{relative(MEASUREMENTS_PATH)} is stale - run `mise run audit:measure --write` "
         f"and commit the result"
     ]
+
+
+@check("the acceptance bar holds")
+def check_acceptance_bar() -> list[str]:
+    if not ACCEPTANCE_PATH.exists():
+        return [f"missing {relative(ACCEPTANCE_PATH)} - the bar is a standard; write it down"]
+    result = subprocess.run(
+        [sys.executable, str(MEASURE / "measure.py"), "--acceptance"],
+        cwd=REPO_ROOT,
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    if result.returncode == 0:
+        return []
+    problems = []
+    for line in (result.stdout + result.stderr).split("\n"):
+        stripped = line.strip()
+        if stripped.startswith("violation:"):
+            problems.append(stripped[len("violation:"):].strip())
+    if not problems:
+        problems.append(
+            "the acceptance bar is violated - run `mise run audit:measure -- --acceptance`"
+        )
+    return problems
 
 
 @check("no duplicate item IDs")

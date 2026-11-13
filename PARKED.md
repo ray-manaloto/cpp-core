@@ -587,6 +587,42 @@ is not "too much formatter"; that is an argument, and it is the owner's to accep
 binary size, sanitizer cleanliness - it names with the command that would produce each, rather
 than reporting a zero.
 
+**And the ruler is held to a bar.** The measurements detect *change*. They did not detect
+*regression*, because nothing said what the project must not lose. `docs/cxx26-features-audit/
+acceptance.json` is that bar, and it is **authored rather than derived** - the opposite of
+`audit-index.json`, which is a snapshot of the Markdown. It holds thresholds and never
+observations: the harness reads the tree, so there is no hand-copied number in it to drift.
+
+| kind | what it is | today |
+|---|---|---|
+| **constraints** | enforced. A breach is a check failure | **8** |
+| **targets** | direction of travel, reported with the delta. Not gates | **2** |
+| **deferred** | not measurable yet; each names the command that would produce it | **4** |
+
+The constraints are the project's existing rules, made checkable: the module interface takes **0**
+standard-library includes, the project defines **0** macros, the two compilers agree on the
+closure (**9** build trees, **1** distinct closure size), the closure reaches **106** headers, **11**
+installed packages are reached by nothing, and **4** of the **12** exported functions are untested.
+The two targets are the formatter's share (**51%**, down) and the test-to-library ratio (**0.12**,
+up). The four deferred metrics are coverage %, runtime cost, binary size and sanitizer cleanliness.
+
+**Three rules the bar follows, and why.**
+
+- **A metric that cannot be measured is deferred, never failed.** The dependency constraints need
+  build artifacts, so on a machine that has never built they are reported as not comparable and
+  do not fail the check. A check that fails where it cannot answer is worse than no check.
+- **A deferred metric's threshold is set by ratchet, not by guessing.** The tooling design's
+  proposed `CPP_CORE_COVERAGE_THRESHOLD` default of **100** is deliberately **not** adopted: a
+  floor nobody can meet fails on the first run and gets switched off, which is worse than no
+  floor. The threshold is set from the first reading when the lane reopens, and raised as the
+  project improves.
+- **Only the owner moves a threshold.** A threshold is a standard. The harness reports whether the
+  standard is met; it does not decide what the standard is, and it never edits the file.
+
+A **fifteenth check** and a **thirteenth mutation**: `verify_audit.py` now fails when the bar is
+violated, and `test_verify_audit.py` tightens a constraint to prove it fires. **13/13 mutations
+detected**, and the tree is restored every time.
+
 ## The automation and the rules
 
 The audit had grown to 19 parts, 8,300 lines of Markdown, 83 items with hand-maintained counts in
@@ -601,6 +637,7 @@ part 18 item. That is now machinery, not memory.
 | **the privacy scan** | inside `verify_audit.py` | a scan whose patterns were typed into every run. The patterns are now **derived at run time** - from this machine's git identity, from this repository's own history, from the machine name - so no private value is stored in the repository. An untracked `.audit/privacy-patterns.txt` can add more |
 | **the upstream manifest** | `docs/cxx26-features-audit/upstream/manifest.json` and `scripts/verify_upstream.py` | `upstream/README.md` is the human-readable provenance record; the manifest is its machine-readable half, with a sha256 per vendored file |
 | **the measurements** | `docs/cxx26-features-audit/measurements.json` and `scripts/measure.py` | assertions about the project's shape, its interface discipline, its API surface, its audit coverage and its dependency closure. `mise run audit:measure` prints them; `--write` regenerates the committed baseline; `verify_audit.py` fails when the baseline is stale |
+| **the acceptance bar** | `docs/cxx26-features-audit/acceptance.json` | the absence of a standard. Nothing said what the project must not lose, so a change that made it worse was as invisible as one that made it better. The bar is **authored**, not derived - a standard, not a snapshot - and the harness reads it and never edits it. `mise run audit:acceptance` |
 | **the drift check** | `scripts/check_overlay_drift.py` | nothing - there was nothing. The README claims the overlay ports are pinned to their upstream's latest commit, and **nothing checked it**. `mise run audit:drift` compares each `REF` against its branch's tip |
 | **the rules** | `AGENTS.md` | the re-derivation, every session, of the lane state, both compilers, the module interface, the privacy rulings and the audit's conventions |
 | **the subagents** | `.opencode/agents/sdlc/*.md` | `qa.md` was told to build, and `research.md` was told to prefer running the compiler - both directly against the parked lane. All five now carry the lane, the privacy rules and the audit's conventions |
@@ -613,10 +650,21 @@ a measurement at all, because the project has no CI (`BUILD-5`), so it is **cont
 carry an ID and are answered or contingent, so that a reference to `VCPKG-1` resolves to
 something. The count went from 83 to 81 for that reason.
 
+**And a third, in the mutation test itself.** The restore writes each mutated file back with
+`path.write_bytes`, which opens with `"wb"` - it **truncates first and writes second**. A signal
+arriving between the two leaves a **zero-byte file**. That is not hypothetical: an interrupted
+run left `PARKED.md` empty, and 671 lines of uncommitted prose were lost with it. The restore is
+now **atomic** - the file is written to a sibling temporary path and moved into place with
+`os.replace`, which on POSIX leaves the target as either the old file or the new one, never a
+half-written one - and `SIGTERM` and `SIGINT` are caught so that the `finally` still runs. The
+verifier's own run is bounded by a timeout, so a hang fails the mutation that caused it instead
+of stalling the suite. **Verified by interrupting a live run with `SIGTERM`: the tree came back
+byte for byte, and the run exited 130 having said so.**
+
 **Nothing here builds.** Every script is stdlib-only Python, and none of them invokes a compiler,
 CMake or a test. The build lane stays parked.
 
-**And the checker is itself checked.** `scripts/test_verify_audit.py` breaks the tree twelve ways
+**And the checker is itself checked.** `scripts/test_verify_audit.py` breaks the tree thirteen ways
 - a wrong count, a dangling ID, a missing decision heading, a table split by a paragraph, an
 unbalanced fence, a broken link, a home path in a tracked file, a stale registry, a stale
 measurement baseline, two parts tables that disagree, a modified vendored file, and an item that

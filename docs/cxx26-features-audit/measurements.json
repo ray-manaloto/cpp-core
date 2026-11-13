@@ -199,7 +199,28 @@
   },
   "dependencies": {
     "available": true,
+    "distinct_closure_sizes": 1,
     "installed_headers": 460,
+    "installed_packages": [
+      "async",
+      "boost",
+      "cib",
+      "conc",
+      "flow",
+      "fmt",
+      "interrupt",
+      "log",
+      "log_binary",
+      "log_fmt",
+      "lookup",
+      "match",
+      "msg",
+      "nexus",
+      "quill",
+      "seq",
+      "stdx",
+      "ut"
+    ],
     "packages": {
       "boost": 27,
       "fmt": 3,
@@ -212,6 +233,7 @@
     "per_tree": [
       {
         "installed_headers": 0,
+        "installed_packages": [],
         "packages": {
           "boost": 27,
           "fmt": 3,
@@ -227,6 +249,26 @@
       },
       {
         "installed_headers": 460,
+        "installed_packages": [
+          "async",
+          "boost",
+          "cib",
+          "conc",
+          "flow",
+          "fmt",
+          "interrupt",
+          "log",
+          "log_binary",
+          "log_fmt",
+          "lookup",
+          "match",
+          "msg",
+          "nexus",
+          "quill",
+          "seq",
+          "stdx",
+          "ut"
+        ],
         "packages": {
           "boost": 27,
           "fmt": 3,
@@ -242,6 +284,26 @@
       },
       {
         "installed_headers": 460,
+        "installed_packages": [
+          "async",
+          "boost",
+          "cib",
+          "conc",
+          "flow",
+          "fmt",
+          "interrupt",
+          "log",
+          "log_binary",
+          "log_fmt",
+          "lookup",
+          "match",
+          "msg",
+          "nexus",
+          "quill",
+          "seq",
+          "stdx",
+          "ut"
+        ],
         "packages": {
           "boost": 27,
           "fmt": 3,
@@ -257,6 +319,26 @@
       },
       {
         "installed_headers": 460,
+        "installed_packages": [
+          "async",
+          "boost",
+          "cib",
+          "conc",
+          "flow",
+          "fmt",
+          "interrupt",
+          "log",
+          "log_binary",
+          "log_fmt",
+          "lookup",
+          "match",
+          "msg",
+          "nexus",
+          "quill",
+          "seq",
+          "stdx",
+          "ut"
+        ],
         "packages": {
           "boost": 27,
           "fmt": 3,
@@ -272,6 +354,26 @@
       },
       {
         "installed_headers": 460,
+        "installed_packages": [
+          "async",
+          "boost",
+          "cib",
+          "conc",
+          "flow",
+          "fmt",
+          "interrupt",
+          "log",
+          "log_binary",
+          "log_fmt",
+          "lookup",
+          "match",
+          "msg",
+          "nexus",
+          "quill",
+          "seq",
+          "stdx",
+          "ut"
+        ],
         "packages": {
           "boost": 27,
           "fmt": 3,
@@ -287,6 +389,26 @@
       },
       {
         "installed_headers": 460,
+        "installed_packages": [
+          "async",
+          "boost",
+          "cib",
+          "conc",
+          "flow",
+          "fmt",
+          "interrupt",
+          "log",
+          "log_binary",
+          "log_fmt",
+          "lookup",
+          "match",
+          "msg",
+          "nexus",
+          "quill",
+          "seq",
+          "stdx",
+          "ut"
+        ],
         "packages": {
           "boost": 27,
           "fmt": 3,
@@ -302,6 +424,26 @@
       },
       {
         "installed_headers": 460,
+        "installed_packages": [
+          "async",
+          "boost",
+          "cib",
+          "conc",
+          "flow",
+          "fmt",
+          "interrupt",
+          "log",
+          "log_binary",
+          "log_fmt",
+          "lookup",
+          "match",
+          "msg",
+          "nexus",
+          "quill",
+          "seq",
+          "stdx",
+          "ut"
+        ],
         "packages": {
           "boost": 27,
           "fmt": 3,
@@ -317,6 +459,26 @@
       },
       {
         "installed_headers": 460,
+        "installed_packages": [
+          "async",
+          "boost",
+          "cib",
+          "conc",
+          "flow",
+          "fmt",
+          "interrupt",
+          "log",
+          "log_binary",
+          "log_fmt",
+          "lookup",
+          "match",
+          "msg",
+          "nexus",
+          "quill",
+          "seq",
+          "stdx",
+          "ut"
+        ],
         "packages": {
           "boost": 27,
           "fmt": 3,
@@ -332,6 +494,26 @@
       },
       {
         "installed_headers": 460,
+        "installed_packages": [
+          "async",
+          "boost",
+          "cib",
+          "conc",
+          "flow",
+          "fmt",
+          "interrupt",
+          "log",
+          "log_binary",
+          "log_fmt",
+          "lookup",
+          "match",
+          "msg",
+          "nexus",
+          "quill",
+          "seq",
+          "stdx",
+          "ut"
+        ],
         "packages": {
           "boost": 27,
           "fmt": 3,
@@ -362,7 +544,20 @@
     },
     "source": "the depfiles the last build wrote",
     "trees_agreeing": true,
-    "trees_measured": 9
+    "trees_measured": 9,
+    "unreached_packages": [
+      "async",
+      "cib",
+      "conc",
+      "flow",
+      "interrupt",
+      "log_fmt",
+      "lookup",
+      "match",
+      "msg",
+      "nexus",
+      "seq"
+    ]
   },
   "generated_by": "scripts/measure.py",
   "interface": {

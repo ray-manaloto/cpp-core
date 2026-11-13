@@ -20,7 +20,7 @@ description = "Check the vendored upstream copies against the manifest"
 run = "python3 scripts/verify_upstream.py"
 
 [tasks."audit:test"]
-description = "Break the tree 12 ways and assert that the checker catches each one"
+description = "Break the tree 13 ways and assert that the checker catches each one"
 run = "python3 scripts/test_verify_audit.py"
 
 [tasks."audit:metrics"]
@@ -31,6 +31,10 @@ run = "python3 scripts/audit_metrics.py"
 description = "Measure the project: its shape, its discipline, its API, its audit coverage, its dependencies"
 run = "python3 scripts/measure.py"
 raw_args = true
+
+[tasks."audit:acceptance"]
+description = "Check the project against the acceptance bar: what it must not lose, and where it is headed"
+run = "python3 scripts/measure.py --acceptance"
 
 [tasks."audit:drift"]
 description = "Compare the overlay ports' pins with their upstreams' current tips"

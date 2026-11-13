@@ -1,0 +1,125 @@
+{
+  "schema": 1,
+  "what_this_is": "The acceptance bar for cpp-core: what the project must not lose, and where it is headed.",
+  "authored_or_derived": "AUTHORED. The thresholds below are a standard, not a measurement. The observed values are never stored here - they are read from the tree by scripts/measure.py at check time, so there is no hand-copied number in this file to drift. This is the opposite of audit-index.json, which is derived from open-items.md and must never be hand-edited.",
+  "set_on": "2026-11-12",
+  "set_from": "the values measured on that day. Every floor is set AT the value the project holds today, so the bar holds on day one and any drift is flagged rather than grandfathered in.",
+  "constraint_kinds": {
+    "floor": "the measured value must be greater than or equal to the threshold. Higher is better.",
+    "ceiling": "the measured value must be less than or equal to the threshold. Lower is better.",
+    "target": "not enforced. The direction of travel is reported with the delta. A target is a goal, not a gate - a gate that nobody can meet is a gate that gets switched off."
+  },
+  "policy": {
+    "deferred_metrics": "A metric that cannot be measured yet is deferred, not failed. It names the command that would produce it. When the build lane reopens, the deferred metrics are measured once and their thresholds are set from that first reading - by RATCHET, not by guessing. The tooling design's proposed CPP_CORE_COVERAGE_THRESHOLD default of 100 is deliberately NOT adopted: a floor nobody can meet fails on the first run and gets disabled, which is worse than no floor at all.",
+    "not_comparable": "A metric that depends on build artifacts cannot be evaluated on a machine that has never built. Such a metric is reported as not comparable and does not fail the check. A check that fails where it cannot answer is worse than no check.",
+    "who_moves_a_threshold": "The owner. A threshold is a standard. The harness reports whether the standard is met; it does not decide what the standard is, and it never edits this file."
+  },
+  "constraints": [
+    {
+      "metric": "interface.standard_library_includes",
+      "kind": "ceiling",
+      "threshold": 0,
+      "why": "The module-interface rule: a module's global module fragment is copied into every importing translation unit, so a standard header there collides with the standard headers of the importers. This is the rule in AGENTS.md, and it is zero now.",
+      "measurable_now": true
+    },
+    {
+      "metric": "macros.defined_by_the_project",
+      "kind": "ceiling",
+      "threshold": 0,
+      "why": "The project defines no macros; the four CIB_* invocations come from Intel's cib package. That is the outcome parts 6 and 15 were looking for, and it is the reason the module path needs no macro.",
+      "measurable_now": true
+    },
+    {
+      "metric": "api.exported_functions_untested",
+      "kind": "ceiling",
+      "threshold": 4,
+      "why": "Four of the twelve exported functions - critical, debug, log, trace - are never called by the test file. This is COV-1, seen from the source side. It is set at today's value so the bar holds; when the lane reopens and COV-2 lands, it drops to zero.",
+      "measurable_now": true
+    },
+    {
+      "metric": "audit.read_coverage_share",
+      "kind": "floor",
+      "threshold": 0.63,
+      "why": "The share of the library's source lines the audit has read at line granularity, as opposed to merely naming the file. A new file that nobody has read drops this, which is the correct behaviour - the number should fall when the library grows faster than the reading.",
+      "measurable_now": true
+    },
+    {
+      "metric": "dependencies.reached_headers",
+      "kind": "ceiling",
+      "threshold": 106,
+      "why": "The third-party headers the project's compiled closure reaches, as recorded by the compiler's own depfiles. Nine build trees - two compilers, five configurations - independently agree on 106. A rise means the project is pulling in more than it needs.",
+      "measurable_now": true
+    },
+    {
+      "metric": "dependencies.unreached_packages",
+      "kind": "ceiling",
+      "threshold": 11,
+      "why": "Installed packages that nothing the project compiles reaches: async, cib, conc, flow, interrupt, log_fmt, lookup, match, msg, nexus, seq. They are transitive dependencies of the intel-cib overlay port, so they cost install time and disk rather than build time or runtime. Removing them means diverging the overlay from upstream.",
+      "measurable_now": true
+    },
+    {
+      "metric": "dependencies.build_trees_measured",
+      "kind": "floor",
+      "threshold": 2,
+      "why": "A cross-check needs at least two build trees. One tree is a measurement; two is a corroboration.",
+      "measurable_now": true
+    },
+    {
+      "metric": "dependencies.distinct_closure_sizes",
+      "kind": "ceiling",
+      "threshold": 1,
+      "why": "Every build tree must report the same closure size. More than one distinct size means the two compilers disagree about what the project includes - which is the kind of thing that must not go unnoticed.",
+      "measurable_now": true
+    }
+  ],
+  "targets": [
+    {
+      "metric": "library.hand_rolled_formatter_share",
+      "direction": "down",
+      "value": 0.509,
+      "why": "The hand-rolled formatter is 492 of the library's 967 lines of code. This is the scale of FMT-14: the decision is not whether fmt is better than a 492-line formatter in the abstract, but whether it is better than half the project.",
+      "measurable_now": true
+    },
+    {
+      "metric": "library.test_to_library_ratio",
+      "direction": "up",
+      "value": 0.12,
+      "why": "The test file is 116 lines against a 967-line library. The project has more formatter than it has tests, and FMT-1 to FMT-5 and FMT-13 are the four cheap compiles that would raise this.",
+      "measurable_now": true
+    }
+  ],
+  "deferred": [
+    {
+      "metric": "coverage.percent",
+      "kind": "floor",
+      "threshold": null,
+      "command": "cmake --workflow --preset gcc16-coverage, then gcov-16 --json-format and the gate",
+      "why": "The coverage percentage, and the uncovered-line list that goes with it. This is COV-2's measurement. The threshold is set from the first reading when the lane reopens, by ratchet.",
+      "measurable_now": false
+    },
+    {
+      "metric": "runtime.cost_per_message",
+      "kind": "ceiling",
+      "threshold": null,
+      "command": "the benchmark harness from part 18, section 4",
+      "why": "The cost of one message on the module path, and the cost of one on the catalog path, so the two can be compared. Part 18's six metrics and five-step ladder are the design.",
+      "measurable_now": false
+    },
+    {
+      "metric": "binary.size_bytes",
+      "kind": "ceiling",
+      "threshold": null,
+      "command": "a release build with size(1)",
+      "why": "The size of the shipped artifact. It is the number a consumer sees, and it is the one place where the dependency closure's cost becomes visible.",
+      "measurable_now": false
+    },
+    {
+      "metric": "sanitizers.clean",
+      "kind": "floor",
+      "threshold": null,
+      "command": "cmake --workflow --preset gcc16-asan, and the p2996 equivalents",
+      "why": "That both sanitizers run clean. The project already has a leak-check analysis and a suppression file for the leaks macOS itself causes; this records the standard they are measured against.",
+      "measurable_now": false
+    }
+  ]
+}

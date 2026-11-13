@@ -100,7 +100,7 @@ All of them are stdlib-only Python, and none of them invokes a compiler.
 |---|---|
 | `scripts/audit_index.py` | parses `open-items.md` into the registry (`--write`, `--check`) |
 | `scripts/verify_audit.py` | every check that does not need a compiler |
-| `scripts/test_verify_audit.py` | breaks the tree 12 ways and asserts that the checker catches each one |
+| `scripts/test_verify_audit.py` | breaks the tree 13 ways and asserts that the checker catches each one |
 | `scripts/audit_summary.py` | the registry, sliced - the answer without the reading |
 | `scripts/audit_metrics.py` | what the automation is worth, measured rather than asserted |
 | `scripts/measure.py` | measures the project: its shape, its discipline, its API, its audit coverage, its dependency closure (`--write`, `--check`) |
@@ -108,13 +108,20 @@ All of them are stdlib-only Python, and none of them invokes a compiler.
 | `scripts/check_overlay_drift.py` | the overlay ports' pins against their upstreams' tips (`--network`) |
 
 **Run `mise run audit:test` before you trust the checker.** A check that never fails is not a
-check; the test breaks the tree twelve ways and asserts that each one is caught. If you add a
+check; the test breaks the tree thirteen ways and asserts that each one is caught. If you add a
 check, add a mutation for it.
 
 **The measurement harness has a committed baseline.** `docs/cxx26-features-audit/measurements.json`
 is derived from the tree by `scripts/measure.py`, never hand-edited; `mise run audit:measure`
 regenerates it with `--write` and the checker fails when it is stale. It is a ruler, not a verdict -
 it counts, and it does not judge.
+
+**And there is a bar the ruler is held to.** `docs/cxx26-features-audit/acceptance.json` is the
+acceptance bar: the constraints the project must not lose, the targets it is heading towards, and
+the metrics that cannot be measured yet. It is **authored, not derived** - a standard, not a
+snapshot - and the harness reads it and never edits it. Only the owner moves a threshold.
+`mise run audit:acceptance` checks the tree against it, and the checker fails when it is
+violated.
 
 ## Agent skills
 
