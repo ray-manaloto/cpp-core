@@ -135,7 +135,7 @@ answers "is T an integral type?" **[doc / inferred]**. cpp-core implements them 
 **[doc]**. The blocker is the standard-library-free rule, not reflection.
 
 **(b) The `consteval` scanner `scan_format` and the `format_matches` argument-count check
-(`format.hpp:217-298`). Verdict: not yet.** `scan_format` walks the format string's *text*
+(`format.hpp:220-294`). Verdict: not yet.** `scan_format` walks the format string's *text*
 character by character; no reflection metafunction operates on the contents of a string literal, so
 reflection cannot replace the parse **[inferred]**. The argument-count check already works through
 `sizeof...(Args)` without reflection **[doc]**. A reflection-driven count would need to walk a
@@ -143,7 +143,7 @@ reflection cannot replace the parse **[inferred]**. The argument-count check alr
 **[doc]**.
 
 **(c) Naming a member or a type as a compile-time string - named fields like `{"count": 42}`
-instead of `{0}` (`format.hpp:331-463, 547-578`). Verdict: not yet.** `identifier_of(reflection)`
+instead of `{0}` (`format.hpp:239-241, 575-578`). Verdict: not yet.** `identifier_of(reflection)`
 can yield an entity's name as a `std::string_view` (P2996R13 §4.4.11) **[doc]**, but:
 
 1. collecting the names means walking `members_of`, which is blocked in `constexpr` by allocation;
@@ -156,7 +156,7 @@ can yield an entity's name as a `std::string_view` (P2996R13 §4.4.11) **[doc]**
 Wait for non-transient constexpr allocation and for the annotations story (P3394R4) to settle.
 
 **(d) Replacing the per-type `format_value` dispatch with a generated formatter
-(`format.hpp:428-468`). Verdict: not yet, and not worth it.** `format_value` dispatches per
+(`format.hpp:423-463`). Verdict: not yet, and not worth it.** `format_value` dispatches per
 *argument type*; reflection enumerates *class members* and gives no "how do I format T" answer
 **[inferred]**. Generating the dispatch would mean walking an allocating range in `constexpr`
 (blocked) **[doc]**, would raise compile time (clang-p2996's implementation notes warn that memory

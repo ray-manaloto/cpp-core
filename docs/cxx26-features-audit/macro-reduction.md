@@ -261,7 +261,7 @@ ever grows a second macro-free logging idiom, option (c) is the way to converge.
 `std::source_location::current()` used in a default argument returns the **call site's** location,
 which is exactly the trick the module path already uses with the defaulted
 `__builtin_FILE` / `__builtin_LINE` / `__builtin_FUNCTION` parameters
-(`modules/logging/logging.cppm:64-84, 104-107`).
+(`modules/logging/logging.cppm:64-83, 101-105`).
 
 The module path cannot use `std::source_location` because its interface must not name
 `<source_location>`. **The cib path has no such restriction** - `include/cpp-core/logging/cib_quill.hpp`

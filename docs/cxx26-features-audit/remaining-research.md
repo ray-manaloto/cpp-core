@@ -49,7 +49,7 @@ Two more things fall out of the same source.
 (`constexpr auto sz = fmt::formatted_size(fmtstr, s);`, `ct_format.hpp:341`) and then formats into a
 buffer of exactly that size. The module does the opposite: it formats into a fixed 2,048-byte
 buffer (`format.hpp:154-206`) and **truncates silently** - `append` drops whatever does not fit
-(`format.hpp:158-168`). So the module can produce a log line that ends mid-word with no indication
+(`format.hpp:154-168`). So the module can produce a log line that ends mid-word with no indication
 that it did.
 
 **What a hand-rolled scanner looks like when someone writes one on purpose.** `stdx`'s freestanding
@@ -88,7 +88,7 @@ difference.
 
 It is now read. The declaration is `include/cpp-core/logging/internal.hpp:52-53`; the definition is
 `src/logging/quill_logger.cpp:121-167`; it uses `std::snprintf` with `%f`, `%e`, `%E`, `%g` and `%G`;
-and it treats `'f'` and the default alike (`quill_logger.cpp:130-137`). Part 6's verdict - that no
+and it treats `'f'` and the default alike (`quill_logger.cpp:131-137`). Part 6's verdict - that no
 Intel facility replaces it - stands, and is now resting on the source rather than on the
 declaration.
 
@@ -124,7 +124,7 @@ installed quill 13.1.0 headers.
 
 **Hazard 2 - the two paths format in different places, and only one of them is documented as such.**
 Part 13's last section has the detail: the module path formats on the **calling** thread
-(`logging.cppm:112-114`) and then copies the message into a `std::string`
+(`logging.cppm:110-112`) and then copies the message into a `std::string`
 (`quill_logger.cpp:118`), so each message costs one copy of its bytes on the calling thread - plus
 a heap allocation for any message longer than the small-string threshold, which is 22 characters on
 libc++ and 15 on libstdc++ (part 18, section 4); the

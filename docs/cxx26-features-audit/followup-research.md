@@ -209,7 +209,7 @@ Three details make it work, and each was checked:
 - `message_buffer` is **default-constructible in a constant expression**: it has no user-provided
   constructor, `char chars[capacity]{}` and `unsigned long used = 0U` are constant initialisers
   (`format.hpp:204-205`), so the implicit default constructor is `constexpr`.
-- `forward` is the header's **own** `forward` (`format.hpp:126-136`), not `std::forward` - the
+- `forward` is the header's **own** `forward` (`format.hpp:125-132`), not `std::forward` - the
   module may not use the standard library.
 - The test arguments are **namespace-scope `constexpr` variables**, which have static storage
   duration, which is exactly what part 9's caveat 2 requires (`format_message` takes the
@@ -462,7 +462,7 @@ auto log(level l, format_string<...> fmt, Args &&...args) -> void;
 auto trace/debug/info/warning/error/critical(...) -> void;
 ```
 
-(`logging.cppm:86-151`.)
+(`logging.cppm:85-151`.)
 
 Nothing states whether `setup()` is idempotent, whether `log()` before `setup()` is valid,
 whether `set_level()` may race with `log()`, or whether any of them can throw. Part 14
@@ -546,12 +546,12 @@ promised the filtering would be a contract the implementation does not keep.
 #### The log functions - what they do with the arguments
 
 - **`log()` formats on the calling thread**, into a **fixed 2,048-byte stack buffer**
-  (`logging.cppm:112-114`, `format.hpp:154-156`), then copies the result into a `std::string`
+  (`logging.cppm:110-112`, `format.hpp:150-152`), then copies the result into a `std::string`
   (`quill_logger.cpp:118`). So **each module-path message costs one copy of its bytes on the
   calling thread**, plus a heap allocation for any message longer than the small-string threshold
   (22 characters on libc++ 21, 15 on libstdc++ 16 - see section 4), and a message longer than
   2,047 bytes is **silently truncated** at the buffer's
-  capacity (`format.hpp:163-165`).
+  capacity (`format.hpp:159-161`).
 - **`log_raw()` takes an already-formatted message** and a length, and passes them through
   unchanged (`logging.cppm:101-105`). It does **not** copy into the 2,048-byte buffer - it goes
   straight to `emit()`.
@@ -924,7 +924,7 @@ observation:
 | Confound | What it does | How the design handles it |
 |---|---|---|
 | the **multi-line split** | quill formats **each line of a multi-line message separately, with the full prefix** (`quill/backend/PatternFormatter.h:128-160`). A message containing a real newline becomes several prefixed lines | the case list avoids real newlines in the *expected* output, and D15's case is handled explicitly (below) |
-| the **2,048-byte buffer** | the module path truncates silently at the buffer's capacity (`format.hpp:163-165`); the catalog path does not | every case's payload stays well under 2,048 bytes, so the buffer is not part of any comparison |
+| the **2,048-byte buffer** | the module path truncates silently at the buffer's capacity (`format.hpp:159-161`); the catalog path does not | every case's payload stays well under 2,048 bytes, so the buffer is not part of any comparison |
 | the **pattern's field widths** | `%(short_source_location:<28)` and `%(logger:<12)` are padded | the test extracts only the payload, so the widths do not matter - but the *extraction rule* does depend on the pattern's shape, and the test must assert that shape |
 
 **The honest consequence: this is a test of the two paths as the user sees them, not a test of the
@@ -1185,25 +1185,25 @@ library", with the evidence for each verdict.
 
 | # | The hand-rolled thing | Flips? | The new verdict, and why |
 |---|---|---|---|
-| 1 | the type traits (`format.hpp:20-107`) | **yes, cleanly** | `std::remove_cvref_t` and the rest. 88 lines go. The blocker was never the traits - it was only the standard-library-free rule |
-| 2 | `convertible_to` (`format.hpp:109-113`) | **yes, cleanly** | `std::convertible_to`. 5 lines go |
-| 3 | `forward` (`format.hpp:126-136`) | **yes, cleanly** | `std::forward`. 11 lines go |
-| 4 | `message_buffer` (the 2,048-byte stack buffer, `format.hpp:154-210`) | **no** | `std::inplace_vector<char, 2048>` is **not available on libc++ 21** - there is no `<inplace_vector>` in the include tree at all, not merely a missing macro. libstdc++ 16 has it. Two compilers must keep working, so **57 lines stay** |
-| 5 | `scan_format` + `format_matches` (the consteval scanner, `format.hpp:220-298`) | **only with rows 7-9** | The scanner is the module's *dialect*. It stays unless the module stops doing its own formatting. But its **reason** changes: Intel's `stdx` is still ruled out (it pulls in the standard library), and `std::format_string` becomes available as the validation mechanism - which is row 19, and which is only correct **together with** rows 7-9 (below) |
-| 6 | `format_integer` (`format.hpp:329-422`, plus `digit_char` at `:323-327`) | **yes, cleanly** | `std::to_chars` **is** `constexpr` in both implementations: libstdc++ 16 `<charconv>:126,166,212,235,288,324`, libc++ 21 `<charconv>:34` (P2291R3). 99 lines go |
-| 7 | `format_value` (the per-type dispatch, `format.hpp:424-467`) | **yes, but lossily** | `std::formatter<T>` is the standard's extension point - but the renderer behind it, `std::format_to`, is **not `constexpr`** in either implementation on this machine (no `constexpr` on `format_to` or `format_to_n` in libstdc++ 16's `<format>` or libc++ 21's `<format>`). Taking this row **destroys the constexpr formatter** |
-| 8 | `parse_spec` (the runtime spec parser, `format.hpp:477-515`) | **yes, but lossily** | same: `std::format_to` parses the spec, and it is not `constexpr` |
-| 9 | `format_message` (the field loop, `format.hpp:532-602`) | **yes, but lossily** | same |
+| 1 | the type traits (`format.hpp:20-105`) | **yes, cleanly** | `std::remove_cvref_t` and the rest. 88 lines go. The blocker was never the traits - it was only the standard-library-free rule |
+| 2 | `convertible_to` (`format.hpp:107-109`) | **yes, cleanly** | `std::convertible_to`. 5 lines go |
+| 3 | `forward` (`format.hpp:125-132`) | **yes, cleanly** | `std::forward`. 11 lines go |
+| 4 | `message_buffer` (the 2,048-byte stack buffer, `format.hpp:154-206`) | **no** | `std::inplace_vector<char, 2048>` is **not available on libc++ 21** - there is no `<inplace_vector>` in the include tree at all, not merely a missing macro. libstdc++ 16 has it. Two compilers must keep working, so **57 lines stay** |
+| 5 | `scan_format` + `format_matches` (the consteval scanner, `format.hpp:220-294`) | **only with rows 7-9** | The scanner is the module's *dialect*. It stays unless the module stops doing its own formatting. But its **reason** changes: Intel's `stdx` is still ruled out (it pulls in the standard library), and `std::format_string` becomes available as the validation mechanism - which is row 19, and which is only correct **together with** rows 7-9 (below) |
+| 6 | `format_integer` (`format.hpp:329-421`, plus `digit_char` at `:323-327`) | **yes, cleanly** | `std::to_chars` **is** `constexpr` in both implementations: libstdc++ 16 `<charconv>:126,166,212,235,288,324`, libc++ 21 `<charconv>:34` (P2291R3). 99 lines go |
+| 7 | `format_value` (the per-type dispatch, `format.hpp:424-463`) | **yes, but lossily** | `std::formatter<T>` is the standard's extension point - but the renderer behind it, `std::format_to`, is **not `constexpr`** in either implementation on this machine (no `constexpr` on `format_to` or `format_to_n` in libstdc++ 16's `<format>` or libc++ 21's `<format>`). Taking this row **destroys the constexpr formatter** |
+| 8 | `parse_spec` (the runtime spec parser, `format.hpp:477-514`) | **yes, but lossily** | same: `std::format_to` parses the spec, and it is not `constexpr` |
+| 9 | `format_message` (the field loop, `format.hpp:532-600`) | **yes, but lossily** | same |
 | 10 | `format_double` (`snprintf` with `%g`, `quill_logger.cpp:121-167`) | **no** | It is **already** in a plain translation unit that may use the standard library, so the replacement (fmt) is reachable **today**, with no modules work. The row was already "replace" |
 | 11 | `to_quill_level` / `from_quill_level` | **no** | The two mappings cannot be merged: **MIPI Sys-T's 0 is the most severe level and the module's 0 is the least severe**, so they point in opposite directions. `import std;` gives no shared enum. The row's "shrink" verdict **does not flip** |
 | 12 | `decay_enum_value` (`cib_quill.hpp:53-61`) | **no** | `std::to_underlying` is already available - that header is not standard-library-free. The row was already "replace" |
-| 13 | the cib tag string (`cib_quill.hpp:143-149`) | **no** | same - and it needs `"fmt"` in `vcpkg.json`, which is plan step 2, not a modules change |
+| 13 | the cib tag string (`cib_quill.hpp:142-148`) | **no** | same - and it needs `"fmt"` in `vcpkg.json`, which is plan step 2, not a modules change |
 | 14 | `stdx::ct_conversions::type_as_string` | **no** | reflection still cannot do it (no constexpr allocation) |
 | 15 | the `CIB_*` macros | **no** | unchanged |
-| 16 | the `__builtin_FILE` / `__builtin_LINE` / `__builtin_FUNCTION` default arguments (`logging.cppm:67-69`, `:104-105`) | **partly** | The **module** half becomes `std::source_location::current()`. The **cib** half is already free to use it - that header is not standard-library-free. This is the only payoff that does not depend on the formatter's fate |
+| 16 | the `__builtin_FILE` / `__builtin_LINE` / `__builtin_FUNCTION` default arguments (`logging.cppm:67-69`, `:101-103`) | **partly** | The **module** half becomes `std::source_location::current()`. The **cib** half is already free to use it - that header is not standard-library-free. This is the only payoff that does not depend on the formatter's fate |
 | 17 | the source-location capture itself | **no** | already macro-free; `std::source_location` is the same idiom |
 | 18 | the standard-library-free module rule | **the decision** | see below |
-| 19 | the `format_string` class's compile-time check (`logging.cppm:64-84`) | **yes, cleanly - but not on its own** | `std::basic_format_string<char, Types...>`'s constructor is `consteval` and validates the specification against the class's **type** parameters (libstdc++ 16 `<format>:168-186`, the definition at `:5430`). So DEF-5 goes away. **But see the package rule below** |
+| 19 | the `format_string` class's compile-time check (`logging.cppm:64-83`) | **yes, cleanly - but not on its own** | `std::basic_format_string<char, Types...>`'s constructor is `consteval` and validates the specification against the class's **type** parameters (libstdc++ 16 `<format>:168-186`, the definition at `:5430`). So DEF-5 goes away. **But see the package rule below** |
 | 20 | `std::meta::nonstatic_data_members_of` | **no** | already the C++26 facility |
 
 **The tally.**
@@ -1295,7 +1295,8 @@ import std;
 
 and upstream's `CMakeLists.txt` has `option(FMT_MODULE "Build a module library." ${FMT_USE_CMAKE_MODULES})`,
 where `FMT_USE_CMAKE_MODULES` is TRUE only if CMake >= 3.28, `CMAKE_CXX_STANDARD >= 20`, Ninja
->= 1.11, and GCC >= 15 / Clang >= 16 / MSVC >= 1934 (`CMakeLists.txt:55-86`).
+>= 1.11, and GCC >= 15 / Clang >= 16 / MSVC >= 1934 (upstream fmt's own `CMakeLists.txt`; it is
+not vendored here, so there is no line citation for it).
 
 **The project's own environment clears every one of those gates**: CMake 4.4.5, Ninja 1.13.2, GCC
 16.2.0, clang-p2996 21.0.0git, and `CMAKE_CXX_STANDARD 26` (`cmake/toolchains/cpp-core.cmake:70-72`).
@@ -1370,8 +1371,8 @@ Nothing here can be built or measured - the build lane is parked - so this is an
 | 3 | the module's purview | `modules/logging/logging.cppm` | ~3 lines: `import std;` after `export module` (it must sit there - [module.import]/1) | work 1 |
 | 4 | **the importer migration** | `src/app.cpp`, `src/main.cpp`, `src/reflection_demo.cpp`, `tests/logging_test.cpp` | **every `#include` in four files reviewed.** They include quill's headers, cib's headers, `<unistd.h>` and the standard headers | work 1; and whether `<unistd.h>` survives the mix (**MOD-4**) |
 | 5 | the formatter's replacement | `modules/logging/format.hpp` | 603 -> ~400 (Outcome A) or ~120-150 (Outcome B) | the outcome chosen |
-| 6 | `format_string`'s replacement | `modules/logging/logging.cppm:64-84` | ~20 lines: hold a `std::basic_format_string<char, Types...>` instead of the hand-rolled check - **and only together with work 5** | the package rule |
-| 7 | `std::source_location` | `modules/logging/logging.cppm:67-69`, `:104-105` | ~10 lines: the `__builtin_*` triple becomes one default argument | work 3 |
+| 6 | `format_string`'s replacement | `modules/logging/logging.cppm:64-83` | ~20 lines: hold a `std::basic_format_string<char, Types...>` instead of the hand-rolled check - **and only together with work 5** | the package rule |
+| 7 | `std::source_location` | `modules/logging/logging.cppm:67-69`, `:101-103` | ~10 lines: the `__builtin_*` triple becomes one default argument | work 3 |
 | 8 | the fmt overlay port (Outcome C only) | `ports/fmt/vcppkg.json`, `ports/fmt/portfile.cmake` | **two new files**, following the pattern of the five existing overlays; `-DFMT_MODULE=ON`, `-DCMAKE_CXX_STANDARD=20` | nothing |
 | 9 | `"fmt"` in the manifest | `vcpkg.json` | 1 line | nothing - and it is **plan step 2** regardless, because rows 10 and 13 need it |
 

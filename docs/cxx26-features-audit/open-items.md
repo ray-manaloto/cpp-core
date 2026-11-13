@@ -34,7 +34,7 @@ The chain, read from the installed quill 13.1.0 headers:
 | `set_level()` writes | `quill/core/LoggerBase.h:142-150` | the threshold into the **logger**'s `_log_level` |
 | the only reader | `quill/core/LoggerBase.h:178, 188` | `should_log_statement` |
 | quill's own wrappers call it | `LogMacros.h:404`, `LogFunctions.h:75` | so quill's own paths filter correctly |
-| **cpp-core's `emit()` does not** | `src/logging/quill_logger.cpp:113` | calls `log_statement_runtime_metadata` directly |
+| **cpp-core's `emit()` does not** | `src/logging/quill_logger.cpp:117` | calls `log_statement_runtime_metadata` directly |
 | **the cib path does not** | `include/cpp-core/logging/cib_quill.hpp:157` | same |
 | the backend filters against | `quill/backend/BackendWorker.h:1500` | each **sink**'s threshold, whose default is `TraceL3` (`quill/sinks/Sink.h:279`) |
 
@@ -121,7 +121,7 @@ compares them. Part 13's D-table is the checklist.
 **A format specification that `std::format` and fmt reject at compile time is accepted here, and
 silently ignored at run time.** `scan_format` (`format.hpp:220-281`) scans the specification only to
 find its end (`format.hpp:244-250`), and `parse_spec` (`format.hpp:477-514`) takes *any* trailing
-character as the type character (`format.hpp:509-513`). So `info("{:s}", 42)` compiles, prints "42",
+character as the type character (`format.hpp:511-513`). So `info("{:s}", 42)` compiles, prints "42",
 and tells the reader nothing.
 
 **The fix:** the check would have to move from `format_matches<arg_count>` (`format.hpp:284-294`),
@@ -196,7 +196,7 @@ From [quill-runtime-formatting.md](quill-runtime-formatting.md).
 | QUIL-1 | Does a `Codec` that pushes three arguments from one pack element satisfy a `"{} {} {}"` statement? **This is the load-bearing unknown for the whole formatter rewrite** | one scratch translation unit |
 | QUIL-2 | Which types can be pushed into `DynamicFormatArgStore` without a formatter - `bool`, `char`, the signed and unsigned 8/16/32/64-bit integers, `float`, `double`, `long double`, `void const *`, `string_view`? And does a scoped `enum` push as its underlying integer, or does it need a formatter? (The cib path already has `decay_enum_value` at `cib_quill.hpp:55-61` for this reason) | a compile |
 | QUIL-3 | Exactly which default-specification outputs change between the module's `snprintf("%g")` and fmt's shortest round-trip? | a run - **overlaps FMT-6** |
-| QUIL-4 | Does fmt render the whole specification cross-product identically to the module's `parse_spec` - in particular `#` with `b`/`x`/`o`, `0` padding combined with a sign, `^` centring, and precision on a string (fmt truncates; the module clamps in `copy_text`, `format.hpp:304-316`)? | a compile and a differential test |
+| QUIL-4 | Does fmt render the whole specification cross-product identically to the module's `parse_spec` - in particular `#` with `b`/`x`/`o`, `0` padding combined with a sign, `^` centring, and precision on a string (fmt truncates; the module clamps in `copy_text`, `format.hpp:477-514`)? | a compile and a differential test |
 | QUIL-5 | Can the module's `format_string` hold a compile-time-rewritten template - a struct with a `char[N]` member and no standard-library types - so that the pre-formatted fields become `{}` and the pass-through fields keep their specification? This is what the `self_formatting` path needs | a compile |
 | QUIL-6 | Will the compiler accept a `char const[N]` with no terminator at the `consteval format_string` boundary (`logging.cppm:67`)? If it will, option (b) introduces an out-of-bounds read in quill's `safe_strnlen` that is impossible today, and the consteval check would have to require `text[N-1] == '\0'` | a compile |
 | QUIL-7 | Does a message over 2047 bytes behave acceptably on the default `UnboundedBlocking` queue, and would a bounded queue throw `QuillError` (`Logger.h:871-882`) where the message is silently truncated today? | a run |
@@ -287,16 +287,16 @@ Not questions - work items. The gate is not 100% today, and these are what close
 
 | # | What is not reached | Where |
 |---|---|---|
-| COV-1 | `trace`, `debug` and `critical` - none of the three is called by any test | `logging.cppm:86-151` |
+| COV-1 | `trace`, `debug` and `critical` - none of the three is called by any test | `logging.cppm:85-151` |
 | COV-2 | The level-filtering branches, and the assertion that a message below the threshold is suppressed - **this is DEF-1's test** | `quill_logger.cpp:105-119` |
 | COV-3 | Almost every format specification: alignment and fill, sign, `#`, zero padding, precision, `x`/`X`/`o`/`b`, uppercase digits, `^` centring | `format.hpp` |
-| COV-4 | The 2,048-byte buffer truncation | `format.hpp:158-210` |
-| COV-5 | The `self_formatting` path - no `self_formatting` type exists in the codebase today | `format.hpp:424-468` |
-| COV-6 | The `is_array` and `string_like` branches | `format.hpp:20-107` |
+| COV-4 | The 2,048-byte buffer truncation | `format.hpp:154-206` |
+| COV-5 | The `self_formatting` path - no `self_formatting` type exists in the codebase today | `format.hpp:424-463` |
+| COV-6 | The `is_array` and `string_like` branches | `format.hpp:70-72` |
 | COV-7 | The cib/catalog path - `demo::run()` in `src/app.cpp` is never called by any test; the catalog IDs are produced but never executed | `src/app.cpp`, `cib_quill.hpp` |
 | COV-8 | The internals of `quill_logger.cpp`: logger-creation races, the `current_level` getter's edge cases | `quill_logger.cpp` |
 | COV-9 | `src/reflection_demo.cpp` is compiled, but its runtime line only runs if reflection works at runtime (it does) - and nothing calls it in the tests | `src/reflection_demo.cpp` |
-| COV-10 | `log_raw`'s length path is only partially exercised | `logging.cppm:104-107` |
+| COV-10 | `log_raw`'s length path is only partially exercised | `logging.cppm:101-105` |
 
 **The `constexpr` change removes half of this from the runtime-coverage problem.** With
 `format.hpp` `constexpr`, every formatting rule becomes a `static_assert` that the compiler checks,
@@ -371,7 +371,7 @@ These were asked, answered and are recorded so nobody re-derives them.
 | Is the logger's lifetime sound? | **Yes**, with one hazard in the public API: the backend is stopped at exit through quill's own `atexit` handler, the level threshold is atomic, and the project's level round-trip is exact. The hazard is `flush()`, which quill says must not be called from a static object's destructor (`quill/Logger.h:613`) and which the project's public API does not mention - **QUIL-9** | part 14 |
 | Is DEF-1 a data race? | **No** - the threshold is atomic (`quill/core/LoggerBase.h:224`) and correct; the module path simply never asks. The *sink* threshold (default `TraceL3`) is what filters, so everything is written. It is a policy defect, not a race | part 14 |
 | Is fmt's constexpr support still pending? | **No** - fmt#3403 was **closed as completed** on 2023-06-17, and the installed 12.2.1 has it. The remaining blocker is the standard libraries' (llvm#171292, still open; and LWG4531, which settled the macro values at Brno in June 2026) | part 14 |
-| Where does the module path format its message? | **On the calling thread**, and then it is copied into a `std::string` - so each module-path message costs one copy of its bytes on the calling thread, plus a heap allocation for any message longer than the small-string threshold (`logging.cppm:112-114`, `quill_logger.cpp:118`; the thresholds are in part 18, section 4). The catalog path queues the arguments and formats on the backend thread. The root README's "What the two paths share → Threading" said only the second | part 13; part 14; part 18 |
+| Where does the module path format its message? | **On the calling thread**, and then it is copied into a `std::string` - so each module-path message costs one copy of its bytes on the calling thread, plus a heap allocation for any message longer than the small-string threshold (`logging.cppm:110-112`, `quill_logger.cpp:118`; the thresholds are in part 18, section 4). The catalog path queues the arguments and formats on the backend thread. The root README's "What the two paths share → Threading" said only the second | part 13; part 14; part 18 |
 | Are the catalog IDs stable across compilers? | **Yes - and structurally, not by luck.** The ID is a function of the **message text** (the rank among the messages, in text order), and the text is carried in the message's *type* (`sc::string<char...>`), which both compilers spell the same way. All nine catalogs on disk - two compilers, four configurations, two build times - are byte-identical. The *link* is the backstop: a message that the tool dropped or misread leaves an undefined `catalog<...>` symbol | part 15 |
 | Are the catalog IDs stable across *releases*? | **No** - and that is **DEF-6**. The ID is the rank in text order, so adding a message that sorts first renumbers every later one, and the build does not use the tool's `STABLE_JSON` mechanism that would prevent it. The XML is MIPI Sys-T deployment collateral, and the IDs are its wire identifiers | part 15 |
 | Does the upstream vcpkg `quill` port have an opt-in feature for an external fmt? | **No.** At the pinned baseline the upstream `quill` port has **no `features` key at all** and depends only on `vcpkg-cmake` and `vcpkg-cmake-config`; its portfile passes no fmt option. quill 13.1.0's own CMakeLists has no fmt switch either - none of its 26 `option()` calls mentions fmt - and it installs `include/quill/bundled/fmt/*` unconditionally, exposing it as the `fmtquill` interface target. So **the two copies of fmt are structural**, and there is no such feature to opt into | part 18, section 2 |

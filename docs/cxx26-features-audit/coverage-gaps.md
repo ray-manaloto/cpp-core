@@ -29,36 +29,36 @@ location of a formatted and a raw call.
 
 | What | Line | What a test would do |
 |---|---|---|
-| `message_buffer::append_padded`, the "left" alignment | `format.hpp:198-201` | log a value with a width, e.g. `"{:10}"` |
-| `message_buffer::append_padded`, the "right" alignment (`>`) | `format.hpp:182-186` | log `"{:>10}"` |
-| `message_buffer::append_padded`, the "centre" alignment (`^`) | `format.hpp:187-197` | log `"{:^10}"` |
-| the buffer truncation at 2048 bytes | `format.hpp:163-165`, `:169-171` | log a string longer than 2048 bytes |
-| `copy_text`, the precision branch | `format.hpp:306-308` | log `"{:.3}"` of a string |
-| `copy_text`, the capacity branch | `format.hpp:309-311` | log a string longer than the 1024-byte per-argument buffer |
-| `digit_char`, the uppercase table | `format.hpp:329-330` | log `"{:X}"` |
-| `format_integer`, base 16 / 16-upper / 8 / 2 | `format.hpp:338-357` | log `"{:x}"`, `"{:X}"`, `"{:o}"`, `"{:b}"` |
-| `format_integer`, the `+` and space signs | `format.hpp:373-377` | log `"{:+}"` and `"{: }"` |
-| `format_integer`, the `#` alternate form | `format.hpp:378-388` | log `"{:#x}"`, `"{:#o}"`, `"{:#b}"` |
-| `format_integer`, the zero padding | `format.hpp:400-403`, `:409-412` | log `"{:08}"` |
-| `format_integer`, the truncation at the capacity | `format.hpp:404-406` | log a very wide integer |
-| `format_value`, the `char const *` / `char *` branch | `format.hpp:440-442` | log a `char const *` **variable** - a string *literal* takes the array branch instead |
-| `format_value`, the `string_like` branch | `format.hpp:457-459` | log a `std::string` or a `std::string_view` |
-| `format_value`, the `self_formatting` branch | `format.hpp:460-462` | log a type with a `format_to(buffer, capacity)` member - **the project has no such type and no test for it** |
-| `parse_spec`, every specification | `format.hpp:482-519` | log `"{:*>8+#.3x}"` and every single-character case |
-| `format_message`, the `{:spec}` field | `format.hpp:568-574` | log any specification |
-| `format_message`, the `char const *` branch | `format.hpp:440-442` | see above |
-| `format_message`, an argument index beyond the argument list | `format.hpp:584` | **unreachable by construction** - `format_matches` rejects it at compile time |
+| `message_buffer::append_padded`, the "left" alignment | `format.hpp:192-197` | log a value with a width, e.g. `"{:10}"` |
+| `message_buffer::append_padded`, the "right" alignment (`>`) | `format.hpp:178-182` | log `"{:>10}"` |
+| `message_buffer::append_padded`, the "centre" alignment (`^`) | `format.hpp:183-191` | log `"{:^10}"` |
+| the buffer truncation at 2048 bytes | `format.hpp:159-161`, `:165-167` | log a string longer than 2048 bytes |
+| `copy_text`, the precision branch | `format.hpp:302-304` | log `"{:.3}"` of a string |
+| `copy_text`, the capacity branch | `format.hpp:305-307` | log a string longer than the 1024-byte per-argument buffer |
+| `digit_char`, the uppercase table | `format.hpp:325-326` | log `"{:X}"` |
+| `format_integer`, base 16 / 16-upper / 8 / 2 | `format.hpp:333-352` | log `"{:x}"`, `"{:X}"`, `"{:o}"`, `"{:b}"` |
+| `format_integer`, the `+` and space signs | `format.hpp:368-372` | log `"{:+}"` and `"{: }"` |
+| `format_integer`, the `#` alternate form | `format.hpp:373-383` | log `"{:#x}"`, `"{:#o}"`, `"{:#b}"` |
+| `format_integer`, the zero padding | `format.hpp:395-398`, `:407-409` | log `"{:08}"` |
+| `format_integer`, the truncation at the capacity | `format.hpp:399-401` | log a very wide integer |
+| `format_value`, the `char const *` / `char *` branch | `format.hpp:434-436` | log a `char const *` **variable** - a string *literal* takes the array branch instead |
+| `format_value`, the `string_like` branch | `format.hpp:451-454` | log a `std::string` or a `std::string_view` |
+| `format_value`, the `self_formatting` branch | `format.hpp:455-457` | log a type with a `format_to(buffer, capacity)` member - **the project has no such type and no test for it** |
+| `parse_spec`, every specification | `format.hpp:477-514` | log `"{:*>8+#.3x}"` and every single-character case |
+| `format_message`, the `{:spec}` field | `format.hpp:563-569` | log any specification |
+| `format_message`, the `char const *` branch | `format.hpp:434-436` | see above |
+| `format_message`, an argument index beyond the argument list | `format.hpp:579` | **unreachable by construction** - `format_matches` rejects it at compile time |
 
 ### 1.2 Branches that no test can reach
 
 | What | Line | Why | What to do |
 |---|---|---|---|
-| `scan_format` and `format_matches` | `format.hpp:224-298` | they are `consteval`: they run at compile time, so they produce no runtime arcs | a reviewed coverage exclusion, **or** the open question about whether GCC records them at all |
+| `scan_format` and `format_matches` | `format.hpp:220-294` | they are `consteval`: they run at compile time, so they produce no runtime arcs | a reviewed coverage exclusion, **or** the open question about whether GCC records them at all |
 | the `volatile` and `const volatile` specialisations of `remove_cv` | `format.hpp:38-42` | nothing in the project has a volatile-qualified type | harmless - a type-only template produces no code |
-| `remove_extent<T[]>` and `is_array<T[]>` | `format.hpp:65-67`, `:73` | no unbounded array is ever passed | harmless |
-| the `is_integral` specialisations for `signed char`, `unsigned char`, `wchar_t`, `char16_t`, `char32_t`, `short`, `unsigned short`, `unsigned int`, `long`, `unsigned long`, `long long`, `unsigned long long` | `format.hpp:88-99` | the tests log `int`, `bool` and `char` only | each one is a separate `if constexpr` branch of `format_value`; they need a test each, or one test that logs one value of each width and signedness |
-| `is_floating_point` for `float` and `long double` | `format.hpp:103-105` | only `double` is logged | two more tests |
-| the `static_assert` in the `else` branch of `format_value` | `format.hpp:464-466` | it is a compile-time error, not a runtime path | no coverage needed, but it is the one place where a wrong argument type produces a diagnostic - and there is no negative-compile test for it |
+| `remove_extent<T[]>` and `is_array<T[]>` | `format.hpp:64-66`, `:71` | no unbounded array is ever passed | harmless |
+| the `is_integral` specialisations for `signed char`, `unsigned char`, `wchar_t`, `char16_t`, `char32_t`, `short`, `unsigned short`, `unsigned int`, `long`, `unsigned long`, `long long`, `unsigned long long` | `format.hpp:86-98` | the tests log `int`, `bool` and `char` only | each one is a separate `if constexpr` branch of `format_value`; they need a test each, or one test that logs one value of each width and signedness |
+| `is_floating_point` for `float` and `long double` | `format.hpp:101-103` | only `double` is logged | two more tests |
+| the `static_assert` in the `else` branch of `format_value` | `format.hpp:459-461` | it is a compile-time error, not a runtime path | no coverage needed, but it is the one place where a wrong argument type produces a diagnostic - and there is no negative-compile test for it |
 
 ## 2. `src/logging/quill_logger.cpp` - the implementation behind the standard-library-free boundary
 
@@ -68,12 +68,12 @@ location of a formatted and a raw call.
 | `to_quill_level`, the `default` case | `quill_logger.cpp:51-54` | an out-of-range level - **not reachable through the module's `level` enum**, so it needs a direct call or an exclusion |
 | `from_quill_level`, the `TraceL3` / `TraceL1` / `Notice` cases | `quill_logger.cpp:59-65` | quill's own levels, which the module never sets |
 | `from_quill_level`, the `Backtrace` / `None` cases | `quill_logger.cpp:74-76` | ditto |
-| `format_double`, the `capacity == 0` case | `quill_logger.cpp:120-122` | a zero-capacity call - **unreachable through the module**, which always passes 1024 |
-| `format_double`, the `'f'` type | `quill_logger.cpp:128-134` | log `"{:f}"` - and this is where the **divergence** is |
-| `format_double`, the `'e'`, `'E'`, `'G'`, `'g'` types | `quill_logger.cpp:135-151` | log `"{:e}"`, `"{:E}"`, `"{:G}"`, `"{:g}"` |
-| `format_double`, the explicit-precision branches | `quill_logger.cpp:132`, `:136`, `:140`, `:149` | log `"{:.2f}"` and friends |
-| `format_double`, the `written < 0` case | `quill_logger.cpp:154-157` | a failing `snprintf` - hard to trigger on purpose |
-| `format_double`, the truncation at the capacity | `quill_logger.cpp:159-162` | a double whose text is longer than 1024 bytes - reachable with a large precision |
+| `format_double`, the `capacity == 0` case | `quill_logger.cpp:123-125` | a zero-capacity call - **unreachable through the module**, which always passes 1024 |
+| `format_double`, the `'f'` type | `quill_logger.cpp:131-137` | log `"{:f}"` - and this is where the **divergence** is |
+| `format_double`, the `'e'`, `'E'`, `'G'`, `'g'` types | `quill_logger.cpp:138-154` | log `"{:e}"`, `"{:E}"`, `"{:G}"`, `"{:g}"` |
+| `format_double`, the explicit-precision branches | `quill_logger.cpp:135`, `:139`, `:143`, `:152` | log `"{:.2f}"` and friends |
+| `format_double`, the `written < 0` case | `quill_logger.cpp:157-160` | a failing `snprintf` - hard to trigger on purpose |
+| `format_double`, the truncation at the capacity | `quill_logger.cpp:162-165` | a double whose text is longer than 1024 bytes - reachable with a large precision |
 
 ### 2.1 The `{:f}` divergence, which a test would expose
 
@@ -102,7 +102,7 @@ instantiations live in `src/app.cpp`. So:
 | `level_of`, the `.value` branch and the plain branch | `cib_quill.hpp:45-51` |
 | `decay_enum_value`, the `format_as` / non-enum branch and the `stdx::to_underlying` branch | `cib_quill.hpp:55-61` |
 | `to_quill_level`, all eight cib levels | `cib_quill.hpp:68-88` |
-| `quill_config::logger::log`, the whole callback | `cib_quill.hpp:130-160` |
+| `quill_config::logger::log`, the whole callback | `cib_quill.hpp:129-161` |
 
 **This is a scope decision that has to be made explicitly**, not a gap to be closed:
 

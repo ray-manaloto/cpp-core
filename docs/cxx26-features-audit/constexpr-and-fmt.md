@@ -168,7 +168,7 @@ headers say no; the upstream port might. If it did, the two-copies problem would
 |---|---|---|
 | `modules/logging/**` | **no** | - |
 | `src/logging/quill_logger.cpp` | yes | `std::snprintf` in `format_double` (`quill_logger.cpp:121-167`) - and this **fixes the `{:f}` divergence**: fmt's default floating-point presentation is the shortest round-trip, and `'f'` gives six digits after the point, exactly as `std::format` does |
-| `include/cpp-core/logging/cib_quill.hpp` | yes | the `std::string` concatenation that builds the tags (`cib_quill.hpp:146-148`) becomes `fmt::format`; the rest of that path already goes through quill's fmt |
+| `include/cpp-core/logging/cib_quill.hpp` | yes | the `std::string` concatenation that builds the tags (`cib_quill.hpp:147-148`) becomes `fmt::format`; the rest of that path already goes through quill's fmt |
 | `tests/logging_test.cpp` | yes | the hand-rolled stdout capture stays; the assertions can compare against `fmt::format` output instead of literals, which would catch any formatting divergence automatically |
 | `src/reflection_demo.cpp` | yes | nothing to replace |
 
@@ -257,7 +257,7 @@ constant-evaluate with "call to non-`constexpr` function". Every other argument 
 `self_formatting` types with a `constexpr format_to` - works.
 
 **Caveat 2 - `format_message` needs its arguments to be constants of static storage duration.**
-`format_message` builds two local arrays (`format.hpp:537-540`):
+`format_message` builds two local arrays (`format.hpp:539-540`):
 
 ```cpp
 formatter_fn const formatters[] = {&format_value<remove_cvref_t<Args>>...};

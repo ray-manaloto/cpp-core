@@ -98,6 +98,21 @@ def strip_comments(text: str) -> str:
     return "".join(out)
 
 
+def physical_lines(text: str) -> int:
+    """The number of physical lines in a file's text.
+
+    `text.split("\\n")` counts a trailing empty element, so a file of N lines that ends with a
+    newline comes out as N + 1. The extra line does not exist, and crediting it inflates the
+    denominator of the read-coverage share by one line per file.
+    """
+    if not text:
+        return 0
+    count = text.count("\n")
+    if not text.endswith("\n"):
+        count += 1
+    return count
+
+
 def code_lines(path: Path) -> int:
     """Lines of code: not blank, not a comment."""
     text = path.read_text(encoding="utf-8", errors="replace")
@@ -452,7 +467,7 @@ def measure() -> dict:
             continue
         # The numerator and the denominator have to be the same unit: physical source lines.
         # A cited line is a line someone looked at - whether it is code, a comment or a blank.
-        source_lines = len(path.read_text(encoding="utf-8", errors="replace").split("\n"))
+        source_lines = physical_lines(path.read_text(encoding="utf-8", errors="replace"))
         citation_totals[relative] = {
             "source_lines": source_lines,
             "cited_lines": len([line for line in lines if 1 <= line <= source_lines]),
@@ -464,7 +479,7 @@ def measure() -> dict:
         path = REPO_ROOT / relative
         if not path.exists() or relative in citation_totals:
             continue
-        source_lines = len(path.read_text(encoding="utf-8", errors="replace").split("\n"))
+        source_lines = physical_lines(path.read_text(encoding="utf-8", errors="replace"))
         citation_totals[relative] = {
             "source_lines": source_lines,
             "cited_lines": 0,
@@ -474,7 +489,7 @@ def measure() -> dict:
     # that happens to live under `modules/`.
     library_set = {str(path.relative_to(REPO_ROOT)) for path in files}
     library_total = sum(
-        len((REPO_ROOT / relative).read_text(encoding="utf-8", errors="replace").split("\n"))
+        physical_lines((REPO_ROOT / relative).read_text(encoding="utf-8", errors="replace"))
         for relative in library_set
     )
     library_cited = sum(

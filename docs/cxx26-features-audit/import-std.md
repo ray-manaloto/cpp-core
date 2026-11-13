@@ -278,7 +278,7 @@ Driving `import std;` by hand rather than through CMake does not work:
 
 ### (a) Keep the module standard-library-free - the status quo
 
-The 607-line `modules/logging/format.hpp` stays, and `std::source_location` stays out of reach.
+The 602-line `modules/logging/format.hpp` stays, and `std::source_location` stays out of reach.
 
 - **Pro:** one code path, both compilers, no experimental CMake gate, no dependency on the
   standard library module's maturity, no risk to the importers. It is also the configuration the

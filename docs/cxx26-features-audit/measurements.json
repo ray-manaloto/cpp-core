@@ -33,169 +33,169 @@
     ]
   },
   "audit_coverage": {
-    "library_lines_cited_specifically": 904,
-    "library_lines_cited_whole_file": 1425,
-    "library_lines_seen": 1425,
-    "library_source_lines": 1425,
+    "library_lines_cited_specifically": 885,
+    "library_lines_cited_whole_file": 1415,
+    "library_lines_seen": 1415,
+    "library_source_lines": 1415,
     "per_file": {
       "CMakeLists.txt": {
         "cited_lines": 1,
-        "source_lines": 36,
+        "source_lines": 35,
         "whole_file_cited": true
       },
       "CMakePresets.json": {
         "cited_lines": 0,
-        "source_lines": 10,
+        "source_lines": 9,
         "whole_file_cited": true
       },
       "cmake/catalog.cmake": {
         "cited_lines": 22,
-        "source_lines": 43,
+        "source_lines": 42,
         "whole_file_cited": true
       },
       "cmake/cpp-core-check.cmake": {
         "cited_lines": 11,
-        "source_lines": 45,
+        "source_lines": 44,
         "whole_file_cited": true
       },
       "cmake/dev-mode.cmake": {
         "cited_lines": 0,
-        "source_lines": 16,
+        "source_lines": 15,
         "whole_file_cited": true
       },
       "cmake/iwyu.cmake": {
         "cited_lines": 29,
-        "source_lines": 95,
+        "source_lines": 94,
         "whole_file_cited": true
       },
       "cmake/iwyu_mappings.txt": {
         "cited_lines": 0,
-        "source_lines": 28,
+        "source_lines": 27,
         "whole_file_cited": true
       },
       "cmake/prelude.cmake": {
         "cited_lines": 0,
-        "source_lines": 10,
+        "source_lines": 9,
         "whole_file_cited": true
       },
       "cmake/presets/cpp-core.json": {
         "cited_lines": 0,
-        "source_lines": 437,
+        "source_lines": 436,
         "whole_file_cited": true
       },
       "cmake/project-is-top-level.cmake": {
         "cited_lines": 0,
-        "source_lines": 7,
+        "source_lines": 6,
         "whole_file_cited": true
       },
       "cmake/toolchains/cpp-core.cmake": {
         "cited_lines": 18,
-        "source_lines": 165,
+        "source_lines": 164,
         "whole_file_cited": true
       },
       "cmake/variables.cmake": {
         "cited_lines": 1,
-        "source_lines": 32,
+        "source_lines": 31,
         "whole_file_cited": true
       },
       "include/cpp-core/logging/cib_quill.hpp": {
         "cited_lines": 105,
-        "source_lines": 172,
+        "source_lines": 171,
         "whole_file_cited": true
       },
       "include/cpp-core/logging/internal.hpp": {
         "cited_lines": 8,
-        "source_lines": 56,
+        "source_lines": 55,
         "whole_file_cited": true
       },
       "include/cpp-core/logging/quill_logger.hpp": {
         "cited_lines": 0,
-        "source_lines": 21,
+        "source_lines": 20,
         "whole_file_cited": true
       },
       "modules/CMakeLists.txt": {
         "cited_lines": 0,
-        "source_lines": 4,
+        "source_lines": 3,
         "whole_file_cited": true
       },
       "modules/logging/CMakeLists.txt": {
         "cited_lines": 2,
-        "source_lines": 24,
+        "source_lines": 23,
         "whole_file_cited": true
       },
       "modules/logging/format.hpp": {
-        "cited_lines": 517,
-        "source_lines": 603,
+        "cited_lines": 499,
+        "source_lines": 602,
         "whole_file_cited": true
       },
       "modules/logging/logging.cppm": {
         "cited_lines": 105,
-        "source_lines": 154,
+        "source_lines": 153,
         "whole_file_cited": true
       },
       "ports/intel-cib/portfile.cmake": {
         "cited_lines": 4,
-        "source_lines": 54,
+        "source_lines": 53,
         "whole_file_cited": false
       },
       "ports/intel-cib/vcpkg.json": {
         "cited_lines": 5,
-        "source_lines": 13,
+        "source_lines": 12,
         "whole_file_cited": false
       },
       "ports/intel-cpp-std-extensions/vcpkg.json": {
         "cited_lines": 0,
-        "source_lines": 13,
+        "source_lines": 12,
         "whole_file_cited": true
       },
       "ports/ut/portfile.cmake": {
         "cited_lines": 3,
-        "source_lines": 27,
+        "source_lines": 26,
         "whole_file_cited": false
       },
       "ports/ut/vcpkg.json": {
         "cited_lines": 0,
-        "source_lines": 8,
+        "source_lines": 7,
         "whole_file_cited": true
       },
       "src/app.cpp": {
         "cited_lines": 10,
-        "source_lines": 36,
+        "source_lines": 35,
         "whole_file_cited": true
       },
       "src/logging/quill_logger.cpp": {
-        "cited_lines": 125,
-        "source_lines": 170,
+        "cited_lines": 124,
+        "source_lines": 169,
         "whole_file_cited": true
       },
       "src/main.cpp": {
         "cited_lines": 1,
-        "source_lines": 18,
+        "source_lines": 17,
         "whole_file_cited": true
       },
       "src/reflection_demo.cpp": {
         "cited_lines": 3,
-        "source_lines": 32,
+        "source_lines": 31,
         "whole_file_cited": true
       },
       "tests/CMakeLists.txt": {
         "cited_lines": 1,
-        "source_lines": 15,
+        "source_lines": 14,
         "whole_file_cited": true
       },
       "tests/logging_test.cpp": {
         "cited_lines": 30,
-        "source_lines": 163,
+        "source_lines": 162,
         "whole_file_cited": true
       },
       "vcpkg.json": {
         "cited_lines": 1,
-        "source_lines": 13,
+        "source_lines": 12,
         "whole_file_cited": true
       }
     },
     "seen_share": 1.0,
-    "specific_share": 0.634
+    "specific_share": 0.625
   },
   "dependencies": {
     "available": true,

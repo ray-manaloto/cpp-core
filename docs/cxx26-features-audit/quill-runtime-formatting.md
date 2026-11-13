@@ -8,10 +8,10 @@
 cpp-core has two logging paths that format differently:
 
 - the **module path** (`modules/logging/logging.cppm`) has no macro, so it hand-rolls a
-  printf-style formatter inside its module interface (`modules/logging/format.hpp`, 607 lines),
+  printf-style formatter inside its module interface (`modules/logging/format.hpp`, 602 lines),
   formats the message itself into a fixed 2048-byte buffer, and hands quill an
   **already-formatted** message with the format string `"{}"`
-  (`src/logging/quill_logger.cpp:113-115`);
+  (`src/logging/quill_logger.cpp:117-118`);
 - the **cib path** (`include/cpp-core/logging/cib_quill.hpp`) hands quill the format string **and**
   the runtime arguments, and quill formats on its backend thread (`cib_quill.hpp:157-159`).
 
@@ -49,7 +49,7 @@ types* (a missing `Codec` - `core/Codec.h:199, 276, 317, 352`). A malformed form
 only on the backend, as a `[Could not format log statement...]` line
 (`BackendWorker.h:2432-2452`) - it is never thrown to the caller.
 
-**This matters:** cpp-core's own `consteval` check (`logging.cppm:67-76`) is *strictly stronger*
+**This matters:** cpp-core's own `consteval` check (`logging.cppm:66-76`) is *strictly stronger*
 than anything quill does, and it is independent of who does the formatting. Moving the rendering
 to quill does not weaken it.
 
@@ -124,7 +124,7 @@ The chain, read from the installed quill 13.1.0 headers:
 | `should_log_statement` | `quill/core/LoggerBase.h:178, 188` | the only reader of that threshold: `log_statement_level >= get_log_level()` |
 | quill's macro wrapper | `quill/LogMacros.h:404` | calls it before logging |
 | quill's function wrapper | `quill/LogFunctions.h:75` | calls it before logging |
-| **cpp-core's `emit()`** | **`src/logging/quill_logger.cpp:113`** | **calls `log_statement_runtime_metadata` directly, with no check** |
+| **cpp-core's `emit()`** | **`src/logging/quill_logger.cpp:117`** | **calls `log_statement_runtime_metadata` directly, with no check** |
 | the backend | `quill/backend/BackendWorker.h:1500` | filters against each **sink's** threshold, not the logger's |
 | the sink's default | `quill/sinks/Sink.h:279` | `std::atomic<LogLevel> _log_level{LogLevel::TraceL3}` - everything passes |
 
@@ -224,7 +224,7 @@ trade-off, and the fix is three lines in each of the two call sites.
    fmt's shortest round-trip?
 4. Does fmt render the whole specification cross-product identically to the module's `parse_spec` -
    in particular `#` with `b`/`x`/`o`, `0` padding combined with a sign, `^` centring, and
-   precision on a string (fmt truncates; the module clamps in `copy_text`, `format.hpp:304-316`)?
+   precision on a string (fmt truncates; the module clamps in `copy_text`, `format.hpp:300-312`)?
 5. Can the module's `format_string` hold a compile-time-rewritten template - a struct with a
    `char[N]` member and no standard-library types - so that the pre-formatted fields become `{}`
    and the pass-through fields keep their specification? This is what the `self_formatting` path

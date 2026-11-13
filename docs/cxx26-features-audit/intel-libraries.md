@@ -411,7 +411,7 @@ The BSL-1.0 is permissive (similar to MIT/BSD) and allows commercial use, modifi
 | `intel-cib` flow/interrupt/msg/nexus/seq/lookup/match internals | Not analyzed — outside logging scope. |
 | `async` schedulers (`runloop_scheduler`, `thread_scheduler`, etc.) | Headers listed but **not read** — assumed to implement P2300 scheduler concepts. |
 | `log_binary/catalog/builder.hpp`, `mipi_builder.hpp`, `writer.hpp`, `arguments.hpp`, `mipi_messages.hpp` | Not read — encoder uses them but exact API not verified. |
-| Project's `format_double` implementation | **Now read** (2026-11-12): the declaration is `include/cpp-core/logging/internal.hpp:52-53`, the definition is `src/logging/quill_logger.cpp:121-167`. It uses `std::snprintf` with `%f`, `%e`, `%E`, `%g` and `%G`, and treats `'f'` and the default alike (`quill_logger.cpp:130-137`). The verdict in section 5 stands, and the float default is **DEF-2** |
+| Project's `format_double` implementation | **Now read** (2026-11-12): the declaration is `include/cpp-core/logging/internal.hpp:52-53`, the definition is `src/logging/quill_logger.cpp:121-167`. It uses `std::snprintf` with `%f`, `%e`, `%E`, `%g` and `%G`, and treats `'f'` and the default alike (`quill_logger.cpp:131-137`). The verdict in section 5 stands, and the float default is **DEF-2** |
 | `stdx::ct_format`'s implementation | **Now read** (2026-11-12): it is fmt's compile-time API - `STDX_FMT_COMPILE` is `FMT_COMPILE` (`stdx/detail/fmt.hpp:14`) and `perform_format` is a `consteval` that calls `fmt::format_to` into a fixed-size `ct_string` (`stdx/ct_format.hpp:326-331`). See [remaining-research.md](remaining-research.md) section 1 |
 | `conc::atomic.hpp`, `conc::concepts.hpp` | Not read. |
 
