@@ -205,7 +205,7 @@ constant-evaluated along that path. So the practical rule is:
 | `copy_text` | 300 | - | **constexpr** | |
 | `string_length` | 315 | - | **constexpr** | |
 | `digit_char` | 323 | - | **constexpr** | the two digit tables are `constexpr` locals; fine |
-| `format_integer` | 329 | - | **constexpr** | all arithmetic and local `char` arrays |
+| `format_integer` | 329 | - | **constexpr** | all arithmetic and local `char` arrays. **One dead statement** - see below |
 | `format_value` | 424 | - | **constexpr**, with one caveat | the floating-point branch calls `format_double`, which is not `constexpr` - so the function is legal as `constexpr`, but a float argument cannot be constant-evaluated |
 | `argument_value` | 469 | - | **constexpr** | takes the address of the argument |
 | `parse_spec` | 477 | - | **constexpr** | |
@@ -246,6 +246,32 @@ constant-evaluated along that path. So the practical rule is:
 `include/cpp-core/logging/internal.hpp`: `start_logger`, `flush_logger`, `set_log_level`,
 `get_log_level`, `emit`, `format_double` - **none can be `constexpr`**. They are the runtime
 boundary between the module and its implementation, and that is exactly what they are for.
+
+**One dead statement, found by part 20.** `format_integer` clamps a `total` that it then never
+reads (`format.hpp:393-401`):
+
+```cpp
+auto total = prefix_length + digit_count;
+auto zeros = 0UL;
+if (spec.zero_pad && spec.width > total) {
+  zeros = spec.width - total;
+  total = spec.width;
+}
+if (total >= capacity) {
+  total = capacity - 1U;   // dead: total is never read again
+}
+```
+
+The writes are bounded by the `at < capacity` guards at `format.hpp:404`, `:407` and `:410`
+instead, so the truncation is real but happens elsewhere. Nothing is wrong with the output; the
+statement is simply a leftover. It is worth removing when the lane reopens, and part 7's coverage
+table has been corrected because of it - it listed that branch as a thing to cover.
+
+**And one misplaced header, found by the same pass.** The section header at `format.hpp:473` says
+"The formatter of a whole message", but it heads `parse_spec`; `format_message` is at
+`format.hpp:532`. It is the smallest thing the reading found, and it is recorded as **DEF-8** in
+[open-items.md](open-items.md). Like the dead statement above, it is a comment-only change that
+needs no compile to know it is right.
 
 ### 2.3 The two caveats, stated precisely
 

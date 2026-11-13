@@ -32,6 +32,7 @@ recommendations for the three questions the owner asked:
 | 17 | [decisions.md](decisions.md) | the thirteen decisions the owner has to make, with a recommendation for each |
 | 18 | [followup-research.md](followup-research.md) | **the eight things the audit never asked** - and the answers |
 | 19 | [measurements.md](measurements.md) | **what the project actually is, in numbers** - the shape, the discipline, the API, the dependency closure, and what cannot be measured |
+| 20 | [read-gap.md](read-gap.md) | **the 520 lines the audit had not read** - read line by line, and the six things the reading found |
 | - | [upstream/](upstream/) | the upstream sources these parts quote, vendored so the review can be done offline |
 | - | [decision-brief.md](decision-brief.md) | the owner's thirteen decisions on one page - pre-filled, marked by strength, and answerable in a sitting |
 
@@ -66,7 +67,7 @@ it is violated.
 
 ## The defects this audit found
 
-There are six now. The first is the important one.
+There are eight now. The first is the important one.
 
 **`set_level()` does not filter anything on the module path.** A message logged below the
 configured level is still emitted.
@@ -94,7 +95,7 @@ message *below* the threshold is suppressed. That assertion belongs in the cover
 
 **This is a bug, not a trade-off, and it should be fixed whatever else happens.**
 
-The other five, in the order they were found:
+The other seven, in the order they were found:
 
 | # | The defect | Why it matters | Part |
 |---|---|---|---|
@@ -103,6 +104,8 @@ The other five, in the order they were found:
 | **DEF-4** | **the two logging paths do not share a format-string dialect**, and the differences are silent: `info("{:>06}", 42)` gives "000042" on the module path and "    42" on the catalog path | the same project, the same format string, two answers | 13 |
 | **DEF-5** | the module never validates the format specification against the argument's type, so `info("{:s}", 42)` compiles and is silently ignored | a format string that `std::format` and fmt reject is accepted here | 13 |
 | **DEF-6** | **the catalog IDs are renumbered on every regeneration** - the ID is the message's rank in text order, and the build does not use the tool's `STABLE_JSON` mechanism, so adding a message renumbers the ones after it | the XML is MIPI Sys-T deployment collateral, and the IDs are its wire identifiers | 15 |
+| **DEF-7** | **the catalog path's level mapping is inverted at both ends** - cib's most severe level (`MAX`) maps to quill's least severe (`TraceL3`), and cib's least severe (`TRACE`) maps to quill's second-least severe | with a sink at `Error`, a `MAX` message is dropped and a `FATAL` message is kept - the exact opposite of the intent. Latent: the project never logs at `MAX` | 20 |
+| **DEF-8** | **the formatter's section header names the wrong function** - `format.hpp:473` says "The formatter of a whole message" and heads `parse_spec`; `format_message` is 59 lines further down | a comment defect: the code is right and the comment is wrong. Nothing depends on it, and nothing breaks | 20 |
 
 
 ## The verdict in one paragraph
@@ -267,6 +270,13 @@ level filtering, almost any format specification, the 2048-byte buffer truncatio
 therefore a to-do list as much as a tool: extend the tests until the measured uncovered list is
 empty.
 
+**And part 20 made the baseline worse than it looked.** The suite has eight tests, and **four of
+them assert `expect(true)`** - three of them explicitly ("the logger should not have thrown"). The
+suite proves the library **does not throw** and that the source location is **right**. It proves
+nothing about what any message says: six of the eight tests would pass against a logger that
+discarded every message it was given. Part 7's coverage plan now says what each test must
+**assert**, not merely what it must log.
+
 ## The open questions
 
 **They are all in one place now: [open-items.md](open-items.md)** - part 10. It has every open
@@ -278,10 +288,10 @@ In summary, and all of it needs a compile, a run, or an owner decision:
 
 | Area | Items | The load-bearing one |
 |---|---|---|
-| **The defects** | 6 | `DEF-1`: `set_level()` filters nothing on the module path - a bug, three lines at each of two call sites |
-| **fmt and `constexpr`** | 15 | `FMT-4` / `FMT-5`: can `format.hpp` be made `constexpr` wholesale, and does the `static_assert` pattern work? The compiler is the test. (`FMT-15`, the "must not compile" mechanism for the four asymmetric divergences, was added by part 18, section 5) |
+| **The defects** | 8 | `DEF-1`: `set_level()` filters nothing on the module path - a bug, three lines at each of two call sites. (`DEF-7` and `DEF-8` were added by part 20: the catalog path's level mapping is inverted at both ends, and the formatter's section header names the wrong function) |
+| **fmt and `constexpr`** | 14 | `FMT-4` / `FMT-5`: can `format.hpp` be made `constexpr` wholesale, and does the `static_assert` pattern work? The compiler is the test. (`FMT-15`, the "must not compile" mechanism for the four asymmetric divergences, was added by part 18, section 5) |
 | **quill's runtime formatting** | 8 | `QUIL-1`: can a `quill::Codec` push three arguments from one pack element? It decides whether the 602-line formatter can shrink. (`QUIL-8` was answered by part 18, section 4 - the module path does **not** flush on every message, and already matches quill's own default) |
-| **The tooling** | 16 | `TOOL-6`: does GCC 16 emit arcs for uninstantiated templates and `consteval` bodies? It decides whether the coverage numbers can be trusted at all |
+| **The tooling** | 15 | `TOOL-6`: does GCC 16 emit arcs for uninstantiated templates and `consteval` bodies? It decides whether the coverage numbers can be trusted at all |
 | **`import std;`** | 11 | `MOD-6`: is the GCC 16 failure an artefact of CMake not building header units, or a merge deficiency? (`MOD-10`, the importing-translation-unit that also includes `cib_quill.hpp`, and `MOD-11`, the GCC dialect question, were added by part 18, sections 5 and 6) |
 | **Static reflection** | 4 | `REFL-1`: do the two compilers' `members_of` forms compile the same source? |
 | **The macros** | 3 | `MAC-1`: does `std::source_location::current()` in a default argument return the *caller's* location through the `logging::log<Env>` template? It may be why the CIB macro cannot be dropped |

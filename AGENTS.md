@@ -133,6 +133,12 @@ regenerates it with `--write`, and the checker fails when a cited line no longer
 said, when a citation names a line the file no longer has, or when a citation has moved without
 the baseline being regenerated.
 
+**The audit has read every line of the library.** Part 20 closed the read gap: the harness's
+`audit.read_coverage_share` is **1.0**, and the bar's floor was ratcheted to 1.0 to match. A new
+file, or a new line in an existing one, drops the share - and the checker fails until the reading
+catches up. The record is `docs/cxx26-features-audit/read-gap.md`, and the plan of what each test
+must **assert** (not merely log) is in `docs/cxx26-features-audit/coverage-gaps.md`.
+
 ## Agent skills
 
 - `implement` - build one ticket from an existing plan, staged, not committed.

@@ -110,6 +110,24 @@ if (i < length) {
 So: **the module checks the shape of the format string at compile time, and it does not check the
 format specification at all - not at compile time and not at run time.**
 
+**The parser's grammar, in full.** Part 20 read `parse_spec` line by line, and the whole of the
+runtime grammar is six branches (`format.hpp:477-514`):
+
+| The parser reads | Lines | What it accepts |
+|---|---|---|
+| the fill and the alignment | `format.hpp:479-486` | `<`, `>` or `^`; a fill character only when it is immediately followed by an alignment |
+| the sign | `format.hpp:487-490` | `+` or `-` |
+| the alternate form | `format.hpp:491-494` | `#` |
+| the zero padding | `format.hpp:495-498` | `0` |
+| the width | `format.hpp:499-502` | the digits that follow |
+| the precision | `format.hpp:503-510` | `.` and the digits that follow |
+| the type | `format.hpp:511-513` | **any one character at all** |
+
+That last row is D1, D7 and D15 at once: because the type character is "whatever is left", every
+unsupported type is *accepted and dropped* rather than rejected. Everything else in the table is
+the standard's grammar, in the standard's order - the parser is faithful to the **shape** and
+permissive about the **content**.
+
 ## What the module gets right
 
 The brace structure is right, and it matches the standard exactly:

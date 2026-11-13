@@ -33,7 +33,7 @@
     ]
   },
   "audit_coverage": {
-    "library_lines_cited_specifically": 895,
+    "library_lines_cited_specifically": 1415,
     "library_lines_cited_whole_file": 1415,
     "library_lines_seen": 1415,
     "library_source_lines": 1415,
@@ -99,17 +99,17 @@
         "whole_file_cited": true
       },
       "include/cpp-core/logging/cib_quill.hpp": {
-        "cited_lines": 105,
+        "cited_lines": 171,
         "source_lines": 171,
         "whole_file_cited": true
       },
       "include/cpp-core/logging/internal.hpp": {
-        "cited_lines": 8,
+        "cited_lines": 55,
         "source_lines": 55,
         "whole_file_cited": true
       },
       "include/cpp-core/logging/quill_logger.hpp": {
-        "cited_lines": 0,
+        "cited_lines": 20,
         "source_lines": 20,
         "whole_file_cited": true
       },
@@ -124,12 +124,12 @@
         "whole_file_cited": true
       },
       "modules/logging/format.hpp": {
-        "cited_lines": 502,
+        "cited_lines": 602,
         "source_lines": 602,
         "whole_file_cited": true
       },
       "modules/logging/logging.cppm": {
-        "cited_lines": 105,
+        "cited_lines": 153,
         "source_lines": 153,
         "whole_file_cited": true
       },
@@ -164,22 +164,22 @@
         "whole_file_cited": true
       },
       "src/app.cpp": {
-        "cited_lines": 10,
+        "cited_lines": 35,
         "source_lines": 35,
         "whole_file_cited": true
       },
       "src/logging/quill_logger.cpp": {
-        "cited_lines": 124,
+        "cited_lines": 169,
         "source_lines": 169,
         "whole_file_cited": true
       },
       "src/main.cpp": {
-        "cited_lines": 1,
+        "cited_lines": 17,
         "source_lines": 17,
         "whole_file_cited": true
       },
       "src/reflection_demo.cpp": {
-        "cited_lines": 3,
+        "cited_lines": 31,
         "source_lines": 31,
         "whole_file_cited": true
       },
@@ -189,7 +189,7 @@
         "whole_file_cited": true
       },
       "tests/logging_test.cpp": {
-        "cited_lines": 37,
+        "cited_lines": 162,
         "source_lines": 162,
         "whole_file_cited": true
       },
@@ -200,7 +200,7 @@
       }
     },
     "seen_share": 1.0,
-    "specific_share": 0.633
+    "specific_share": 1.0
   },
   "dependencies": {
     "available": true,

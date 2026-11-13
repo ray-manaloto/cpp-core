@@ -95,20 +95,29 @@ is never called.
 
 ### The audit's own coverage, at two depths
 
-The library is 1,425 source lines.
+The library is **1,415 source lines**.
 
 | | lines | share |
 |---|---|---|
-| cited with line numbers - **read** | 904 | **63%** |
-| credited from a whole-file path - **looked at** | 1,425 | 100% |
-| seen, either way | 1,425 | 100% |
+| cited with line numbers - **read** | 1,415 | **100%** |
+| credited from a whole-file path - **looked at** | 1,415 | 100% |
+| seen, either way | 1,415 | 100% |
 
-Every library file has been looked at. Sixty-three per cent of it has been read at line
-granularity - and the concentrated reading is where the defects are: `format.hpp` has 517 of its
-603 source lines cited individually, and `src/logging/quill_logger.cpp` has 125 of 170.
+Every library file has been looked at, and - since **part 20** - every line of it has been **read**
+at line granularity. The concentrated reading is where the defects are: `format.hpp` has all 602
+of its source lines cited individually, and `src/logging/quill_logger.cpp` has all 169 of its.
 
-The 37% that is "looked at but not read" is the honest list of where the next research should go,
-and the harness prints it, per file, sorted by how much is missing.
+**Two corrections to this table, and a ratchet.** When this part was written the library was
+**1,425** lines and **904** of them (63%) were read. The denominator was wrong: the harness
+measured a file's length with `text.split("\n")`, which counts the trailing empty element, so it
+credited one phantom line per file - ten of them. The real number is **1,415**, and the true
+share was **895/1415 = 0.633**, not 904/1425. The bar's floor was corrected with it (0.63 →
+0.625), and the harness now counts the lines that exist.
+
+**Then part 20 read the 520 unread lines**, and the share is **1.0**. That is the **one ratchet**
+the floor takes: it was set at today's value so the bar would hold, and it moves when the reading
+moves. The read gap - "looked at, but not read at line granularity" - is now **zero**, and the
+harness will say so the moment a new file appears that nobody has read.
 
 ### The dependency closure, measured by the compiler's own record
 
@@ -194,10 +203,11 @@ The harness is a **ruler**, not a verdict.
 - **Eleven** installed packages are reached by nothing the project compiles - a sharper statement
   than part 18's, and one that explains *why* they are there.
 - The hand-rolled formatter is **51%** of the library, which is the scale of `FMT-14`.
-- The audit's own coverage is **63% read / 100% looked at** - the honest version of the 100%.
+- The audit's own coverage was **63% read / 100% looked at** when this part was written - the
+  honest version of the 100%. **Part 20 has since read the rest: 100% read.**
 - The module interface's zero standard-library includes is now a **measured** zero.
 - Four exported functions are never called by the test file, which is `COV-1` from the other side.
 
 No new open item is created by this part. The findings either sharpen existing items (`FMT-14`,
 `COV-1`, `BUILD-7`) or replace a claim that was already open (`VCPKG-2`, `BUILD-5`). The count
-stays at **81 open items**.
+stays at 81 open items.

@@ -151,6 +151,17 @@ suppressed. That assertion belongs in the coverage work (see
 [coverage-gaps.md](coverage-gaps.md), section 1) - "level filtering" is on the uncovered list
 precisely because it does not work.
 
+**A second thing the same call site gets wrong** - found by part 20, which read the file line by
+line. `quill::Logger::log_statement_runtime_metadata` takes the function name as its **fourth**
+parameter (`quill/Logger.h:427-433`). The module path passes the real one
+(`src/logging/quill_logger.cpp:117-118`: `file, function`); the catalog path passes an **empty
+string** (`include/cpp-core/logging/cib_quill.hpp:157-159`: `file, ""`). The cause is upstream -
+cib's `CIB_LOG` hands the customization point only `__FILE__` and `__LINE__`
+(`log/log.hpp:63-64`) - so there is no function name to pass. It has no visible effect today,
+because the project's pattern prints `%(short_source_location)` and not `%(caller_function)`
+(`src/logging/quill_logger.cpp:33-35`), but quill's `%(caller_function)` attribute would show the
+module path's function and nothing at all for the catalog path. Part 6's option (e) fixes it.
+
 ## The three options
 
 ### (a) The formatter stays

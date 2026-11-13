@@ -14,7 +14,8 @@ answers a different question: **what did the audit leave unasked?**
 
 ## The state this starts from
 
-The audit has **83 open items**, and they decompose exactly (verified by parsing the "settled by"
+The audit had **83 open items** when this part opened, and they decompose exactly (verified by
+parsing the "settled by"
 column of every row, plus the six defect headings):
 
 | Kind | Count | What resolves it |

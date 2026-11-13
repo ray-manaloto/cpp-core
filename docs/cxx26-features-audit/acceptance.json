@@ -39,8 +39,8 @@
     {
       "metric": "audit.read_coverage_share",
       "kind": "floor",
-      "threshold": 0.625,
-      "why": "The share of the library's source lines the audit has read at line granularity, as opposed to merely naming the file. A new file that nobody has read drops this, which is the correct behaviour - the number should fall when the library grows faster than the reading. CORRECTED ON 2026-11-13: the floor was 0.63, derived from a denominator that counted one phantom line per file (text.split(\"\\n\") counts the trailing empty element). The real denominator is 1415 physical lines, not 1425, so the true share is 885/1415 = 0.625. This is a correction of a floor that was computed from a wrong number, not a ratchet; the ratchet happens once, when the read gap closes.",
+      "threshold": 1.0,
+      "why": "The share of the library's source lines the audit has read at line granularity, as opposed to merely naming the file. A new file that nobody has read drops this, which is the correct behaviour - the number should fall when the library grows faster than the reading. HISTORY: the floor was 0.63, derived from a denominator that counted one phantom line per file (text.split(\"\\n\") counts the trailing empty element); the real denominator is 1415 physical lines, not 1425, so the true share was 885/1415 = 0.625. That was a correction of a floor computed from a wrong number, not a ratchet. THE RATCHET HAPPENED ONCE, ON 2026-11-13: part 20 read the 520 unread lines, so the share is now 1415/1415 = 1.0 and the floor is 1.0. Every line of the library has now been read at line granularity.",
       "measurable_now": true
     },
     {

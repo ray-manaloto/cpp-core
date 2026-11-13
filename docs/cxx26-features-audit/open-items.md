@@ -163,6 +163,75 @@ that file lives is an owner decision, and it is **BUILD-7**.
 **The test it needs:** regenerate the catalog with one message added and check that the other
 messages keep their IDs.
 
+### DEF-7 - the catalog path's level mapping is inverted at both ends
+
+**cib's most severe level is mapped onto quill's least severe one, and cib's least severe level
+is mapped onto quill's second-least severe one.** This is new in part 20, and it is found by
+reading the mapping against the two scales it claims to relate.
+
+The mapping is at `include/cpp-core/logging/cib_quill.hpp:68-88`. The two scales run in opposite
+directions:
+
+| | The scale | Where |
+|---|---|---|
+| cib | `MAX = 0` (most severe) … `TRACE = 7` (least severe) | `log/level.hpp:8-17` |
+| quill | `TraceL3` (least severe) … `Critical` (most severe) | `quill/core/LogLevel.h:26-44` |
+
+| cib | quill | Severity, on quill's scale |
+|---|---|---|
+| `MAX` | `TraceL3` | **least severe** - the bottom of the whole scale |
+| `FATAL` | `Critical` | **most severe** - the top of the whole scale |
+| `ERROR` | `Error` | severe |
+| `WARN` | `Warning` | - |
+| `INFO` | `Info` | - |
+| `USER1` | `Debug` | - |
+| `USER2` | `TraceL1` | - |
+| `TRACE` | `TraceL2` | second least severe |
+
+The comment above the mapping (`cib_quill.hpp:63-67`) says the mapping "preserves the relative
+order", and prints the two scales side by side as `TrL3 Crit Error Warn Info Debug TrL1 TrL2` -
+which treats `TrL3` as quill's most severe level. Quill says the opposite: "TraceL3 is the most
+detailed trace level", and `Critical` is the top of the scale (`quill/core/LogLevel.h:26-44`).
+
+**What it costs.** The sink drops anything less severe than its threshold
+(`quill/sinks/Sink.h:204`: `if (log_level < _log_level.load(...)) return false;`). With a sink at
+`Error`, a `MAX` message is **dropped** and a `FATAL` message is **kept** - the exact opposite of
+the intent. The two ends of the scale are swapped.
+
+**Reachability.** `CIB_LOG_WITH_LEVEL(logging::level::MAX, ...)` reaches it
+(`log/log.hpp:66-69`). The project never logs at `MAX` - the three catalog calls in
+`src/app.cpp:27-30` are `CIB_INFO`, `CIB_WARN` and `CIB_ERROR` - so **nothing misbehaves today**.
+It is a latent defect.
+
+**Why it is not a one-line fix.** quill has exactly one level more severe than `Error`
+(`Critical`), so eight cib levels cannot map one-to-one onto quill's ten; the mapping has to
+decide which cib levels share a quill level, and the two ends are where it goes wrong. The fix
+belongs with `DEF-1` - until the level filter works at all, the mapping's effect is not
+observable - and with the level table in part 2.
+
+**The test it needs:** a test that logs at each cib level and asserts the quill level it maps
+to. The catalog path is not under test today (part 7, section 3), so this belongs with the
+decision about the coverage denominator.
+
+### DEF-8 - the formatter's section header names the wrong function
+
+**`format.hpp:473` heads the wrong section.** The comment says "The formatter of a whole message",
+but what follows is `parse_spec` - the function that parses one field's specification
+(`format.hpp:477-514`). The function the header names, `format_message`, is 59 lines further down
+(`format.hpp:532`).
+
+This is new in part 20, and it is the smallest thing the reading found. Like `DEF-3`, it is a
+comment defect: the code is right and the comment is wrong. Unlike `DEF-3`, nothing depends on it -
+no diagnostic, no rule, no behaviour.
+
+**Why it matters anyway.** These headers are the map of the file's structure, and this one names a
+function that is 59 lines away. A reader who trusts it goes to `parse_spec` expecting the
+whole-message formatter, and the file's two halves - the per-argument formatters and the
+whole-message formatter - lose their boundary marker.
+
+**The fix:** move the header down to `format_message`, or rename it to "The format specification".
+A comment-only change; no compile needed to know it is right.
+
 ## 2. fmt and `constexpr` (FMT)
 
 From [constexpr-and-fmt.md](constexpr-and-fmt.md) section 4.

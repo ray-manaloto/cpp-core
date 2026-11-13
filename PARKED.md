@@ -64,6 +64,7 @@ possible**. What remains is the implementation, which is parked.
 | 17 | [decisions.md](docs/cxx26-features-audit/decisions.md) | the thirteen decisions the owner has to make, with a recommendation for each |
 | 18 | [followup-research.md](docs/cxx26-features-audit/followup-research.md) | **the eight things the audit never asked** - and the answers |
 | 19 | [measurements.md](docs/cxx26-features-audit/measurements.md) | **what the project actually is, in numbers** - the shape, the discipline, the API, the dependency closure, and what cannot be measured |
+| 20 | [read-gap.md](docs/cxx26-features-audit/read-gap.md) | **the 520 lines the audit had not read** - read line by line, and the six things the reading found |
 | - | [decision-brief.md](docs/cxx26-features-audit/decision-brief.md) | the owner's thirteen decisions on one page - pre-filled, marked by strength, and answerable in a sitting |
 
 The upstream sources those parts quote are vendored under
@@ -198,12 +199,15 @@ When the build lane reopens:
 ## The open items, in one place
 
 **[docs/cxx26-features-audit/open-items.md](docs/cxx26-features-audit/open-items.md)** has all of
-them: 6 defects, 14 fmt/`constexpr` questions, 8 quill questions, 15 tooling questions, 11
+them: 8 defects, 14 fmt/`constexpr` questions, 8 quill questions, 15 tooling questions, 11
 `import std;` questions, 4 reflection questions, 3 macro questions, 10 coverage to-dos, 7 build
-questions and 3 environment questions - **81 in all** - each with what
+questions and 3 environment questions - **83 in all** - each with what
 settles it, plus a table of the questions that are **not** open because they have already been
 answered, and a table of the items that **carry an ID** and are answered or contingent
 (section 13).
+
+**83 open items**: 13 owner decisions, 0 registry reads, 70 settled by a compile, a run or a
+preprocessor pass.
 
 The count is derived, not typed: `scripts/audit_index.py` parses that file into
 `docs/cxx26-features-audit/audit-index.json`, and `scripts/verify_audit.py` fails if the number
@@ -421,8 +425,9 @@ no-compile research: what remains is the implementation (parked) and the owner d
 ## What part 17 changed
 
 **Part 17 - the decisions, collected.** The audit had **83 open items** when part 17 was written;
-part 18 then answered three of them and added three of its own, and two more have since been
-answered, so there are **81 open items** now. Seventy of them are settled by a compile, a run or
+part 18 then answered three of them and added three of its own, two more have since been
+answered, and part 20 added two more - so there are **83 open items** now. Seventy of them are
+settled by a compile, a run or
 a preprocessor pass - they are *questions*, and they unblock the moment the build lane reopens.
 **Thirteen are decisions**, because the answer is a judgement about what the project should be
 rather than a fact about the world. They were scattered across `open-items.md`; part 17 gathers
@@ -529,7 +534,7 @@ to `open-items.md` section 12 for questions that were **never** open-list items 
 MemorySanitizer, module consumption, `ut`'s supply chain, quill, CMake 4.5.0, GCC 17's constexpr
 format, and the overlay pins - so that nobody re-derives them.
 
-**Since then, two more have been answered** and the audit has **81 open items**: 13 owner
+**Since then, two more have been answered** and the audit had 81 open items: 13 owner
 decisions, 0 registry reads, 68 settled by a compile, a run or a preprocessor pass. `FMT-9` - the
 question whether the vcpkg `quill` port has an external-fmt feature - was answered by part 18,
 section 2, and was still sitting in the open table; and `TOOL-16` - what CI image would provide
@@ -580,7 +585,7 @@ and reported **152%** - the numerator and the denominator have to be the same un
 are.
 
 **No new open item.** The findings sharpen existing ones (`FMT-14`, `COV-1`, `BUILD-7`) or replace
-a claim that was already open. The count stays at **81 open items**.
+a claim that was already open. The count stays at 81 open items.
 
 **The harness is a ruler, not a verdict.** Every number here is a count. "492 lines of formatter"
 is not "too much formatter"; that is an argument, and it is the owner's to accept or reject with
@@ -625,6 +630,67 @@ A **fifteenth check** and a **thirteenth mutation**: `verify_audit.py` now fails
 violated, and `test_verify_audit.py` tightens a constraint to prove it fires. **13/13 mutations
 detected**, and the tree is restored every time. The citation anchor brought the **sixteenth
 check** and the **fourteenth mutation**: **14/14 mutations detected**.
+
+## What part 20 changed
+
+**The read gap, closed.** The measurement harness counts the library's source lines the audit has
+read at line granularity - cited with a line number, not merely named as a file. On 2026-11-12
+that share was **0.633**: 895 of 1415 lines, with **520 lines** read by nobody, spread over ten
+files. The biggest gaps were the test file (125 of 162 lines unread), the formatter (100 of 602),
+the catalog path's header (66 of 171), the module interface (48 of 153), the standard-library-free
+bridge (47 of 55), the implementation (45 of 169), the application (69 of 83) and the demo (28 of
+31).
+
+**Part 20 read every one of them.** The share is now **1.0** - 1415 of 1415 lines, read at line
+granularity - and the read gap is **zero**. The record is
+[read-gap.md](docs/cxx26-features-audit/read-gap.md): every range, what it says, and what the
+reading found.
+
+**The bar ratcheted once, at the end.** `audit.read_coverage_share`'s floor moves from **0.625** to
+**1.0**. That is the one ratchet the owner ruled on: the floor was corrected when the denominator
+was found to be wrong (the harness counted one phantom line per file), and it is raised now that
+the reading is done. **Only the owner moves a threshold**, and this one was moved by the owner's
+own ruling - recorded in the bar's own `why`.
+
+**Six findings.**
+
+1. **A new defect, `DEF-7`** - the catalog path's level mapping is inverted at both ends. cib's
+   most severe level (`MAX`) maps to quill's **least** severe one (`TraceL3`), and cib's least
+   severe (`TRACE`) maps to quill's second-least severe. The comment above the mapping says it
+   "preserves the relative order" and prints a table that shows the inversion. The sink drops
+   anything below its threshold (`quill/sinks/Sink.h:204`), so with a sink at `Error` a `MAX`
+   message is dropped and a `FATAL` message is kept. **Nothing misbehaves today** - the project
+   never logs at `MAX` - so it is latent. The count moves from 81 open items to **82**.
+2. **The catalog path carries no function name.** quill's `log_statement_runtime_metadata` takes
+   the function name as its fourth parameter; the module path passes the real one and the catalog
+   path passes an empty string. The cause is upstream - cib's `CIB_LOG` hands the customization
+   point only `__FILE__` and `__LINE__` - and there is no visible effect today, because the
+   project's pattern prints `%(short_source_location)`. Part 6's option (e) fixes it, which makes
+   that option worth more than "the cheap one".
+3. **A dead assignment in the formatter.** `format.hpp:399-401` clamps a `total` that is never
+   read again; the real bound is the `at < capacity` guards at `:404`, `:407` and `:410`. Part 7's
+   coverage table had listed that branch as a thing to cover - it is a no-op.
+4. **Four of the eight tests assert `expect(true)`.** The suite proves the library does not throw
+   and that the source location is right; it proves nothing about what any message says. Six of
+   the eight would pass against a logger that discarded every message it was given.
+5. **A counterexample to the audit's own module matrix.** The project's test translation unit
+   imports the module *and* includes six standard headers (through `ut/ut.hpp`) - the shape part
+   18's matrix says fails on GCC 16 - and it builds. `MOD-11` is the open question that already
+   says so, and the pass confirmed it from the source.
+6. **A misplaced section header, `DEF-8`.** `format.hpp:473` says "The formatter of a whole
+   message" and heads `parse_spec`; `format_message` is 59 lines further down (`format.hpp:532`).
+   A comment defect - the code is right and the comment is wrong - and the smallest thing the
+   reading found. The count moves from 82 open items to **83**.
+
+**Part 7's plan changed shape.** Every row of the coverage table now says what the test must
+**assert**, not what it must log: the exact output it must produce. And there is a new table of
+the eight existing tests, what each asserts today, and what it must assert instead. The rule the
+assertions follow: **a test asserts a value, never a fact about the code.** "The logger did not
+throw" is not an assertion about the library.
+
+**What part 20 did not do.** It did not build anything, change a line of the library, or settle
+anything that needs a compile. The source is byte-identical to the baseline. The pass moved the
+audit, not the code.
 
 ## The automation and the rules
 

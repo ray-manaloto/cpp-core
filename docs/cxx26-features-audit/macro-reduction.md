@@ -274,6 +274,30 @@ This is a **small, contained improvement**: it removes the macro's need to touch
 all, and it makes the project use one idiom for source-location capture on both paths. It is worth
 doing when the build lane reopens, and it is not worth a macro-reduction project on its own.
 
+**And there is a second thing option (e) would fix** - found by part 20, which read the catalog
+path line by line. **The catalog path carries no function name at all.**
+`quill::Logger::log_statement_runtime_metadata` takes the function name as its **fourth**
+parameter (`quill/Logger.h:427-433`), and the module path passes the real one
+(`src/logging/quill_logger.cpp:117-118`: `file, function`). The catalog path passes an **empty
+string** (`include/cpp-core/logging/cib_quill.hpp:157-159`: `file, ""`).
+
+The cause is upstream: cib's `CIB_LOG` hands the customization point only the file and the line
+(`log/log.hpp:63-64`):
+
+```cpp
+#define CIB_LOG(...) \
+    logging::log<cib_log_env_t>(__FILE__, __LINE__, STDX_CT_FORMAT(__VA_ARGS__))
+```
+
+There is no function name in the interface, so there is none to pass. **No visible effect today** -
+the project's pattern prints `%(short_source_location)`, not `%(caller_function)`
+(`src/logging/quill_logger.cpp:33-35`) - but quill's `%(caller_function)` attribute would show the
+module path's function and nothing at all for the catalog path.
+
+`std::source_location::current()` carries the function name as well as the file and the line, so
+option (e) fixes this too. That makes option (e) worth more than it looked: it is not only "the
+cheap one", it is the one that makes the two paths agree on the call site.
+
 ## 4. The decisive detail: `stdx` is not usable inside the module interface
 
 The most promising replacement for the module's hand-rolled compile-time scanner

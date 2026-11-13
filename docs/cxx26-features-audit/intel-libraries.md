@@ -231,6 +231,34 @@ namespace logging {
 #define CIB_LOG_VERSION()     // logs version info
 ```
 
+**The level scale, and the mapping the project gets wrong.** cib's levels follow the MIPI Sys-T
+severity scale: **0 is the most severe** and 7 the least. Quill's scale runs the other way -
+`TraceL3` is the least severe and `Critical` the most (`quill/core/LogLevel.h:26-44`). The
+project's mapping between them (`include/cpp-core/logging/cib_quill.hpp:68-88`) sends cib's most
+severe level to quill's least severe one, and cib's least severe level to quill's second-least
+severe one:
+
+| cib | quill | Severity, on quill's scale |
+|---|---|---|
+| `MAX` | `TraceL3` | **least severe** |
+| `FATAL` | `Critical` | **most severe** |
+| `ERROR` | `Error` | severe |
+| `WARN` | `Warning` | - |
+| `INFO` | `Info` | - |
+| `USER1` | `Debug` | - |
+| `USER2` | `TraceL1` | - |
+| `TRACE` | `TraceL2` | second least severe |
+
+The two ends are swapped, and the sink drops anything less severe than its threshold
+(`quill/sinks/Sink.h:204`) - so with a sink at `Error`, a `MAX` message is dropped and a `FATAL`
+message is kept. This is **`DEF-7`**, and part 20 has the evidence. Nothing misbehaves today,
+because the project never logs at `MAX`.
+
+**And the interface carries no function name.** `CIB_LOG` hands the customization point only
+`__FILE__` and `__LINE__` (the `log/log.hpp:63-64` line above), so the catalog path cannot pass
+one to quill - and passes an empty string instead
+(`include/cpp-core/logging/cib_quill.hpp:157-159`). Part 6's option (e) fixes it.
+
 ### 2.3 Binary Logging (`logging::binary::`)
 
 ```cpp

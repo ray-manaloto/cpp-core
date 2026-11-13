@@ -254,6 +254,17 @@ and the same formula in `stable_msg_key`, `:744-745`). Two consequences:
   property, so it is the same under both compilers.
 - **The module ID has a ceiling.** `check_module_limit` enforces `module_id_max`, 127 by default
   (`gen_str_catalog.py:719-724`). This project has one module.
+- **The identifiers are traced from the source to the queue.** Part 20 read the whole catalog path
+  line by line, and the chain is: the three `CIB_*` calls in `src/app.cpp:27-30` name the
+  messages; `CIB_LOG_MODULE("cpp_core")` (`src/app.cpp:21`) names the module; the format string
+  and the argument types become the message's **type**
+  (`include/cpp-core/logging/cib_quill.hpp:89-105`), so the text never reaches the payload; the
+  module name is kept in a `static constexpr` so that its characters have static storage duration
+  (`include/cpp-core/logging/cib_quill.hpp:108-116`); and the two IDs are looked up at run time
+  (`include/cpp-core/logging/cib_quill.hpp:139-140`) and attached to the message as a **tag**
+  (`include/cpp-core/logging/cib_quill.hpp:146-148`) - `cpp_core id=<n> mod=<n>` - which the
+  pattern prints as `[%(tags)]` (`src/logging/quill_logger.cpp:33-35`). The IDs are the only
+  identification of the message that goes onto the queue.
 
 ## The method
 

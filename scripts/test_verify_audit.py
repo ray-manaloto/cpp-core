@@ -62,7 +62,10 @@ def insert_after(path: Path, anchor: str, text: str) -> None:
 
 
 def mutate_counts() -> None:
-    replace(PARKED, "**81 open items**", "**82 open items**")
+    # The count is derived, not typed: a tree that claims a different number must fail against
+    # the registry. The number it claims is the registry's own, so it can only be wrong by
+    # being changed - and 85 is neither the current count nor a historical one.
+    replace(PARKED, "**83 open items**", "**85 open items**")
 
 
 def mutate_dangling_id() -> None:

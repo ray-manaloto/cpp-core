@@ -79,21 +79,21 @@
       "build-system-change": 1,
       "compile": 30,
       "decided": 1,
-      "fix-and-test": 6,
+      "fix-and-test": 8,
       "owner-decision": 13,
       "reading": 1,
       "run": 19,
       "test": 10
     },
     "by_kind": {
-      "defect": 6,
+      "defect": 8,
       "question": 65,
       "work-item": 10
     },
     "by_prefix": {
       "BUILD": 7,
       "COV": 10,
-      "DEF": 6,
+      "DEF": 8,
       "ENV": 3,
       "FMT": 14,
       "MAC": 3,
@@ -103,7 +103,7 @@
       "TOOL": 15
     },
     "contingent": 1,
-    "open": 81
+    "open": 83
   },
   "generated_by": "scripts/audit_index.py",
   "items": [
@@ -359,6 +359,28 @@
       "settled_by": "a fix and a test",
       "state": "open",
       "title": "the catalog IDs are renumbered on every regeneration"
+    },
+    {
+      "category": "fix-and-test",
+      "doc": "docs/cxx26-features-audit/open-items.md#1-the-issues---known-defects-to-fix",
+      "id": "DEF-7",
+      "kind": "defect",
+      "section": 1,
+      "section_title": "The issues - known defects, to fix",
+      "settled_by": "a fix and a test",
+      "state": "open",
+      "title": "the catalog path's level mapping is inverted at both ends"
+    },
+    {
+      "category": "fix-and-test",
+      "doc": "docs/cxx26-features-audit/open-items.md#1-the-issues---known-defects-to-fix",
+      "id": "DEF-8",
+      "kind": "defect",
+      "section": 1,
+      "section_title": "The issues - known defects, to fix",
+      "settled_by": "a fix and a test",
+      "state": "open",
+      "title": "the formatter's section header names the wrong function"
     },
     {
       "category": "decided",
@@ -1094,6 +1116,11 @@
       "file": "measurements.md",
       "part": 19,
       "subject": "**what the project actually is, in numbers** - the shape, the discipline, the API, the dependency closure, and what..."
+    },
+    {
+      "file": "read-gap.md",
+      "part": 20,
+      "subject": "**the 520 lines the audit had not read** - read line by line, and the five things the reading found"
     }
   ],
   "schema": 1,
