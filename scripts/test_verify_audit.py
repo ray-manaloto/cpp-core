@@ -27,6 +27,7 @@ DECISIONS = REPO_ROOT / "docs" / "cxx26-features-audit" / "decisions.md"
 OPEN_ITEMS = REPO_ROOT / "docs" / "cxx26-features-audit" / "open-items.md"
 AUDIT_README = REPO_ROOT / "docs" / "cxx26-features-audit" / "README.md"
 VENDORED = REPO_ROOT / "docs" / "cxx26-features-audit" / "upstream" / "fmt" / "base.h"
+MEASUREMENTS = REPO_ROOT / "docs" / "cxx26-features-audit" / "measurements.json"
 PROBE = REPO_ROOT / "scripts" / "_privacy_probe.tmp"
 
 
@@ -122,6 +123,16 @@ def mutate_contradiction() -> None:
     )
 
 
+def mutate_measurements() -> None:
+    # The baseline is a derived artifact. A number in it that no longer matches the tree is
+    # exactly what the staleness check exists to catch.
+    replace(
+        MEASUREMENTS,
+        '"code_lines": 967,',
+        '"code_lines": 968,',
+    )
+
+
 MUTATIONS = [
     ("the counts the prose claims are the counts the registry holds", mutate_counts),
     ("every referenced item ID resolves", mutate_dangling_id),
@@ -131,6 +142,7 @@ MUTATIONS = [
     ("relative links resolve", mutate_link),
     ("no private name, path or host is in a tracked file", mutate_privacy),
     ("the committed registry is up to date", mutate_registry),
+    ("the committed measurement baseline is up to date", mutate_measurements),
     ("the parts tables agree", mutate_parts),
     ("the vendored upstream copies match the manifest", mutate_upstream),
     ("an item is not open and answered at the same time", mutate_contradiction),
@@ -162,7 +174,7 @@ def git_status() -> str:
 # The only files a mutation may touch. The restore writes these back byte for byte - it does NOT
 # use `git checkout`, which would revert every uncommitted change in the tree, including the
 # work being tested.
-MUTABLE = [PARKED, DECISIONS, OPEN_ITEMS, AUDIT_README, VENDORED]
+MUTABLE = [PARKED, DECISIONS, OPEN_ITEMS, AUDIT_README, VENDORED, MEASUREMENTS]
 
 
 def snapshot() -> dict[Path, bytes | None]:

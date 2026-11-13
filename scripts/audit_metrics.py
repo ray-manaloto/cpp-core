@@ -164,7 +164,35 @@ def main() -> int:
     )
     last = result.stdout.strip().split("\n")[-1]
     print(f"  {last}")
-    print("  the checker is tested by breaking the tree 11 ways and asserting that each one is caught")
+    print("  the checker is tested by breaking the tree 12 ways and asserting that each one is caught")
+
+    print("\nTHE MEASUREMENTS - what the project is, in numbers")
+    measurements = REPO_ROOT / "docs" / "cxx26-features-audit" / "measurements.json"
+    if measurements.exists():
+        import json
+
+        data = json.loads(measurements.read_text())
+        library = data["library"]
+        coverage = data["audit_coverage"]
+        dependencies = data["dependencies"]
+        print(f"  the library: {library['files']} files, {library['code_lines']} lines of code")
+        print(f"  the hand-rolled formatter: {library['hand_rolled_formatter_lines']} lines"
+              f" ({library['hand_rolled_formatter_share']:.0%} of the library)")
+        print(f"  standard-library includes in the module interface: "
+              f"{data['interface']['standard_library_includes']} (the rule is 0)")
+        print(f"  exported functions the test file never calls: "
+              f"{len(data['api']['not_tested_at_source_level'])}"
+              f" of {data['api']['public_functions']}")
+        print(f"  the audit's own coverage: {coverage['specific_share']:.0%} read"
+              f" / {coverage['seen_share']:.0%} looked at")
+        if dependencies.get("available"):
+            print(f"  the dependency closure: {dependencies['reached_headers']} headers,"
+                  f" cross-checked by {dependencies.get('trees_measured', 0)} build trees"
+                  f" ({'all agree' if dependencies.get('trees_agreeing') else 'DISAGREE'})")
+        print("  the baseline is committed, so a change is visible as a delta:"
+              " `mise run audit:measure`")
+    else:
+        print("  not measured: no baseline")
 
     print("\nTHE RULES - are they where a subagent will actually see them")
     agents = sorted((REPO_ROOT / ".opencode" / "agents" / "sdlc").glob("*.md"))
@@ -194,7 +222,8 @@ def main() -> int:
     print("  the library: DEF-1 to DEF-6 are all still there, and the build lane is still parked")
     print("  the decisions: the four owner decisions still gate the implementation")
     print("  the coverage: the gate is still a run away")
-    print("  what it does improve is the cost of getting to those answers")
+    print("  what it does improve is the cost of getting to those answers,")
+    print("  and it now says what the project *is*, in numbers, rather than in adjectives")
     return 0
 
 

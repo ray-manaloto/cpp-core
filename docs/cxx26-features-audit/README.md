@@ -31,6 +31,7 @@ recommendations for the three questions the owner asked:
 | 16 | [readme-check.md](readme-check.md) | the root `README.md`, checked line by line - and the proof that the committed tree is the tree that built |
 | 17 | [decisions.md](decisions.md) | the thirteen decisions the owner has to make, with a recommendation for each |
 | 18 | [followup-research.md](followup-research.md) | **the eight things the audit never asked** - and the answers |
+| 19 | [measurements.md](measurements.md) | **what the project actually is, in numbers** - the shape, the discipline, the API, the dependency closure, and what cannot be measured |
 | - | [upstream/](upstream/) | the upstream sources these parts quote, vendored so the review can be done offline |
 
 **The audit has a machine-readable side.** `open-items.md` is the source of truth for the items;
@@ -48,8 +49,13 @@ $ mise run audit:summary -- --prefix MOD
 
 `mise run audit:verify` runs every check that does not need a compiler: the counts, duplicate and
 dangling IDs, the decisions sheet against the open list, the counts this prose claims, table
-shape, fence balance, relative links, the parts tables, the privacy scan, and the vendored
-upstream copies.
+shape, fence balance, relative links, the parts tables, the privacy scan, the vendored
+upstream copies, and the measurement baseline.
+
+`mise run audit:measure` measures the project: its shape, its interface discipline, its API
+surface, how much of it the audit has actually read, and its dependency closure. The numbers are
+in [measurements.md](measurements.md); the baseline is committed, so a change is visible as a
+delta.
 
 ## The defects this audit found
 

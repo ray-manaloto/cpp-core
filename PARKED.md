@@ -63,6 +63,7 @@ possible**. What remains is the implementation, which is parked.
 | 16 | [readme-check.md](docs/cxx26-features-audit/readme-check.md) | the root `README.md`, checked line by line - and the proof that the committed tree is the tree that built |
 | 17 | [decisions.md](docs/cxx26-features-audit/decisions.md) | the thirteen decisions the owner has to make, with a recommendation for each |
 | 18 | [followup-research.md](docs/cxx26-features-audit/followup-research.md) | **the eight things the audit never asked** - and the answers |
+| 19 | [measurements.md](docs/cxx26-features-audit/measurements.md) | **what the project actually is, in numbers** - the shape, the discipline, the API, the dependency closure, and what cannot be measured |
 
 The upstream sources those parts quote are vendored under
 [`docs/cxx26-features-audit/upstream/`](docs/cxx26-features-audit/upstream/README.md), so the review
@@ -536,9 +537,59 @@ section 2, and was still sitting in the open table; and `TOOL-16` - what CI imag
 the items that carry an ID and are answered or contingent, so that a reference to `VCPKG-1`
 resolves to something.
 
+## What part 19 changed
+
+**Part 19 - what the project actually is, in numbers.** A new part, in one document, with a
+harness behind it. It is research-only: **nothing was built, configured, run or regenerated**, and
+every number was reached without invoking a compiler.
+
+| what | the number |
+|---|---|
+| the library | 10 files, **967** lines of code |
+| the hand-rolled formatter (`modules/logging/format.hpp`) | **492 lines - 51% of the library** |
+| the tests | 116 lines - **0.12** of the library |
+| the module interface | 70 lines, **0** standard-library includes (the rule, measured) |
+| exported functions the test file never calls | **4** of 12 - `critical`, `debug`, `log`, `trace` |
+| the audit's own coverage | **63% read** (line numbers) / 100% looked at (whole-file paths) |
+| the third-party headers the project reaches | **106** of 460 installed - **23%** |
+| installed packages reached by nothing the project compiles | **11 of 18** |
+
+**Three findings change what the audit said.**
+
+- **The dependency closure is 106, not 77.** The first implementation resolved the project's own
+  `#include` lines and reported 77 headers. **That was wrong**: the resolver started from the
+  project's headers and missed everything the *translation units* pulled in - 29 headers, including
+  27 of Boost.MP11. The right source was already on disk: a Ninja build writes one depfile per
+  translation unit, and the last build left **nine build trees**' worth. **Two compilers, five
+  configurations, all nine agreeing on 106.** Reading a build artifact is not building anything.
+- **Eleven of the eighteen installed packages are reached by nothing the project compiles** -
+  `async`, `cib`, `conc`, `flow`, `interrupt`, `log_fmt`, `lookup`, `match`, `msg`, `nexus`,
+  `seq`. That sharpens part 18's question about the baremetal overlays: they are **transitive
+  dependencies of the `intel-cib` overlay port**, not of the project, so dropping them means
+  diverging the overlay from upstream - which tracks `main`, so they come back on the next bump.
+  They cost install time and disk, not build time or runtime.
+- **The hand-rolled formatter is half the library.** That is the scale of `FMT-14`: the decision is
+  not "is `fmt` better than a 492-line formatter" in the abstract, it is "is `fmt` better than
+  **half the project**".
+
+**And two corrections to numbers the audit had been carrying.** The audit's own coverage was
+reported as **100%**; that conflated *looked at* (a whole-file path) with *read* (line numbers).
+It is **63% read**. And the first coverage metric divided *code* lines cited by *source* lines,
+and reported **152%** - the numerator and the denominator have to be the same unit, and they now
+are.
+
+**No new open item.** The findings sharpen existing ones (`FMT-14`, `COV-1`, `BUILD-7`) or replace
+a claim that was already open. The count stays at **81 open items**.
+
+**The harness is a ruler, not a verdict.** Every number here is a count. "492 lines of formatter"
+is not "too much formatter"; that is an argument, and it is the owner's to accept or reject with
+`FMT-14`. The harness is a ruler, and what it cannot measure - coverage percentage, runtime cost,
+binary size, sanitizer cleanliness - it names with the command that would produce each, rather
+than reporting a zero.
+
 ## The automation and the rules
 
-The audit had grown to 18 parts, 8,300 lines of Markdown, 83 items with hand-maintained counts in
+The audit had grown to 19 parts, 8,300 lines of Markdown, 83 items with hand-maintained counts in
 four places, and a verification sweep that was **re-typed by hand eight times** - once after each
 part 18 item. That is now machinery, not memory.
 
@@ -549,6 +600,7 @@ part 18 item. That is now machinery, not memory.
 | **the sweep** | `scripts/verify_audit.py` | the eight hand-typed sweeps: counts, duplicate IDs, dangling references, the decisions sheet against the open list, the counts the prose claims, table shape, fence balance, relative links, the parts tables, the privacy scan, the vendored copies. One command: `mise run audit:verify` |
 | **the privacy scan** | inside `verify_audit.py` | a scan whose patterns were typed into every run. The patterns are now **derived at run time** - from this machine's git identity, from this repository's own history, from the machine name - so no private value is stored in the repository. An untracked `.audit/privacy-patterns.txt` can add more |
 | **the upstream manifest** | `docs/cxx26-features-audit/upstream/manifest.json` and `scripts/verify_upstream.py` | `upstream/README.md` is the human-readable provenance record; the manifest is its machine-readable half, with a sha256 per vendored file |
+| **the measurements** | `docs/cxx26-features-audit/measurements.json` and `scripts/measure.py` | assertions about the project's shape, its interface discipline, its API surface, its audit coverage and its dependency closure. `mise run audit:measure` prints them; `--write` regenerates the committed baseline; `verify_audit.py` fails when the baseline is stale |
 | **the drift check** | `scripts/check_overlay_drift.py` | nothing - there was nothing. The README claims the overlay ports are pinned to their upstream's latest commit, and **nothing checked it**. `mise run audit:drift` compares each `REF` against its branch's tip |
 | **the rules** | `AGENTS.md` | the re-derivation, every session, of the lane state, both compilers, the module interface, the privacy rulings and the audit's conventions |
 | **the subagents** | `.opencode/agents/sdlc/*.md` | `qa.md` was told to build, and `research.md` was told to prefer running the compiler - both directly against the parked lane. All five now carry the lane, the privacy rules and the audit's conventions |
@@ -564,11 +616,12 @@ something. The count went from 83 to 81 for that reason.
 **Nothing here builds.** Every script is stdlib-only Python, and none of them invokes a compiler,
 CMake or a test. The build lane stays parked.
 
-**And the checker is itself checked.** `scripts/test_verify_audit.py` breaks the tree eleven ways
+**And the checker is itself checked.** `scripts/test_verify_audit.py` breaks the tree twelve ways
 - a wrong count, a dangling ID, a missing decision heading, a table split by a paragraph, an
-unbalanced fence, a broken link, a home path in a tracked file, a stale registry, two parts
-tables that disagree, a modified vendored file, and an item that is open *and* answered - and
-asserts that the right check fires and that the tree is restored afterwards. `mise run audit:test`.
+unbalanced fence, a broken link, a home path in a tracked file, a stale registry, a stale
+measurement baseline, two parts tables that disagree, a modified vendored file, and an item that
+is open *and* answered - and asserts that the right check fires and that the tree is restored
+afterwards. `mise run audit:test`.
 
 That test earned its place immediately: it found a **name shadowing bug in the checker itself**
 (a local variable named `relative` hid the path helper, so the link check crashed rather than
@@ -582,16 +635,19 @@ is worth, with the "before" figures read from the tree at the commit before it l
 
 | | before | after |
 |---|---|---|
-| what a session reads to know where things stand | 538 lines (hurried) / 1,664 lines (thorough) | 128 lines - `AGENTS.md` plus one command |
+| what a session reads to know where things stand | 538 lines (hurried) / 1,664 lines (thorough) | 140 lines - `AGENTS.md` plus one command |
 | what it costs to verify a change | ~120 lines of Python, re-typed 8 times | one command, 4 lines of output |
 | subagent files carrying the lane | 0 of 5 | **5 of 5** |
 | subagent files carrying the privacy rule | 0 of 5 | **5 of 5** |
 | a drifted overlay pin | **never noticed** - nothing checked it | one command |
+| what the project *is*, in numbers | **in adjectives** - no baseline, no delta | one command, with a committed baseline |
 
 And the metric that matters most, because it is the honest one: **the library is byte-identical
 to the baseline.** This work moved the process, not the code. `DEF-1` to `DEF-6` are all still
 there, the four owner decisions still gate the implementation, and the coverage gate is still a
-run away. What improved is the cost of getting to those answers.
+run away. What improved is the cost of getting to those answers - the orientation cost, the
+verification cost, the time-to-notice a drift, and the chance that a subagent reads the lane and
+the privacy rules at all.
 
 ## State of the working tree
 

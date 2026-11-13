@@ -15,7 +15,7 @@ ports), and the code uses C++26 static reflection (P2996).
 | `cmake/` | The toolchain, the presets, the catalog and the include-what-you-use integration. |
 | `ports/` | The vcpkg overlay ports. |
 | `docs/` | The research: the [C++26 and third-party features audit](docs/cxx26-features-audit/README.md), the ASan leak-check analysis and the module source-location study. |
-| `scripts/` | The checks that do not need a compiler: `mise run audit:verify` runs them all. |
+| `scripts/` | The checks that do not need a compiler: `mise run audit:verify` runs them all, `mise run audit:measure` measures the project. |
 | `AGENTS.md` | The repository's rules, for an agent or a contributor working here. |
 
 A new library is a new directory under `modules/`, with a `<name>.cppm` interface unit and a
@@ -174,7 +174,8 @@ So the module formats the messages itself (`modules/logging/format.hpp`, a modul
 standard-library-free formatter) and reaches its implementation through the
 standard-library-free interface in `include/cpp-core/logging/internal.hpp`. The implementation
 (`src/logging/quill_logger.cpp`) is a plain translation unit: it is the one place where the
-standard library and quill are used.
+standard library and quill are used. The formatter is **492 of the library's 967 lines of code -
+51% of it** ([part 19](docs/cxx26-features-audit/measurements.md)).
 
 ### The catalog path
 
@@ -371,7 +372,11 @@ The reflection demo needs `<meta>`, which is not part of Homebrew's libc++ yet.
   - `intel-cib` (Intel's compile-time-init-build) and its dependencies `intel-cpp-std-extensions`,
     `intel-baremetal-concurrency` and `intel-baremetal-senders-and-receivers`. The cib port also
     installs the string-catalog tooling (`cmake/string_catalog.cmake` and the python script it
-    drives), so that a consumer can use `gen_str_catalog()`.
+    drives), so that a consumer can use `gen_str_catalog()`. The two baremetal overlays are
+    transitive dependencies of the `cib` port, not of this project: the compiled closure reaches
+    **106 of the 460** installed third-party headers, and **11 of the 18** installed packages -
+    including both baremetal ones - are reached by nothing this project compiles
+    ([part 19](docs/cxx26-features-audit/measurements.md)).
   - `ut` (Stephen Berry's test framework). Header-only: upstream's module variant needs
     `import std`, which puts the `std` module in every test translation unit — and GCC 16 then
     collides with the standard headers the test file includes. CMake's experimental gate is not

@@ -1,0 +1,408 @@
+{
+  "api": {
+    "names": [
+      "critical",
+      "current_level",
+      "debug",
+      "error",
+      "flush",
+      "info",
+      "log",
+      "log_raw",
+      "set_level",
+      "setup",
+      "trace",
+      "warning"
+    ],
+    "not_tested_at_source_level": [
+      "critical",
+      "debug",
+      "log",
+      "trace"
+    ],
+    "public_functions": 12,
+    "tested_at_source_level": [
+      "current_level",
+      "error",
+      "flush",
+      "info",
+      "log_raw",
+      "set_level",
+      "setup",
+      "warning"
+    ]
+  },
+  "audit_coverage": {
+    "library_lines_cited_specifically": 904,
+    "library_lines_cited_whole_file": 1425,
+    "library_lines_seen": 1425,
+    "library_source_lines": 1425,
+    "per_file": {
+      "CMakeLists.txt": {
+        "cited_lines": 1,
+        "source_lines": 36,
+        "whole_file_cited": true
+      },
+      "CMakePresets.json": {
+        "cited_lines": 0,
+        "source_lines": 10,
+        "whole_file_cited": true
+      },
+      "cmake/catalog.cmake": {
+        "cited_lines": 22,
+        "source_lines": 43,
+        "whole_file_cited": true
+      },
+      "cmake/cpp-core-check.cmake": {
+        "cited_lines": 11,
+        "source_lines": 45,
+        "whole_file_cited": true
+      },
+      "cmake/dev-mode.cmake": {
+        "cited_lines": 0,
+        "source_lines": 16,
+        "whole_file_cited": true
+      },
+      "cmake/iwyu.cmake": {
+        "cited_lines": 29,
+        "source_lines": 95,
+        "whole_file_cited": true
+      },
+      "cmake/iwyu_mappings.txt": {
+        "cited_lines": 0,
+        "source_lines": 28,
+        "whole_file_cited": true
+      },
+      "cmake/prelude.cmake": {
+        "cited_lines": 0,
+        "source_lines": 10,
+        "whole_file_cited": true
+      },
+      "cmake/presets/cpp-core.json": {
+        "cited_lines": 0,
+        "source_lines": 437,
+        "whole_file_cited": true
+      },
+      "cmake/project-is-top-level.cmake": {
+        "cited_lines": 0,
+        "source_lines": 7,
+        "whole_file_cited": true
+      },
+      "cmake/toolchains/cpp-core.cmake": {
+        "cited_lines": 18,
+        "source_lines": 165,
+        "whole_file_cited": true
+      },
+      "cmake/variables.cmake": {
+        "cited_lines": 1,
+        "source_lines": 32,
+        "whole_file_cited": true
+      },
+      "include/cpp-core/logging/cib_quill.hpp": {
+        "cited_lines": 105,
+        "source_lines": 172,
+        "whole_file_cited": true
+      },
+      "include/cpp-core/logging/internal.hpp": {
+        "cited_lines": 8,
+        "source_lines": 56,
+        "whole_file_cited": true
+      },
+      "include/cpp-core/logging/quill_logger.hpp": {
+        "cited_lines": 0,
+        "source_lines": 21,
+        "whole_file_cited": true
+      },
+      "modules/CMakeLists.txt": {
+        "cited_lines": 0,
+        "source_lines": 4,
+        "whole_file_cited": true
+      },
+      "modules/logging/CMakeLists.txt": {
+        "cited_lines": 2,
+        "source_lines": 24,
+        "whole_file_cited": true
+      },
+      "modules/logging/format.hpp": {
+        "cited_lines": 517,
+        "source_lines": 603,
+        "whole_file_cited": true
+      },
+      "modules/logging/logging.cppm": {
+        "cited_lines": 105,
+        "source_lines": 154,
+        "whole_file_cited": true
+      },
+      "ports/intel-cib/portfile.cmake": {
+        "cited_lines": 4,
+        "source_lines": 54,
+        "whole_file_cited": false
+      },
+      "ports/intel-cib/vcpkg.json": {
+        "cited_lines": 5,
+        "source_lines": 13,
+        "whole_file_cited": false
+      },
+      "ports/intel-cpp-std-extensions/vcpkg.json": {
+        "cited_lines": 0,
+        "source_lines": 13,
+        "whole_file_cited": true
+      },
+      "ports/ut/portfile.cmake": {
+        "cited_lines": 3,
+        "source_lines": 27,
+        "whole_file_cited": false
+      },
+      "ports/ut/vcpkg.json": {
+        "cited_lines": 0,
+        "source_lines": 8,
+        "whole_file_cited": true
+      },
+      "src/app.cpp": {
+        "cited_lines": 10,
+        "source_lines": 36,
+        "whole_file_cited": true
+      },
+      "src/logging/quill_logger.cpp": {
+        "cited_lines": 125,
+        "source_lines": 170,
+        "whole_file_cited": true
+      },
+      "src/main.cpp": {
+        "cited_lines": 1,
+        "source_lines": 18,
+        "whole_file_cited": true
+      },
+      "src/reflection_demo.cpp": {
+        "cited_lines": 3,
+        "source_lines": 32,
+        "whole_file_cited": true
+      },
+      "tests/CMakeLists.txt": {
+        "cited_lines": 1,
+        "source_lines": 15,
+        "whole_file_cited": true
+      },
+      "tests/logging_test.cpp": {
+        "cited_lines": 30,
+        "source_lines": 163,
+        "whole_file_cited": true
+      },
+      "vcpkg.json": {
+        "cited_lines": 1,
+        "source_lines": 13,
+        "whole_file_cited": true
+      }
+    },
+    "seen_share": 1.0,
+    "specific_share": 0.634
+  },
+  "dependencies": {
+    "available": true,
+    "installed_headers": 460,
+    "packages": {
+      "boost": 27,
+      "fmt": 3,
+      "log": 5,
+      "log_binary": 2,
+      "quill": 52,
+      "stdx": 16,
+      "ut": 1
+    },
+    "per_tree": [
+      {
+        "installed_headers": 0,
+        "packages": {
+          "boost": 27,
+          "fmt": 3,
+          "log": 5,
+          "log_binary": 2,
+          "quill": 52,
+          "stdx": 16,
+          "ut": 1
+        },
+        "reached_headers": 106,
+        "translation_units": 7,
+        "tree": "coverage-clang"
+      },
+      {
+        "installed_headers": 460,
+        "packages": {
+          "boost": 27,
+          "fmt": 3,
+          "log": 5,
+          "log_binary": 2,
+          "quill": 52,
+          "stdx": 16,
+          "ut": 1
+        },
+        "reached_headers": 106,
+        "translation_units": 8,
+        "tree": "gcc16-asan"
+      },
+      {
+        "installed_headers": 460,
+        "packages": {
+          "boost": 27,
+          "fmt": 3,
+          "log": 5,
+          "log_binary": 2,
+          "quill": 52,
+          "stdx": 16,
+          "ut": 1
+        },
+        "reached_headers": 106,
+        "translation_units": 7,
+        "tree": "gcc16-debug"
+      },
+      {
+        "installed_headers": 460,
+        "packages": {
+          "boost": 27,
+          "fmt": 3,
+          "log": 5,
+          "log_binary": 2,
+          "quill": 52,
+          "stdx": 16,
+          "ut": 1
+        },
+        "reached_headers": 106,
+        "translation_units": 8,
+        "tree": "gcc16-release"
+      },
+      {
+        "installed_headers": 460,
+        "packages": {
+          "boost": 27,
+          "fmt": 3,
+          "log": 5,
+          "log_binary": 2,
+          "quill": 52,
+          "stdx": 16,
+          "ut": 1
+        },
+        "reached_headers": 106,
+        "translation_units": 7,
+        "tree": "p2996-asan"
+      },
+      {
+        "installed_headers": 460,
+        "packages": {
+          "boost": 27,
+          "fmt": 3,
+          "log": 5,
+          "log_binary": 2,
+          "quill": 52,
+          "stdx": 16,
+          "ut": 1
+        },
+        "reached_headers": 106,
+        "translation_units": 7,
+        "tree": "p2996-debug"
+      },
+      {
+        "installed_headers": 460,
+        "packages": {
+          "boost": 27,
+          "fmt": 3,
+          "log": 5,
+          "log_binary": 2,
+          "quill": 52,
+          "stdx": 16,
+          "ut": 1
+        },
+        "reached_headers": 106,
+        "translation_units": 7,
+        "tree": "p2996-iwyu"
+      },
+      {
+        "installed_headers": 460,
+        "packages": {
+          "boost": 27,
+          "fmt": 3,
+          "log": 5,
+          "log_binary": 2,
+          "quill": 52,
+          "stdx": 16,
+          "ut": 1
+        },
+        "reached_headers": 106,
+        "translation_units": 8,
+        "tree": "p2996-release"
+      },
+      {
+        "installed_headers": 460,
+        "packages": {
+          "boost": 27,
+          "fmt": 3,
+          "log": 5,
+          "log_binary": 2,
+          "quill": 52,
+          "stdx": 16,
+          "ut": 1
+        },
+        "reached_headers": 106,
+        "translation_units": 7,
+        "tree": "p2996-tsan"
+      }
+    ],
+    "reached_headers": 106,
+    "resolved_fallback": {
+      "installed_files": 462,
+      "installed_headers": 460,
+      "packages": {
+        "boost": 27,
+        "fmt": 4,
+        "log": 5,
+        "log_binary": 1,
+        "quill": 23,
+        "stdx": 17
+      },
+      "reached_headers": 77
+    },
+    "source": "the depfiles the last build wrote",
+    "trees_agreeing": true,
+    "trees_measured": 9
+  },
+  "generated_by": "scripts/measure.py",
+  "interface": {
+    "project_includes": [
+      "cpp-core/logging/internal.hpp",
+      "format.hpp"
+    ],
+    "standard_library_include_names": [],
+    "standard_library_includes": 0
+  },
+  "library": {
+    "code_lines": 967,
+    "files": 10,
+    "hand_rolled_formatter_lines": 492,
+    "hand_rolled_formatter_share": 0.509,
+    "module_interface_lines": 70,
+    "per_file": {
+      "include/cpp-core/logging/cib_quill.hpp": 97,
+      "include/cpp-core/logging/internal.hpp": 17,
+      "include/cpp-core/logging/quill_logger.hpp": 5,
+      "modules/logging/format.hpp": 492,
+      "modules/logging/logging.cppm": 70,
+      "src/app.cpp": 12,
+      "src/logging/quill_logger.cpp": 133,
+      "src/main.cpp": 10,
+      "src/reflection_demo.cpp": 15,
+      "tests/logging_test.cpp": 116
+    },
+    "test_lines": 116,
+    "test_to_library_ratio": 0.12
+  },
+  "macros": {
+    "cib_call_site_list": [
+      "src/app.cpp:21 CIB_LOG_MODULE",
+      "src/app.cpp:28 CIB_INFO",
+      "src/app.cpp:29 CIB_WARN",
+      "src/app.cpp:30 CIB_ERROR"
+    ],
+    "cib_call_sites": 4,
+    "defined_by_the_project": []
+  },
+  "schema": 1
+}

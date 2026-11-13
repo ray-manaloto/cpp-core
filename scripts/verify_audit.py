@@ -34,9 +34,11 @@ OPEN_ITEMS = AUDIT_DIR / "open-items.md"
 DECISIONS = AUDIT_DIR / "decisions.md"
 AUDIT_README = AUDIT_DIR / "README.md"
 INDEX_PATH = AUDIT_DIR / "audit-index.json"
+MEASUREMENTS_PATH = AUDIT_DIR / "measurements.json"
 UPSTREAM_MANIFEST = AUDIT_DIR / "upstream" / "manifest.json"
 PARKED = REPO_ROOT / "PARKED.md"
 ROOT_README = REPO_ROOT / "README.md"
+MEASURE = REPO_ROOT / "scripts"
 
 # The documents whose prose and tables are checked.
 AUDIT_DOCS = sorted(AUDIT_DIR.glob("*.md"))
@@ -129,6 +131,25 @@ def check_registry_fresh() -> list[str]:
             f"and commit the result"
         ]
     return []
+
+
+@check("the committed measurement baseline is up to date")
+def check_measurements_fresh() -> list[str]:
+    if not MEASUREMENTS_PATH.exists():
+        return [f"missing {relative(MEASUREMENTS_PATH)} - run `mise run audit:measure --write`"]
+    result = subprocess.run(
+        [sys.executable, str(MEASURE / "measure.py"), "--check"],
+        cwd=REPO_ROOT,
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    if result.returncode == 0:
+        return []
+    return [
+        f"{relative(MEASUREMENTS_PATH)} is stale - run `mise run audit:measure --write` "
+        f"and commit the result"
+    ]
 
 
 @check("no duplicate item IDs")

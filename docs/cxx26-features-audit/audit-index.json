@@ -1089,6 +1089,11 @@
       "file": "followup-research.md",
       "part": 18,
       "subject": "**the eight things the audit never asked** - and the answers"
+    },
+    {
+      "file": "measurements.md",
+      "part": 19,
+      "subject": "**what the project actually is, in numbers** - the shape, the discipline, the API, the dependency closure, and what..."
     }
   ],
   "schema": 1,
