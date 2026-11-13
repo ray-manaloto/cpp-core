@@ -611,11 +611,12 @@ up). The four deferred metrics are coverage %, runtime cost, binary size and san
 - **A metric that cannot be measured is deferred, never failed.** The dependency constraints need
   build artifacts, so on a machine that has never built they are reported as not comparable and
   do not fail the check. A check that fails where it cannot answer is worse than no check.
-- **A deferred metric's threshold is set by ratchet, not by guessing.** The tooling design's
-  proposed `CPP_CORE_COVERAGE_THRESHOLD` default of **100** is deliberately **not** adopted: a
-  floor nobody can meet fails on the first run and gets switched off, which is worse than no
-  floor. The threshold is set from the first reading when the lane reopens, and raised as the
-  project improves.
+- **A deferred metric's threshold is set by ratchet, not by guessing** - with **one exception the
+  owner has ruled on**: **code coverage is always 100%**, measured on the **`ut`** suite, the same
+  unit testing library glaze uses and the one this project already writes its tests in. That is
+  the number the tooling design already carries as `CPP_CORE_COVERAGE_THRESHOLD`'s default, and
+  the bar now states it as a floor of **1.0**, not a ratchet. The other three deferred metrics
+  are set from the first reading when the lane reopens, and raised as the project improves.
 - **Only the owner moves a threshold.** A threshold is a standard. The harness reports whether the
   standard is met; it does not decide what the standard is, and it never edits the file.
 

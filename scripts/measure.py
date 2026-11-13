@@ -641,8 +641,16 @@ def check_acceptance(current: dict) -> dict:
         )
 
     for entry in bar.get("deferred", []):
+        threshold = entry.get("threshold")
+        if threshold is None:
+            shown = "threshold set at the first reading"
+        elif entry["kind"] == "floor" and threshold <= 1.0 and threshold >= 0.0:
+            shown = f"floor {threshold:.0%}"
+        else:
+            shown = f"{entry['kind']} {threshold}"
         deferred.append(
-            f"{entry['metric']:<40} not measurable here - {entry['command']}"
+            f"{entry['metric']:<40} not measurable here - {shown}"
+            f" - {entry['command']}"
         )
 
     return {

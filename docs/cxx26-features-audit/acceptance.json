@@ -10,7 +10,7 @@
     "target": "not enforced. The direction of travel is reported with the delta. A target is a goal, not a gate - a gate that nobody can meet is a gate that gets switched off."
   },
   "policy": {
-    "deferred_metrics": "A metric that cannot be measured yet is deferred, not failed. It names the command that would produce it. When the build lane reopens, the deferred metrics are measured once and their thresholds are set from that first reading - by RATCHET, not by guessing. The tooling design's proposed CPP_CORE_COVERAGE_THRESHOLD default of 100 is deliberately NOT adopted: a floor nobody can meet fails on the first run and gets disabled, which is worse than no floor at all.",
+    "deferred_metrics": "A metric that cannot be measured yet is deferred, not failed. It names the command that would produce it. When the build lane reopens, the deferred metrics are measured once and their thresholds are set from that first reading - by RATCHET, not by guessing. The one exception is COVERAGE, which the owner has ruled on: it is 100%, always, measured on the ut test suite. That is the same number the tooling design already carries as CPP_CORE_COVERAGE_THRESHOLD's default, and it is not a suggestion - 100% = measured 100 on the merged data, or it does not ship.",
     "not_comparable": "A metric that depends on build artifacts cannot be evaluated on a machine that has never built. Such a metric is reported as not comparable and does not fail the check. A check that fails where it cannot answer is worse than no check.",
     "who_moves_a_threshold": "The owner. A threshold is a standard. The harness reports whether the standard is met; it does not decide what the standard is, and it never edits this file."
   },
@@ -92,9 +92,9 @@
     {
       "metric": "coverage.percent",
       "kind": "floor",
-      "threshold": null,
+      "threshold": 1.0,
       "command": "cmake --workflow --preset gcc16-coverage, then gcov-16 --json-format and the gate",
-      "why": "The coverage percentage, and the uncovered-line list that goes with it. This is COV-2's measurement. The threshold is set from the first reading when the lane reopens, by ratchet.",
+      "why": "The coverage percentage, and the uncovered-line list that goes with it. This is COV-2's measurement. THE OWNER HAS RULED ON THIS ONE: code coverage is always 100%, measured on the ut test suite - the same unit testing library glaze uses, and the one this project already writes its tests in. The threshold is 1.0 (100%), not a ratchet. This is the number the tooling design already carries as CPP_CORE_COVERAGE_THRESHOLD's default, and it means: every instrumented, non-excluded line of this repository's library, application and module code is executed at least once by the coverage test run - no more, no less. Not branch coverage, not vcpkg or system code, not the tests themselves, and not consteval bodies whose only definition is compile time.",
       "measurable_now": false
     },
     {
