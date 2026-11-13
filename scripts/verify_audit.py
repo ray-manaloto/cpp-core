@@ -36,6 +36,7 @@ AUDIT_README = AUDIT_DIR / "README.md"
 INDEX_PATH = AUDIT_DIR / "audit-index.json"
 MEASUREMENTS_PATH = AUDIT_DIR / "measurements.json"
 ACCEPTANCE_PATH = AUDIT_DIR / "acceptance.json"
+CITATIONS_PATH = AUDIT_DIR / "citations.json"
 UPSTREAM_MANIFEST = AUDIT_DIR / "upstream" / "manifest.json"
 PARKED = REPO_ROOT / "PARKED.md"
 ROOT_README = REPO_ROOT / "README.md"
@@ -151,6 +152,31 @@ def check_measurements_fresh() -> list[str]:
         f"{relative(MEASUREMENTS_PATH)} is stale - run `mise run audit:measure --write` "
         f"and commit the result"
     ]
+
+
+@check("the audit's citations still point at the code they name")
+def check_citations_anchored() -> list[str]:
+    if not CITATIONS_PATH.exists():
+        return [f"missing {relative(CITATIONS_PATH)} - run `mise run audit:anchor`"]
+    result = subprocess.run(
+        [sys.executable, str(MEASURE / "anchor_citations.py"), "--check"],
+        cwd=REPO_ROOT,
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    if result.returncode == 0:
+        return []
+    problems = []
+    for line in (result.stdout + result.stderr).split("\n"):
+        stripped = line.strip()
+        if stripped.startswith("problem:"):
+            problems.append(stripped[len("problem:"):].strip())
+    if not problems:
+        problems.append(
+            "the citations have drifted - re-anchor them and run `mise run audit:anchor`"
+        )
+    return problems
 
 
 @check("the acceptance bar holds")

@@ -29,25 +29,20 @@ from __future__ import annotations
 import argparse
 import json
 import re
+import sys
 from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+
+from citations import (  # noqa: E402
+    audit_citations,
+    library_files,
+    physical_lines,
+)
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
 AUDIT_DIR = REPO_ROOT / "docs" / "cxx26-features-audit"
 MEASUREMENTS = AUDIT_DIR / "measurements.json"
-
-# The library's own code, and what counts as its code.
-LIBRARY_GLOBS = [
-    "modules/**/*.cppm",
-    "modules/**/*.hpp",
-    "include/**/*.hpp",
-    "src/**/*.cpp",
-    "tests/**/*.cpp",
-]
-BUILD_GLOBS = ["CMakeLists.txt", "cmake/**/*.cmake", "cmake/**/*.json", "CMakePresets.json"]
-
-# The paths the audit is allowed to cite. The rest of the repository is not the subject.
-CITABLE = ["modules", "include", "src", "tests", "cmake", "ports", "CMakeLists.txt",
-           "CMakePresets.json", "vcpkg.json"]
 
 
 def strip_comments(text: str) -> str:
@@ -98,39 +93,10 @@ def strip_comments(text: str) -> str:
     return "".join(out)
 
 
-def physical_lines(text: str) -> int:
-    """The number of physical lines in a file's text.
-
-    `text.split("\\n")` counts a trailing empty element, so a file of N lines that ends with a
-    newline comes out as N + 1. The extra line does not exist, and crediting it inflates the
-    denominator of the read-coverage share by one line per file.
-    """
-    if not text:
-        return 0
-    count = text.count("\n")
-    if not text.endswith("\n"):
-        count += 1
-    return count
-
-
 def code_lines(path: Path) -> int:
     """Lines of code: not blank, not a comment."""
     text = path.read_text(encoding="utf-8", errors="replace")
     return sum(1 for line in strip_comments(text).split("\n") if line.strip())
-
-
-def library_files() -> list[Path]:
-    files: list[Path] = []
-    for pattern in LIBRARY_GLOBS:
-        files.extend(REPO_ROOT.glob(pattern))
-    return sorted(set(files))
-
-
-def build_files() -> list[Path]:
-    files: list[Path] = []
-    for pattern in BUILD_GLOBS:
-        files.extend(REPO_ROOT.glob(pattern))
-    return sorted(set(files))
 
 
 def module_interface() -> Path:
@@ -165,60 +131,6 @@ def tested_api(api: list[str]) -> dict:
     text = test.read_text(encoding="utf-8")
     called = [name for name in api if re.search(rf"\b{re.escape(name)}\s*\(", text)]
     return {"called": sorted(called), "not_called": sorted(set(api) - set(called))}
-
-
-def audit_citations() -> tuple[dict[str, set[int]], set[str]]:
-    """The source lines the audit has cited, and the files it cited only as a whole path.
-
-    The audit cites both full paths (`modules/logging/format.hpp:220-281`) and bare names
-    (`format.hpp:284-294`). Both are resolved here, against the library's own files.
-
-    A file cited only as a path has been *looked at*; a file cited with line numbers has been
-    *read*. The two are reported separately, because "the audit has seen every file" is a much
-    weaker statement than "the audit has read every file".
-    """
-    by_name: dict[str, Path] = {}
-    for path in library_files() + build_files():
-        by_name.setdefault(path.name, path)
-
-    cited: dict[str, set[int]] = {}
-    whole_files: set[str] = set()
-
-    def note(path: Path, line: int) -> None:
-        if line < 1:
-            return
-        cited.setdefault(str(path.relative_to(REPO_ROOT)), set()).add(line)
-
-    pattern = re.compile(
-        r"([A-Za-z0-9_./-]+\.(?:cppm|hpp|cpp|cmake|json|txt))"
-        r"(?::(\d+)(?:-(\d+))?)?"
-    )
-    for doc in sorted(AUDIT_DIR.glob("*.md")):
-        text = doc.read_text(encoding="utf-8")
-        for match in pattern.finditer(text):
-            raw = match.group(1)
-            start = match.group(2)
-            end = match.group(3)
-            path = None
-            candidate = REPO_ROOT / raw
-            if candidate.exists() and candidate.is_file():
-                path = candidate
-            elif "/" not in raw and raw in by_name:
-                path = by_name[raw]
-            if path is None:
-                continue
-            relative = str(path.relative_to(REPO_ROOT))
-            if not relative.startswith(tuple(CITABLE)):
-                continue
-            if start is None:
-                # A whole-file citation: the file has been looked at.
-                whole_files.add(relative)
-                continue
-            first = int(start)
-            last = int(end) if end else first
-            for line in range(first, last + 1):
-                note(path, line)
-    return cited, whole_files
 
 
 INCLUDE_RE = re.compile(r'^\s*#\s*include\s*[<"]([^>"]+)[>"]', re.M)

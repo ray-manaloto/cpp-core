@@ -9,7 +9,8 @@ and it is deliberately conservative about what enters the module interface.
 - **Check:** `mise run audit:verify` runs every check that does not need a compiler: the audit's
   item counts, duplicate and dangling IDs, the decisions sheet against the open list, the counts
   the prose claims, Markdown table shape, fence balance, relative links, the parts tables, the
-  privacy scan, and the vendored upstream copies. It is fast, it needs nothing but Python, and it
+  privacy scan, the vendored upstream copies, and the citation anchor - whether every line the
+  audit cites still says what it said. It is fast, it needs nothing but Python, and it
   must pass before each commit.
 - **Shipping:** a change is a local commit. **There is no git remote** - every commit in this
   repository is local and nothing has been pushed. Do not push, do not open a pull request, and do
@@ -99,8 +100,10 @@ All of them are stdlib-only Python, and none of them invokes a compiler.
 | script | what it does |
 |---|---|
 | `scripts/audit_index.py` | parses `open-items.md` into the registry (`--write`, `--check`) |
+| `scripts/citations.py` | finds the citations the audit makes, and what file each one names |
+| `scripts/anchor_citations.py` | hashes every source line the audit cites, and checks that it still says what it said (`--write`, `--check`) |
 | `scripts/verify_audit.py` | every check that does not need a compiler |
-| `scripts/test_verify_audit.py` | breaks the tree 13 ways and asserts that the checker catches each one |
+| `scripts/test_verify_audit.py` | breaks the tree 14 ways and asserts that the checker catches each one |
 | `scripts/audit_summary.py` | the registry, sliced - the answer without the reading |
 | `scripts/audit_metrics.py` | what the automation is worth, measured rather than asserted |
 | `scripts/measure.py` | measures the project: its shape, its discipline, its API, its audit coverage, its dependency closure (`--write`, `--check`) |
@@ -108,7 +111,7 @@ All of them are stdlib-only Python, and none of them invokes a compiler.
 | `scripts/check_overlay_drift.py` | the overlay ports' pins against their upstreams' tips (`--network`) |
 
 **Run `mise run audit:test` before you trust the checker.** A check that never fails is not a
-check; the test breaks the tree thirteen ways and asserts that each one is caught. If you add a
+check; the test breaks the tree fourteen ways and asserts that each one is caught. If you add a
 check, add a mutation for it.
 
 **The measurement harness has a committed baseline.** `docs/cxx26-features-audit/measurements.json`
@@ -122,6 +125,13 @@ the metrics that cannot be measured yet. It is **authored, not derived** - a sta
 snapshot - and the harness reads it and never edits it. Only the owner moves a threshold.
 `mise run audit:acceptance` checks the tree against it, and the checker fails when it is
 violated.
+
+**A citation is a claim about a range of lines, and it is checked like one.**
+`docs/cxx26-features-audit/citations.json` records every citation the audit makes and a hash of
+every source line those citations name. It is derived, never hand-edited; `mise run audit:anchor`
+regenerates it with `--write`, and the checker fails when a cited line no longer says what it
+said, when a citation names a line the file no longer has, or when a citation has moved without
+the baseline being regenerated.
 
 ## Agent skills
 

@@ -33,7 +33,7 @@
     ]
   },
   "audit_coverage": {
-    "library_lines_cited_specifically": 885,
+    "library_lines_cited_specifically": 895,
     "library_lines_cited_whole_file": 1415,
     "library_lines_seen": 1415,
     "library_source_lines": 1415,
@@ -54,7 +54,7 @@
         "whole_file_cited": true
       },
       "cmake/cpp-core-check.cmake": {
-        "cited_lines": 11,
+        "cited_lines": 17,
         "source_lines": 44,
         "whole_file_cited": true
       },
@@ -64,7 +64,7 @@
         "whole_file_cited": true
       },
       "cmake/iwyu.cmake": {
-        "cited_lines": 29,
+        "cited_lines": 32,
         "source_lines": 94,
         "whole_file_cited": true
       },
@@ -89,12 +89,12 @@
         "whole_file_cited": true
       },
       "cmake/toolchains/cpp-core.cmake": {
-        "cited_lines": 18,
+        "cited_lines": 32,
         "source_lines": 164,
         "whole_file_cited": true
       },
       "cmake/variables.cmake": {
-        "cited_lines": 1,
+        "cited_lines": 2,
         "source_lines": 31,
         "whole_file_cited": true
       },
@@ -119,18 +119,23 @@
         "whole_file_cited": true
       },
       "modules/logging/CMakeLists.txt": {
-        "cited_lines": 2,
+        "cited_lines": 3,
         "source_lines": 23,
         "whole_file_cited": true
       },
       "modules/logging/format.hpp": {
-        "cited_lines": 499,
+        "cited_lines": 502,
         "source_lines": 602,
         "whole_file_cited": true
       },
       "modules/logging/logging.cppm": {
         "cited_lines": 105,
         "source_lines": 153,
+        "whole_file_cited": true
+      },
+      "ports/README.md": {
+        "cited_lines": 0,
+        "source_lines": 8,
         "whole_file_cited": true
       },
       "ports/intel-cib/portfile.cmake": {
@@ -184,7 +189,7 @@
         "whole_file_cited": true
       },
       "tests/logging_test.cpp": {
-        "cited_lines": 30,
+        "cited_lines": 37,
         "source_lines": 162,
         "whole_file_cited": true
       },
@@ -195,7 +200,7 @@
       }
     },
     "seen_share": 1.0,
-    "specific_share": 0.625
+    "specific_share": 0.633
   },
   "dependencies": {
     "available": true,

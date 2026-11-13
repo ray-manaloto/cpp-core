@@ -92,8 +92,9 @@ target_sources(
 target_include_directories(cpp-core-logging PUBLIC "${PROJECT_SOURCE_DIR}/include")
 ```
 
-`format.hpp` is a **PRIVATE** source (`:19`), and the only published include directory is
-`include/` (`:22`). The module's own directory is not on any include path for a consumer.
+`format.hpp` is a **PRIVATE** source (`modules/logging/CMakeLists.txt:19`), and the only published
+include directory is `include/` (`modules/logging/CMakeLists.txt:22`). The module's own directory
+is not on any include path for a consumer.
 
 And the module includes it in its **private implementation section** - after `export module`
 (`modules/logging/logging.cppm:33`), so it is not reachable by `import` either.
@@ -236,7 +237,7 @@ what would detect a drift?
 
 **The evidence, before the research.**
 
-- `cmake/cpp-core-check.cmake:29` validates `p2996` with `_path MATCHES "p2996"` - **no version
+- `cmake/cpp-core-check.cmake:27-29` validates `p2996` with `_path MATCHES "p2996"` - **no version
   bound**. The `gcc16` and `clang23` branches do check a version range; `p2996` does not.
 - The compiler on `PATH` is `~/.local/share/p2996/current`, a **symlink between git snapshots**.
   The machine has at least two (`562409c...`, `f17c8d6...`); the symlink is repointed by

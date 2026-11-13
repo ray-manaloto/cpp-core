@@ -623,7 +623,8 @@ up). The four deferred metrics are coverage %, runtime cost, binary size and san
 
 A **fifteenth check** and a **thirteenth mutation**: `verify_audit.py` now fails when the bar is
 violated, and `test_verify_audit.py` tightens a constraint to prove it fires. **13/13 mutations
-detected**, and the tree is restored every time.
+detected**, and the tree is restored every time. The citation anchor brought the **sixteenth
+check** and the **fourteenth mutation**: **14/14 mutations detected**.
 
 ## The automation and the rules
 
@@ -640,6 +641,7 @@ part 18 item. That is now machinery, not memory.
 | **the upstream manifest** | `docs/cxx26-features-audit/upstream/manifest.json` and `scripts/verify_upstream.py` | `upstream/README.md` is the human-readable provenance record; the manifest is its machine-readable half, with a sha256 per vendored file |
 | **the measurements** | `docs/cxx26-features-audit/measurements.json` and `scripts/measure.py` | assertions about the project's shape, its interface discipline, its API surface, its audit coverage and its dependency closure. `mise run audit:measure` prints them; `--write` regenerates the committed baseline; `verify_audit.py` fails when the baseline is stale |
 | **the acceptance bar** | `docs/cxx26-features-audit/acceptance.json` | the absence of a standard. Nothing said what the project must not lose, so a change that made it worse was as invisible as one that made it better. The bar is **authored**, not derived - a standard, not a snapshot - and the harness reads it and never edits it. `mise run audit:acceptance` |
+| **the citation anchor** | `docs/cxx26-features-audit/citations.json` and `scripts/anchor_citations.py` | nothing - there was nothing. A citation is a claim about a range of lines, and **196 of the audit's 291 line citations had drifted off the code they named** after one reformat. The anchor records every citation and a hash of every line it names, and fails when a cited line no longer says what it said. `mise run audit:anchor` |
 | **the drift check** | `scripts/check_overlay_drift.py` | nothing - there was nothing. The README claims the overlay ports are pinned to their upstream's latest commit, and **nothing checked it**. `mise run audit:drift` compares each `REF` against its branch's tip |
 | **the rules** | `AGENTS.md` | the re-derivation, every session, of the lane state, both compilers, the module interface, the privacy rulings and the audit's conventions |
 | **the subagents** | `.opencode/agents/sdlc/*.md` | `qa.md` was told to build, and `research.md` was told to prefer running the compiler - both directly against the parked lane. All five now carry the lane, the privacy rules and the audit's conventions |
@@ -666,10 +668,11 @@ byte for byte, and the run exited 130 having said so.**
 **Nothing here builds.** Every script is stdlib-only Python, and none of them invokes a compiler,
 CMake or a test. The build lane stays parked.
 
-**And the checker is itself checked.** `scripts/test_verify_audit.py` breaks the tree thirteen ways
+**And the checker is itself checked.** `scripts/test_verify_audit.py` breaks the tree fourteen ways
 - a wrong count, a dangling ID, a missing decision heading, a table split by a paragraph, an
 unbalanced fence, a broken link, a home path in a tracked file, a stale registry, a stale
-measurement baseline, two parts tables that disagree, a modified vendored file, and an item that
+measurement baseline, a tightened acceptance bar, a citation whose line no longer says what it
+said, two parts tables that disagree, a modified vendored file, and an item that
 is open *and* answered - and asserts that the right check fires and that the tree is restored
 afterwards. `mise run audit:test`.
 

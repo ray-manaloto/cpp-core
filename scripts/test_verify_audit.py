@@ -35,6 +35,7 @@ AUDIT_README = REPO_ROOT / "docs" / "cxx26-features-audit" / "README.md"
 VENDORED = REPO_ROOT / "docs" / "cxx26-features-audit" / "upstream" / "fmt" / "base.h"
 MEASUREMENTS = REPO_ROOT / "docs" / "cxx26-features-audit" / "measurements.json"
 ACCEPTANCE = REPO_ROOT / "docs" / "cxx26-features-audit" / "acceptance.json"
+CITATIONS = REPO_ROOT / "docs" / "cxx26-features-audit" / "citations.json"
 PROBE = REPO_ROOT / "scripts" / "_privacy_probe.tmp"
 
 
@@ -154,6 +155,19 @@ def mutate_acceptance() -> None:
     )
 
 
+def mutate_citation_anchor() -> None:
+    # The citation anchor is a derived artifact: a hash of what every cited line says. A
+    # hash that no longer matches the source it describes is exactly what the check exists
+    # to catch - and this is the same comparison a line of source moving under a citation
+    # makes, with the source left alone.
+    text = CITATIONS.read_text(encoding="utf-8")
+    for line in text.split("\n"):
+        if '"sha256:' in line:
+            CITATIONS.write_text(text.replace(line, line.replace("sha256:", "sha256:0"), 1), "utf-8")
+            return
+    raise SystemExit("no hash in citations.json")
+
+
 MUTATIONS = [
     ("the counts the prose claims are the counts the registry holds", mutate_counts),
     ("every referenced item ID resolves", mutate_dangling_id),
@@ -165,6 +179,7 @@ MUTATIONS = [
     ("the committed registry is up to date", mutate_registry),
     ("the committed measurement baseline is up to date", mutate_measurements),
     ("the acceptance bar holds", mutate_acceptance),
+    ("the audit's citations still point at the code they name", mutate_citation_anchor),
     ("the parts tables agree", mutate_parts),
     ("the vendored upstream copies match the manifest", mutate_upstream),
     ("an item is not open and answered at the same time", mutate_contradiction),
@@ -205,7 +220,8 @@ def git_status() -> str:
 # The only files a mutation may touch. The restore writes these back byte for byte - it does NOT
 # use `git checkout`, which would revert every uncommitted change in the tree, including the
 # work being tested.
-MUTABLE = [PARKED, DECISIONS, OPEN_ITEMS, AUDIT_README, VENDORED, MEASUREMENTS, ACCEPTANCE]
+MUTABLE = [PARKED, DECISIONS, OPEN_ITEMS, AUDIT_README, VENDORED, MEASUREMENTS, ACCEPTANCE,
+           CITATIONS]
 
 
 def snapshot() -> dict[Path, bytes | None]:

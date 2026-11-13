@@ -164,7 +164,7 @@ def main() -> int:
     )
     last = result.stdout.strip().split("\n")[-1]
     print(f"  {last}")
-    print("  the checker is tested by breaking the tree 13 ways and asserting that each one is caught")
+    print("  the checker is tested by breaking the tree 14 ways and asserting that each one is caught")
 
     print("\nTHE MEASUREMENTS - what the project is, in numbers")
     measurements = REPO_ROOT / "docs" / "cxx26-features-audit" / "measurements.json"
