@@ -1,3 +1,5 @@
+// Copyright 2024 cpp-core authors
+//
 // cpp-core: the module-private formatting helpers of the logging module.
 //
 // The module's interface cannot use the standard library (see the comment at the top of
@@ -466,6 +468,7 @@ template <typename T> auto format_value(void const *value, field_spec &spec, cha
 // The value of an argument, as the formatter sees it: the address of the argument itself. The
 // formatter knows the type of the argument, so it reads the object at that address - an array is
 // read as an array, not as a pointer.
+// ---------------------------------------------------------------------------------------------
 template <typename T> auto argument_value(T &value) -> void const * {
   return static_cast<void const *>(&value);
 }

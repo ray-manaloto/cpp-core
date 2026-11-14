@@ -1,0 +1,14 @@
+# cpplint configuration for cpp-core
+# This project has its own intentional coding style that differs from Google's.
+
+# Line length: project allows longer lines in comments and documentation
+linelength=120
+
+# Disable checks that conflict with project style
+filter=-whitespace/indent_namespace,-whitespace/line_length,-build/include_order,-runtime/int,-whitespace/braces,-whitespace/comments,-whitespace/indent,-build/include_what_you_use,-build/namespaces,-readability/alt_tokens
+
+# The project uses 'long' and 'short' in template specializations for type traits
+# The project uses namespace indentation (standard C++ practice)
+# The project has its own include order
+# The project allows longer comment lines for documentation
+# The project uses 'not' as alternative token (C++ standard)

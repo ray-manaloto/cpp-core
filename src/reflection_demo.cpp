@@ -1,3 +1,5 @@
+// Copyright 2024 cpp-core authors
+//
 // cpp-core: the C++26 static reflection demo.
 //
 // It is in its own translation unit, because the reflection header is not part of the standard

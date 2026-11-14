@@ -1,3 +1,5 @@
+// Copyright 2024 cpp-core authors
+//
 // cpp-core: the com.rsm.logging module.
 //
 // The module is the logging library's public interface:

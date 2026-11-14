@@ -1,3 +1,5 @@
+// Copyright 2024 cpp-core authors
+//
 // cpp-core: the logging tests.
 //
 // The tests use ut (https://github.com/stephenberry/ut), the same way glaze does:

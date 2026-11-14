@@ -1,3 +1,5 @@
+// Copyright 2024 cpp-core authors
+//
 // cpp-core: the interface between the logging module and its implementation.
 //
 // The module's public interface deliberately avoids the standard library. A module's global
