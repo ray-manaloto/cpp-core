@@ -1,841 +1,203 @@
-# Parked
-
-The owner paused every implementation lane except the plugin and MCP setup. **cpp-core has an
-exception: research continues** - reading, web and doc research, notes and write-ups. There is to
-be no compiler work: no builds, no compiler or toolchain installs or configuration, no CMake or
-preset build runs, no test or ASan runs. If a research step would need a compile to check
-something, it is written down as a question for later instead.
-
-This file records where the cpp-core work stands so it can be picked up without re-deriving
-anything.
-
-## The three-part request that is open
-
-1. C++26 / third-party-library features that replace hand-rolled code.
-2. clang-format, clang-tidy, cmake-format and 100% unit-test coverage set up.
-3. Macros reduced or eliminated in favour of C++26 features, static reflection and templates.
-
-**The research for all three is now done and written down**, including the two follow-up decisions
-the owner added: **fmt over `std::format`**, and **everything `constexpr` / `consteval` wherever
-possible**. What remains is the implementation, which is parked.
-
-## Done and committed
-
-- Item 1 of the earlier request (ASan leak check on `p2996-asan`): `fd79fc0`, `87d2fcf`.
-- Item 2 of the earlier request (macro-free source location in the module): `8800b0a`.
-- **clang-format configuration (this step)**: `61ba2da`.
-  - `.clang-format` was glaze's config and was never run; the code uses a different style.
-  - It is now derived from the code: 2-space indent, attached braces, right-aligned pointers and
-    references, 100-column limit, include blocks preserved (they are grouped by hand).
-  - The tree is conformed (131 lines changed, mostly pre-existing internal inconsistency).
-  - Verified: `clang-format --dry-run --Werror` is clean; `p2996-debug` and `gcc16-debug` build and
-    their tests pass.
-  - Tools on this machine: `clang-format` / `clang-tidy` 23.1.5 in `/opt/homebrew/opt/llvm/bin`;
-    `cmake-format` / `cmake-lint` 0.6.13 (mise `pipx:cmakelang`, not pinned in any config, so the
-    shims fail with "No version is set" - it has to be found by path or a project `.mise.toml`
-    added and trusted); `gcov-16` in `/opt/homebrew/opt/gcc/bin`; no `lcov`/`genhtml`.
-- `.editorconfig` made to agree with the formatter: `2ef42de`.
-- The features audit, in sixteen parts: `3d7e865`, `15be31c`, `0e414de`, plus the parts written
-  since (reflection, macro reduction, fmt and `constexpr`, the consolidated open-items list).
-- The SDLC subagent role definitions: `22b6a65`.
-
-## The research lane - complete
-
-`docs/cxx26-features-audit/`:
-
-| Part | File | Subject |
-|---|---|---|
-| 1 | [README.md](docs/cxx26-features-audit/README.md) | the verdict and the 20-row keep / replace / defer table |
-| 2 | [intel-libraries.md](docs/cxx26-features-audit/intel-libraries.md) | what the Intel libraries in the dependency tree provide, header by header |
-| 3 | [tooling-design.md](docs/cxx26-features-audit/tooling-design.md) | clang-tidy, cmake-format/cmake-lint and the coverage gate |
-| 4 | [import-std.md](docs/cxx26-features-audit/import-std.md) | `import std;` and the standard-library-free rule, against the C++26 text |
-| 5 | [reflection.md](docs/cxx26-features-audit/reflection.md) | C++26 static reflection (P2996) against the C++26 text |
-| 6 | [macro-reduction.md](docs/cxx26-features-audit/macro-reduction.md) | what each macro does, and whether a template can do it |
-| 7 | [coverage-gaps.md](docs/cxx26-features-audit/coverage-gaps.md) | what the tests do not reach today, branch by branch |
-| 8 | [quill-runtime-formatting.md](docs/cxx26-features-audit/quill-runtime-formatting.md) | quill's runtime formatting, the type-erasure boundary, and the defect below |
-| 9 | [constexpr-and-fmt.md](docs/cxx26-features-audit/constexpr-and-fmt.md) | fmt over `std::format`, and the `constexpr` inventory |
-| 10 | [open-items.md](docs/cxx26-features-audit/open-items.md) | **every open question, defect and to-do, in one list** |
-| 11 | [cxx26-library-availability.md](docs/cxx26-features-audit/cxx26-library-availability.md) | the verified C++26 library sweep against both toolchains' headers |
-| 12 | [build-and-dependencies.md](docs/cxx26-features-audit/build-and-dependencies.md) | the vcpkg overlays, the triplets and the CMake - the build as a subject |
-| 13 | [format-dialect.md](docs/cxx26-features-audit/format-dialect.md) | the module path's format strings against the C++26 grammar and fmt's - and the two paths' disagreement |
-| 14 | [remaining-research.md](docs/cxx26-features-audit/remaining-research.md) | the four questions that needed no compile: Intel's `stdx`, the logger's lifetime, `ut`'s module, the upstream watch |
-| 15 | [catalog-ids.md](docs/cxx26-features-audit/catalog-ids.md) | are the catalog IDs the same under both compilers? - and why they are not the same between releases |
-| 16 | [readme-check.md](docs/cxx26-features-audit/readme-check.md) | the root `README.md`, checked line by line - and the proof that the committed tree is the tree that built |
-| 17 | [decisions.md](docs/cxx26-features-audit/decisions.md) | the thirteen decisions the owner has to make, with a recommendation for each |
-| 18 | [followup-research.md](docs/cxx26-features-audit/followup-research.md) | **the eight things the audit never asked** - and the answers |
-| 19 | [measurements.md](docs/cxx26-features-audit/measurements.md) | **what the project actually is, in numbers** - the shape, the discipline, the API, the dependency closure, and what cannot be measured |
-| 20 | [read-gap.md](docs/cxx26-features-audit/read-gap.md) | **the 520 lines the audit had not read** - read line by line, and the six things the reading found |
-| 21 | [cmake-feature-checks.md](docs/cxx26-features-audit/cmake-feature-checks.md) | **can CMake ask the compiler?** - the feature-check facilities, what CMake 4.5.0 added on 2026-11-12, the presets the project has not used, and two worked checks |
-| - | [decision-brief.md](docs/cxx26-features-audit/decision-brief.md) | the owner's thirteen decisions on one page - pre-filled, marked by strength, and answerable in a sitting |
-
-The upstream sources those parts quote are vendored under
-[`docs/cxx26-features-audit/upstream/`](docs/cxx26-features-audit/upstream/README.md), so the review
-can be done offline.
-
-### The decisions the owner added, and what they mean
-
-**Use fmt, not `std::format`.** The premise is correct and stronger than expected:
-
-- fmt's compile-time API (`FMT_COMPILE`, the `"..."_cf` literal, `FMT_STATIC_FORMAT`) is
-  `constexpr` **including floating point**. C++26's `std::format` excludes floats from constant
-  evaluation - only the *integral* overloads of `std::to_chars` are `constexpr` (P2291R3).
-- `FMT_STATIC_FORMAT` returns a `fmt::static_format_result<N>`, which holds a `char data[N]`
-  (`fmt/compile.h:565-578`). So it needs **no** constexpr `std::string` - which neither standard
-  library has.
-- `std::format` *is* `constexpr` in C++26 (**P3391R2**, adopted at Kona in November 2025,
-  `__cpp_lib_constexpr_format 202511L`), but **neither library here implements it**: libstdc++ 16
-  and libc++ 21 both lack the macro, and llvm#171292 is open. Wait for the libraries, not for the
-  standard.
-- **fmt cannot enter the module interface.** A textual `#include` in a module unit yields
-  global-module declarations, which collide with the importing translation unit's own standard
-  headers - the same failure the standard library has. `fmt/base.h` includes `<string>`,
-  `<string_view>`, `<memory>`, `<iterator>`, `<type_traits>` and more. So the module keeps its own
-  formatter, and the fmt switch is about the rest of the project.
-
-**Make everything `constexpr` / `consteval` wherever possible.** The inventory is in part 9. The
-short version:
-
-| Where | What | Verdict |
-|---|---|---|
-| `modules/logging/format.hpp` | all fifteen functions | **all can be `constexpr`**; `scan_format` and `format_matches` stay `consteval` |
-| `src/logging/quill_logger.cpp` | `to_quill_level`, `from_quill_level` | **`constexpr`** |
-| `src/logging/quill_logger.cpp` | `format_double` | **cannot** be `constexpr` - `std::snprintf` is a library call and `std::to_chars` for floats is not `constexpr` in C++26 |
-| `include/cpp-core/logging/cib_quill.hpp` | `decay_enum_value` | **`constexpr`** (the others already are) |
-| everything that starts the backend, queues a message or allocates | | **cannot** be `constexpr` - and must not be |
-
-**Why it is worth more than a keyword:** every formatting rule becomes a `static_assert` that the
-compiler checks, on **both** compilers, with no test binary and no coverage instrumentation. That
-turns "the tests do not reach the formatter" from a coverage problem into a compiler-checked
-guarantee - and it is exactly what a 100% coverage target wants.
-
-**Two caveats** (part 9, section 2.3):
-
-1. `format_value`'s floating-point branch calls `format_double`, so a **float argument cannot be
-   constant-evaluated**. The function is still legal as `constexpr`.
-2. `format_message` takes the addresses of its arguments (`format.hpp:537-540`), so in a constant
-   expression the arguments must be `constexpr` objects of **static storage duration**. A temporary
-   argument will not constant-evaluate. That constrains the shape of the `static_assert` tests, not
-   the design.
-
-### A live defect, found by reading quill's headers
-
-**`set_level()` does not filter anything on the module path.** A message below the configured level
-is still emitted. The chain: `Logger::set_log_level` sets the *logger's* threshold
-(`quill/core/LoggerBase.h:142-150`); the only reader is `should_log_statement`
-(`LoggerBase.h:178, 188`); quill's macro wrapper (`LogMacros.h:404`) and function wrapper
-(`LogFunctions.h:75`) call it, but cpp-core's `emit()` (`src/logging/quill_logger.cpp:113`) and the
-cib path (`include/cpp-core/logging/cib_quill.hpp:157`) call
-`log_statement_runtime_metadata` directly; the backend filters against each *sink's* threshold
-(`BackendWorker.h:1500`), whose default is `TraceL3` (`Sink.h:279`).
-
-**This is a bug, not a trade-off.** The fix is three lines in each of the two call sites, copying
-`quill::detail::log` (`LogFunctions.h:63-83`). It needs the test "a message below the configured
-level is not emitted" - which the suite does not have and which would fail today.
-
-### The findings that decide the rest
-
-1. **`import std;` works on both toolchains** (CMake 4.4.5's experimental gate,
-   `CMAKE_EXPERIMENTAL_CXX_IMPORT_STD "f35a9ac6-8463-4d38-8eec-5d6008153e7d"`, `CXX_MODULE_STD ON`,
-   Ninja >= 1.11), but it removes the standard-library-free constraint **only on clang-p2996**. On
-   GCC 16 every importing translation unit would have to stop including standard headers.
-   **The standard permits the mixing** ([std.modules]/4-5 makes it an implementation obligation),
-   so the GCC failures are deficiencies, not ill-formed programs - and the repository's own
-   comment about the global module fragment overstates the standard's rule.
-2. **Static reflection cannot replace anything today**: every `std::meta` range-returning
-   metafunction allocates, and neither compiler implements constexpr allocation (P2680 / P1974), so
-   a reflection range cannot be walked in a constant expression.
-3. **Intel's `stdx` cannot enter the module interface**: `stdx/ct_string.hpp:8-14` includes seven
-   standard headers and `stdx/ct_format.hpp` adds `<algorithm>`, fmt and Boost.MP11.
-4. **The CIB macros stay.** The mechanism underneath them is already macro-free, and each macro
-   has a macro-free equivalent - but every one costs verbosity at the call site. The project uses
-   four macro invocations, all in `src/app.cpp`. The one cheap improvement is
-   `std::source_location` in the cib path, which is not standard-library-free.
-5. **Quill can format from a runtime format string** (`log_statement_runtime_metadata`, `Logger.h:426-431`)
-   and has no compile-time format-string check to lose, so cpp-core's own `consteval` check
-   survives either way. The type erasure is already half built (`format.hpp:537-540`); the missing
-   piece is a custom `quill::Codec` pushing *N* arguments from one pack element - the one thing
-   that needs a compile.
-
-## Not started (the next steps, in order)
-
-When the build lane reopens:
-
-1. **Fix the level-filtering defect** and add the test "a message below the configured level is not
-   emitted". Three lines in each of the two call sites; the test would fail until it is fixed.
-2. **Add `"fmt"` to `vcpkg.json`** as a direct dependency. It is currently transitive only, through
-   `intel-cpp-std-extensions`, and quill bundles its own copy under `quill/bundled/fmt` in the
-   namespace `fmtquill`. One line - and **free**: fmt 12.2.1 is already installed, so this is a
-   manifest change with no download, no version change and no port rebuild (part 12).
-3. **Mark the fifteen `format.hpp` functions `constexpr`.** About fifteen keywords, no signature
-   change, no behaviour change. The compiler is the test.
-4. **Add the `static_assert` formatter tests.** A new file (or a block in the existing test file);
-   no test framework and no runtime needed. The arguments must be `constexpr` objects of static
-   storage duration.
-5. **Replace `std::snprintf` with fmt in `format_double`.** This fixes the `{:f}` divergence:
-   `format_double` treats `'f'` and the default type alike and uses `%g`, so `{:f}` gives `3.5`
-   where fmt (like `std::format`) gives `3.500000`. The format specification is a runtime `char`
-   here, so this uses `fmt::runtime` - it is about correctness, not constexpr-ness.
-6. **Use `fmt::format` for the cib tag string** (`cib_quill.hpp:146-148`). Three lines.
-7. **Then, and only then, consider the big one:** moving the formatting to the implementation TU
-   (part 8). It needs the `quill::Codec` experiment to succeed, and it is the only step that
-   changes the module's design. Steps 3-6 make the current design better whether or not it happens.
-
-**After that**, the tooling and coverage work, which is a separate track:
-
-8. **Wire the formatting into CMake** - `cmake/format.cmake` with the `format`, `format-check`,
-   `cmake-format` and `cmake-lint` targets, modelled on `cmake/iwyu.cmake` (one target per check,
-   opt-in via a cache variable, a preset to turn it on). Needs `.clang-tidy` and
-   `.cmake-format.yaml` - **as JSON**, because the pipx cmakelang venv on this machine has no
-   PyYAML and the YAML config crashes.
-9. **Coverage** - the viable route is GCC 16 `-fprofile-arcs -ftest-coverage` plus `gcov-16`;
-   clang's raw profile is v10 and the installed `llvm-profdata` 23.1.5 expects v11, so
-   `llvm-cov` cannot be used. A script computes the line coverage and fails the build below the
-   threshold. The uncovered list to close is in part 7 and part 10, section 8 - and step 3 and 4
-   above remove a good part of it from the runtime problem.
-10. **The `import std;` decision** - keep the status quo (option (a)), with the module's interface
-    standard-library-free and the standard-library-dependent work behind
-    `include/cpp-core/logging/internal.hpp`, which already exists for that purpose. Revisit if
-    libstdc++ fixes its mixing deficiency; the design should keep that option cheap.
-
-## The open items, in one place
-
-**[docs/cxx26-features-audit/open-items.md](docs/cxx26-features-audit/open-items.md)** has all of
-them: 8 defects, 13 fmt/`constexpr` questions, 7 quill questions, 13 tooling questions, 11
-`import std;` questions, 4 reflection questions, 3 macro questions, 10 coverage to-dos, 0 build
-questions and 1 environment questions - **70 in all** - each with what
-settles it, plus a table of the questions that are **not** open because they have already been
-answered, and a table of the items that **carry an ID** and are answered or contingent
-(section 13).
-
-**70 open items**: 0 owner decisions, 0 registry reads, 70 settled by a compile, a run or a
-preprocessor pass.
-
-The count is derived, not typed: `scripts/audit_index.py` parses that file into
-`docs/cxx26-features-audit/audit-index.json`, and `scripts/verify_audit.py` fails if the number
-above and the number in the JSON disagree. The same registry answers questions without reading
-the Markdown at all - `mise run audit:summary -- --prefix MOD` prints one slice.
-
-(It was 83 until part 18 answered the two dependency-tree questions and the
-immediate-flush question, and added three of its own; `FMT-9` and `TOOL-16` have since been
-answered too, which is where the two came off. See below.)
-
-## What parts 11 and 12 changed
-
-**Part 11 - the standard library, verified.** A sweep of the C++26 library facilities against the
-two trees the project's own compilers use (libstdc++ 16 at
-`/opt/homebrew/Cellar/gcc/16.2.0/include/c++/16`, libc++ 21 in the p2996 toolchain). **22
-facilities are declared in both, 9 in libstdc++ only, 0 in libc++ only, 5 in neither** (`std::simd`,
-`std::linalg`, constexpr `std::format`, `std::containers`, `std::from_chars` for floating point).
-Two corrections to the audit's own table:
-
-- **constexpr `std::string` / `constexpr std::vector`**: the verdict ("no") stands, but the reason
-  was imprecise. Both libraries declare the macros - it is the *partial* constexpr (construct a
-  string, construct and clear a vector), with no constexpr mutation and no constexpr allocation.
-  Neither can build a `std::string` by formatting at compile time, which is what the project wants.
-- **`std::from_chars` for floating point is in neither library.** `to_chars` for floats *is* in
-  both - libc++ 21 has the overloads (`charconv:39-50`) but never bumped `__cpp_lib_to_chars` off
-  the C++17 value, so the macro under-reports it. Neither is `constexpr` (P2291R3 made only the
-  integral overloads so).
-
-Two traps are documented because they are easy to fall into again: libc++'s `<version>` opens with
-a **synopsis block** that lists unimplemented features as if they existed (its `<inplace_vector>`
-entry is commented out at `version:573`), and both libraries define their macros inside
-per-standard-version branches, so "the last `#define` in the file" picks the **oldest** branch.
-
-**Part 12 - the build, which the audit never treated as a subject.** Ten findings, of which these
-change the plan:
-
-- **`fmt` is already installed** - `intel-cpp-std-extensions` depends on it. Step 2 of the plan
-  (adding `"fmt"` to `vcpkg.json`) is a one-line manifest change with **no download and no port
-  rebuild**.
-- **The two copies of fmt are structural.** The vcpkg `quill` port installs only
-  `quill/bundled/fmt/`, so quill's `fmtquill` and the standalone `fmt` coexist whatever the
-  project does. The rule stands: custom formatters are written for `fmt` only.
-- **There are no compiler warning flags at all** - not `-Wall`, not `-Wextra`. That is a gap next
-  to a clang-tidy plan, but adding warnings is a behavioural change, so it is the owner's call
-  (`BUILD-1`).
-- **There are no install or export rules**, and the "public" header surface is an accident:
-  `quill_logger.hpp` is published under `include/` and pulls in `<quill/Logger.h>`, although its
-  own comment calls it implementation-private (`BUILD-2`, `BUILD-3`).
-- **`clang23` is unreachable** - the toolchain and the configure check accept it, but it has no
-  triplet and no preset. Part 3's clang-tidy design needs Homebrew clang 23 to build a BMI with
-  (`BUILD-4`).
-- **There is no CI and no git remote**, so the coverage, format and tidy gates have nowhere to run
-  and `TOOL-16`'s question about a CI image is moot (`BUILD-5`).
-- **The catalog IDs may not be stable across compilers** - `gen_str_catalog` derives them from
-  `nm`, whose output depends on the compiler's mangling (`BUILD-6`).
-
-## What parts 13 and 14 changed
-
-**Part 13 - the format-string dialect.** The project runs **two** format-string dialects at once,
-and they do not agree. The module path uses the module's own scanner; the catalog path uses quill's
-bundled fmt, which implements the C++26 format-spec grammar and checks it against the argument's
-type. Part 13 compares the three grammars - the standard's, fmt's and the module's - and lists
-fifteen differences (D1-D15). Two of them change output today:
-
-- `info("{:>06}", 42)` gives **"000042"** on the module path and **"    42"** on the catalog path
-  (the standard says the `0` is ignored when an alignment is given; fmt says so in a comment, and
-  the module does not);
-- `info("{}", 1234567.0)` gives **"1.23457e+06"** on the module path and **"1234567"** on the
-  catalog path - the module's default is `%g`, six significant digits, where the standard's is the
-  shortest round-trip. **This is DEF-2 seen from the other side: the default is wrong too, and the
-  default is what every unadorned `{}` uses.** (Step 5 of the plan fixes this one in both paths,
-  because the module's float formatting already happens in the implementation TU, in
-  `format_double`.)
-
-And one of them is not a formatting difference at all: **the module never validates the format
-specification** (`scan_format` only finds its end, `parse_spec` takes any character as the type), so
-`info("{:s}", 42)` compiles and is silently ignored, where `std::format` and fmt reject it at
-compile time. That is **DEF-5**, and fixing it means moving the check from `format_matches<arg_count>`
-(which knows only the argument *count*) into `format_string`'s constructor (which knows their
-*types*).
-
-**The dialect difference is structural**, not a bug in one place: fmt cannot enter the module
-interface, so the module's own dialect stays as long as the module formats inside its own interface.
-Making the two paths agree means moving the formatting out of the module interface - the plan's last
-step. So the decision is **FMT-14**: document the dialect, validate the specification, or move the
-formatting.
-
-**Part 14 - the four questions that needed no compile.**
-
-- **Intel's `stdx` is fmt-based.** `STDX_FMT_COMPILE` *is* `FMT_COMPILE`, and `stdx::ct_format`'s
-  `perform_format` is a `consteval` that calls `fmt::format_to` into a fixed-size `ct_string`.
-  **Intel did not write a constexpr formatter - they used fmt's one**, which independently
-  corroborates the fmt decision. (Intel's *own* hand-rolled one is the freestanding mini-formatter,
-  and it `static_assert`s what it does not support - the opposite of the module's scanner.)
-- **The logger's lifetime is sound**, with one hazard in the public API: quill says `flush_log()`
-  must not be called from a static object's destructor (`quill/Logger.h:613`), and the project's
-  public `flush()` does not say so (**QUIL-9**). The backend is stopped at exit through quill's own
-  `atexit` handler, the level threshold is atomic, and the project's level round-trip is exact.
-- **`ut`'s module variant is reachable and still not usable.** Upstream ships the `import std`
-  gate table, and its CMake 4.4 UUID is the one this project already uses - so CMake was never the
-  obstacle. But `import ut;` puts the `std` module in the test translation unit, and GCC 16 then
-  collides with the standard headers `tests/logging_test.cpp` needs.
-- **The upstream watch:** fmt#3403 is **closed as completed** (2023-06-17) - the fmt side of the
-  watch list is resolved; llvm#171292 is still open, and LWG4531 (WP, Brno June 2026) has settled
-  the macro values; llvm#63939 and #62258 have not moved. **Part 18, section 8 re-checked all five
-  on 2026-11-12: none moved**, and added two rows - CMake 4.5.0 and GCC 17's libstdc++.
-
-**The root README was corrected** in the same commit: the global-module-fragment rationale (the
-observed failure mode, not the standard's rule), the "the two paths share the same threading"
-claim (only the catalog path formats on the backend thread), the `ut` port's reason, and a pointer
-to the audit.
-
-## What part 15 changed
-
-**BUILD-6 is answered: the catalog IDs are the same under both compilers - and not by luck.** All
-nine catalogs on disk (two compilers, four build configurations, two build times) are
-**byte-identical**, and the mechanism says they have to be:
-
-- the message is carried in the message's **type** - `sc::string<char...>` - not in the mangling's
-  structure (`log_binary/catalog/catalog.hpp:7`);
-- the tool reconstructs the message **text** from the character codes
-  (`gen_str_catalog.py:175-177`);
-- the messages are sorted **by that text** (`:228-229`) and the IDs are handed out in that order
-  (`:300-304`).
-
-So **the ID is the message's rank among the messages, in text order** - and the mangling never
-enters the calculation. The one part of the symbol that could have carried a compiler-dependent
-type name is `sc::args<...>`, and cib's encoder only accepts **integral, float and enum** types
-(`arguments.hpp:31-33`), which both compilers spell the same way. The **link** is the backstop: a
-message the tool dropped or misread leaves an undefined `catalog<...>` symbol.
-
-**But the corollary is a new defect: the IDs are not stable across releases.** Because the ID is
-the rank in text order, adding a message that sorts first renumbers every message after it - and
-the XML is **MIPI Sys-T deployment collateral**, where the IDs are the wire identifiers. The tool
-has the mechanism that prevents this (`gen_str_catalog(STABLE_JSON ...)` → `--stable_json` →
-`read_stable` → `assign_ids`), and `cmake/catalog.cmake` does not use it: the flag reaches argparse
-with an empty list, so **every regeneration renumbers from scratch**. That is **DEF-6**, and where
-the stable catalog file should live is **BUILD-7** - an owner decision, with the recommendation
-being a committed file (a build-tree file does not survive a clean build, so it would not fix
-anything).
-
-**Two new owner decisions** came out of it: **BUILD-7** (where the stable catalog lives) and
-**BUILD-8** (whether the build should check the catalog's message set against the call sites - the
-link catches a dropped message today, but only a build that links).
-
-## What part 16 changed
-
-**Part 16 - the root README, checked line by line.** Every factual claim in `README.md` was checked
-against the file it describes. Four were wrong; the README is now corrected.
-
-- **The global-module-fragment claim was in the README three times**, and part 13's fix had
-  corrected only two of them. The third is in the Logging section's macro paragraph. All three now
-  say what the standard says and what the compilers do (the collision is an **implementation
-  deficiency**, not the rule - [module.global.frag]/1, [std.modules]/4-5). The two **source**
-  comments are still deferred.
-- **"does not match the arguments"** was ambiguous in the wrong direction: the module checks the
-  **number** of arguments, not their types. The README now says "the **number** of arguments" and
-  points at DEF-5.
-- **The catalog JSON block was abridged without saying so.** It is now the **generated file
-  verbatim** (the only difference is the trailing newline a fenced block needs).
-- **The "Without vcpkg" command could not work.** Overriding the toolchain also removes vcpkg's
-  **search path** - vcpkg's own toolchain is what puts the installed tree on `CMAKE_PREFIX_PATH`
-  (`vcpkg.cmake:452`) - so `find_package(intel-cib CONFIG REQUIRED)` had nowhere to look. The
-  command now passes the prefix path, with a note about which triplet to use.
-
-**The README's main build claim holds, and now rests on a check.** The committed tree has **never
-been rebuilt**: the formatter-conformance commit `61ba2da` landed **90 seconds after** the last
-build. But the change is **provably semantics-preserving** - the eight files it touched were
-compared by **token stream** (comments, string and character literals, raw string literals and
-escapes recognised), and all eight are **identical**:
-
-| File | tokens | identical? |
-|---|---|---|
-| `include/cpp-core/logging/cib_quill.hpp` | 1106 | **yes** |
-| `include/cpp-core/logging/internal.hpp` | 148 | **yes** |
-| `include/cpp-core/logging/quill_logger.hpp` | 41 | **yes** |
-| `modules/logging/format.hpp` | 3939 | **yes** |
-| `modules/logging/logging.cppm` | 838 | **yes** |
-| `src/logging/quill_logger.cpp` | 1001 | **yes** |
-| `src/reflection_demo.cpp` | 95 | **yes** |
-| `tests/logging_test.cpp` | 1233 | **yes** |
-
-Whitespace outside literals is not significant in C++, and the punctuators that *are* significant
-inside macros - `#` and `##` - are tokens, so they are compared too. **The committed tree is the
-same program as the tree that built and passed the tests.** Everything else in the README checks
-out - the module's API list, the verbatim `format_string<>` signature, the IWYU scope table, the
-preset, sanitizer, hardening, triplet and port claims - and **all five overlay ports are pinned to
-their upstream HEAD** (checked against the GitHub API on 2026-11-12).
-
-**The fmt sources are now vendored** - the last major upstream dependency without a local copy -
-and the vendoring turned up something worth recording: **the installed fmt is not pristine upstream
-12.2.1**. vcpkg applies a patch of its own to the release tarball, backporting upstream PR **#4813**
-("Fix fallback uint128 bitwise not") - three lines in `include/fmt/format.h`. So **every `format.h`
-line number after 328 is three higher in the installed file than in pristine upstream**, and the
-audit's citations (which are to the installed file) would have been three lines out for a reviewer
-checking against upstream. The patch is vendored beside the header, the three-line insertion was
-verified by applying it to a pristine upstream checkout, and the result is byte-identical to the
-installed header.
-
-| file | provenance | git blob |
-|---|---|---|
-| `fmt/base.h` | byte-identical to upstream 12.2.1 | `9df283418079f4745f2120e8647a447f4836ac30` |
-| `fmt/compile.h` | byte-identical to upstream 12.2.1 | `f05d8426c680eada6bb1270c009a6e06038096f6` |
-| `fmt/format.h` | upstream 12.2.1 **+ the #4813 backport** | `0bff24a6bfec476daa63976db457b439431e58ac` |
-| `fmt/LICENSE` | byte-identical to upstream 12.2.1 | `795fdaec8f2ce6fcc97bbb15d1a6ac073af7bd17` |
-
-Every fmt citation in the audit was checked against the vendored files: `base.h:1440`,
-`base.h:1473-1477`, `base.h:1503-1512`, `base.h:1530-1558`, `format.h:2991-3005`, `format.h:3496`,
-`compile.h:55-60`, `compile.h:565-578` and `compile.h:594` - **all of them resolve to what the audit
-says they resolve to**.
-
-**Nothing new was built, configured, run or regenerated.** Part 16 closes the last of the
-no-compile research: what remains is the implementation (parked) and the owner decisions.
-
-## What part 17 changed
-
-**Part 17 - the decisions, collected.** The audit had **83 open items** when part 17 was written;
-part 18 then answered three of them and added three of its own, two more have since been
-answered, part 20 added two defects, and part 21 added one decision - so there are **84 open
-items** now. Seventy of them are
-settled by a compile, a run or
-a preprocessor pass - they are *questions*, and they unblock the moment the build lane reopens.
-**Fourteen are decisions**, because the answer is a judgement about what the project should be
-rather than a fact about the world. They were scattered across `open-items.md`; part 17 gathers
-them into one sheet, with a recommendation for each.
-
-**All 14 are now answered** (2026-11-13). The decision brief (`decision-brief.md`) has the
-answers. The four gating decisions plus the ten shaping decisions are resolved.
-
-**All 14 are answered. The four that gated the implementation and their answers:**
+---
+type: Project Document
+title: PARKED — Work Status Map
+description: Where the cpp-core work stands so it can be picked up without re-deriving anything
+resource: https://github.com/ray-manaloto/cpp-core
+tags:
+  - cpp-core
+  - parked
+  - work-status
+  - research
+generated:
+  by: human:ray-manaloto
+  at: 2026-11-14T00:00:00Z
+verified:
+  - by: human:ray-manaloto
+    at: 2026-11-14T00:00:00Z
+status: stable
+tags:
+  - cpp-core
+  - parked
+  - work-status
+  - research
+sources:
+  - id: audit-bundle
+    resource: ./okf-bundles/audit/index.md
+    title: C++26 features audit bundle
+  - id: architecture-bundle
+    resource: ./okf-bundles/architecture/index.md
+    title: Architecture documentation bundle
+  - id: asan-leak-check
+    resource: ./docs/asan-leak-check/README.md
+    title: ASAN leak-check documentation
+  - id: module-source-location
+    resource: ./docs/module-source-location/README.md
+    title: Module source location research
+---
+
+## PARKED — Work Status Map
+
+> **This is a pointer document.** The full parked work documentation has been migrated to OKF bundles.
+> See the linked bundles below for complete documentation.
+
+### Status
+
+**The build lane is parked.** As of 2026-11-12 the owner's decision is that this repository is research-only:
+
+- No builds, no compiler or toolchain installs or configuration, no CMake or preset build runs, no test, sanitizer or coverage runs
+- **Source files are out of scope** — the documentation is in scope
+- Anything that would need a compile is written down as an open item instead of guessed at
+
+`PARKED.md` records what is parked and what the plan is when the lane reopens. Do not "just try it" with a compiler.
+
+### Research Complete — Documentation Migrated to OKF Bundles
+
+The research for all three parts of the original request is complete and documented in OKF bundles:
+
+| Original Request Part | Documentation |
+|----------------------|---------------|
+| 1. C++26 / third-party-library features that replace hand-rolled code | [Audit Bundle](./okf-bundles/audit/index.md) — 21-part audit |
+| 2. clang-format, clang-tidy, cmake-format and 100% unit-test coverage | [Architecture Bundle](./okf-bundles/architecture/index.md) + [Audit Bundle → Tooling](./okf-bundles/audit/open-items.md#tool-tooling--13-items) |
+| 3. Macros reduced/eliminated in favor of C++26 features | [Audit Bundle → Macro Reduction](./okf-bundles/audit/macro-reduction.md) + [Architecture Bundle](./okf-bundles/architecture/index.md) |
+
+### Key Decisions (All 14 Answered)
+
+See [Audit Bundle → Decisions](./okf-bundles/audit/decisions.md) for full rationale.
 
 | # | Decision | Answer |
-|---|---|---|
-| **FMT-14** | the module path's format dialect | **(c) use fmtlib** — single formatter for both paths; depends on QUIL-1 |
-| **TOOL-13** | `.cmake-format.yaml` or `.cmake-format.json` | **YAML** — add PyYAML via mise; keep .cmake-format.yaml |
-| **TOOL-14** | a one-shot `cmake-format -i` sweep? | **accept the sweep** — 9 of 12 files change; review diff |
-| **BUILD-7** | where the stable catalog lives | **(a) use CIB's stable ID mechanism** per logging.adoc / binary_stable_ids |
+|---|----------|--------|
+| **FMT-14** | Module path format dialect | **(c) use fmtlib** — single formatter for both paths; depends on QUIL-1 |
+| **TOOL-13** | `.cmake-format.yaml` or `.cmake-format.json` | **YAML** — add PyYAML via mise |
+| **TOOL-14** | One-shot `cmake-format -i` sweep? | **Accept the sweep** — 9 of 12 files change; review diff |
+| **BUILD-7** | Where the stable catalog lives | **(a) Use CIB's stable ID mechanism** per logging.adoc / binary_stable_ids |
+| **BUILD-1** | Warning flags | **All at once**: `-Wall -Wextra -Wpedantic -Wconversion -Wshadow` |
+| **BUILD-2** | Consumability | **Add install/export now** for current shape |
+| **BUILD-3** | Public header surface | **All three PRIVATE**, only module is public |
+| **BUILD-4** | `clang23` | **Conditional**: add preset + triplet when Homebrew libc++ has `<meta>` |
+| **BUILD-5** | CI | **No CI yet**, local presets |
+| **BUILD-8** | Catalog message-set check | **Yes**, part of coverage work |
+| **BUILD-8** | Feature-check gate | **(c) Check only where answer gates code path** |
+| **QUIL-9** | `flush()` caveat | **Document in both** module header + README |
+| **ENV-2** | Abandoned tree | **Keep + document** with README |
+| **ENV-3** | `ZAI_API_KEY` | **Deferred**, not a cpp-core decision |
 
-**The other ten and their answers:** `BUILD-1` (warning flags — **all at once**: `-Wall -Wextra -Wpedantic -Wconversion -Wshadow`), `BUILD-2` (consumability — **add install/export now** for current shape), `BUILD-3` (public header surface — **all three PRIVATE**, only module is public), `BUILD-4` (`clang23` — **conditional**: add preset + triplet when Homebrew libc++ has `<meta>`), `BUILD-5` (CI — **no CI yet**, local presets), `BUILD-8` (catalog message-set check — **yes**, part of coverage work), `BUILD-9` (feature-check gate — **(c) check only where answer gates code path**), `QUIL-9` (`flush()` — **document in both** module header + README), `ENV-2` (abandoned tree — **keep + document** with README), `ENV-3` (`ZAI_API_KEY` — **deferred**, not a cpp-core decision).
+### What's Done and Committed
 
-**All 14 answered — every one of the plan's ten steps is unblocked.** FMT-14 is **(c)** so step 7 is unblocked but depends on QUIL-1.
+- ASan leak check on `p2996-asan`: `fd79fc0`, `87d2fcf`
+- Macro-free source location in the module: `8800b0a`
+- clang-format configuration: `61ba2da`
+- `.editorconfig` made to agree with formatter: `2ef42de`
+- Features audit in 21 parts: [Audit Bundle](./okf-bundles/audit/index.md)
+- SDLC subagent role definitions: `22b6a65`
 
-**One correction to a list that was circulating:** **VCPKG-2** (do the overlay ports shadow builtin
-vcpkg ports?) is **not** an owner decision - it is a research step, answered by reading the vcpkg
-registry at the pinned baseline `245d37306671ea67d8f313081a81aae8079f8916`.
+### Research Complete — All in OKF Bundles
 
-**It was believed to be blocked** only because `$VCPKG_ROOT` here is the vcpkg *tool*, with no
-`ports` tree and no `.git`. That is true of the local install and false of the registry: the
-registry is a git repository and the baseline is a commit in it, so the reading is done over HTTP
-against that commit, without a checkout. The same read answers **VCPKG-1**.
+#### Architecture Documentation (7 visual documents)
 
-**Both are now answered** (part 18, section 2, and `open-items.md` section 12): the upstream
-`quill` port has no external-fmt feature and quill 13.1.0 offers no fmt switch at all, so the two
-copies of fmt are structural; and **none** of the five overlay ports shadows a builtin vcpkg port
-at the pinned baseline - so all five track upstream rather than the pinned baseline.
+[Architecture Bundle](./okf-bundles/architecture/index.md):
 
-## What part 18 changed
+- Component Diagram — system components, data flow, boundaries
+- Wire Protocol — Quill vs Catalog-typed wire format comparison
+- Sequence Diagrams — detailed runtime interaction sequences
+- Dependency Graph — all external dependencies with versions
+- Open Issues — visual tracker for 70 open items
+- Decision Log — all 14 architectural decisions with rationale
+- Architecture README — bundle overview
 
-**Part 18 - the eight things the audit never asked.** A new part, in one document, with a
-checklist that was ticked item by item. It is research-only: **nothing was built, configured, run
-or regenerated**, and every finding was reached by reading - the project's own files, the
-installed headers, or upstream. Anything that would need a compile is written down as a
-question.
+#### C++26 Features Audit (21 parts)
 
-| # | The item | The answer, in one line |
-|---|---|---|
-| 1 | the `static_assert` formatter tests cannot reach the code they test | **Route B** - a private `format_tests.hpp` included by the module, so the asserts test the module's own copy. The plan's `tests/format_static_asserts.cpp` would compile a *second* copy and inflate the coverage union |
-| 2 | build reproducibility and upstream drift | the pin inventory, what each compiler bump breaks, and a three-layer drift mechanism - **and a correction:** the two "registry read" items were never blocked; the registry at the pinned baseline is readable over HTTP |
-| 3 | the public API has no contract | the contract, derived from the implementation - threading, start-up, flushing, levels, message handling, the error model. **The headline:** the level threshold is not consulted on the module path (DEF-1) |
-| 4 | a benchmark harness | six metrics (M1-M6), a five-step baseline ladder (B0-B5), the variables, and three traps the harness has to avoid - **and a correction:** `QUIL-8`'s premise was wrong |
-| 5 | a differential test between the two logging paths | the case list: **11 of the 15 divergences are testable** as a runtime differential comparison; the other four are asymmetric compile-time rejections and need a "must not compile" mechanism the project does not have |
-| 6 | costing the `import std;` option | the row-by-row flip analysis of the twenty-row table - **five flip cleanly, one partly, three lossily, one only in combination, nine not at all** |
-| 7 | four smaller questions | module consumption, MemorySanitizer, `ut`'s supply chain, and quill - all four answered |
-| 8 | re-validating the time-sensitive claims | **two things moved**, and neither was on the audit's watch list |
+[Audit Bundle](./okf-bundles/audit/index.md):
 
-**Three findings change what the audit said.**
+- 70 open items + 19 answered + 1 contingent
+- 14 decisions with full rationale
+- Verification system (`scripts/verify_audit.py`)
+- Metrics harness (`scripts/measure.py`)
+- Upstream verification (`scripts/verify_upstream.py`)
 
-- **The `import std;` price just dropped.** **CMake 4.5.0 was released on 2026-11-12** and
-  graduated `import std;` to a **supported** feature: the `CMAKE_EXPERIMENTAL_CXX_IMPORT_STD` UUID
-  gate is gone from CMake's experimental guide and from the cxxmodules manual, the section is
-  marked `.. versionadded:: 4.5`, and the switch is the `CXX_SCAN_FOR_MODULES` target property -
-  which this project already has. CMake 4.5.0's toolchain matrix also adds **"GCC 16 and newer
-  on MacOS"**, the project's exact configuration, which 4.4.5 did not list. The audit's part 4 had
-  already predicted the graduation in prose; what it did not have was the date.
-- **The fmt-over-`std::format` argument weakens.** **GCC 17's libstdc++ has implemented
-  P3391R2**: `__cpp_lib_constexpr_format 202511L` and a `constexpr` `std::format` family. The
-  case for fmt was *"neither library implements it"*; when libstdc++ 17 ships it becomes *"libc++
-  does not"* - a weaker argument, and one that leaves the project's two compilers **disagreeing**
-  about whether the standard's formatter is constexpr. **fmt stays the right answer; the reason
-  changes** to "the standard is not there **on both compilers**". And the hand-rolled `constexpr`
-  formatter cannot be retired until libc++ catches up. GCC 17 is **not released** - the horizon is
-  2027.
-- **The `static_assert` tests need a private header, not a test file.** And the differential test
-  would **trigger DEF-6**, so it needs its own catalog.
+#### Other Research
 
-**And three corrections to the audit's own files**, made in place:
+- ASAN leak-check analysis: [docs/asan-leak-check/README.md](./docs/asan-leak-check/README.md)
+- Module source location research: [docs/module-source-location/README.md](./docs/module-source-location/README.md)
 
-- `import-std.md` named `set(CMAKE_CXX_MODULE_STD ON)` as the per-target switch.
-  **`CMAKE_CXX_MODULE_STD` does not exist in CMake at all** - the documented switch is the
-  `CXX_SCAN_FOR_MODULES` target property.
-- `open-items.md`'s `BUILD-2` said "any of the five `CMakeLists.txt` files". There are **four**.
-- The "one heap allocation per message" claim was wrong for short messages: `std::string{message,
-  length}` uses the small-string buffer - 22 characters on libc++ 21, 15 on libstdc++ 16 - so a
-  shorter message never touches the heap. Corrected in the root README and five audit documents.
+### The Three-Part Request — Research Complete
 
-**Two new watch rows** (part 18, section 8): **CMake 4.5.0** and **GCC 17's libstdc++** - the two
-things that moved, and neither of them existed when the watch list was written. The five original
-watch rows are **unchanged**, and three of the seven *cited* clang-tidy issues are now recorded
-with their states (all three closed; the two that matter are still open).
+1. **C++26 / third-party-library features that replace hand-rolled code** → [Audit Bundle](./okf-bundles/audit/index.md)
+2. **clang-format, clang-tidy, cmake-format and 100% unit-test coverage set up** → [Architecture Bundle](./okf-bundles/architecture/index.md) + [Audit Bundle → Tooling](./okf-bundles/audit/open-items.md#tool-tooling--13-items)
+3. **Macros reduced or eliminated in favour of C++26 features, static reflection and templates** → [Audit Bundle → Macro Reduction](./okf-bundles/audit/macro-reduction.md)
 
-**The counts did not move** during part 18 itself: the audit still had **83 open items** when it
-finished - 13 owner decisions, 0 registry reads, 70 settled by a compile, a run or a preprocessor
-pass. Part 18 answered **three** of them by reading - **`VCPKG-1`** and **`VCPKG-2`** (section 2)
-and **`QUIL-8`** (section 4) - and added **three** of its own (`FMT-15`, `MOD-10`, `MOD-11`), so
-the total was unchanged from the 83 that part 17 recorded. Part 18 also added **seven** new rows
-to `open-items.md` section 12 for questions that were **never** open-list items -
-MemorySanitizer, module consumption, `ut`'s supply chain, quill, CMake 4.5.0, GCC 17's constexpr
-format, and the overlay pins - so that nobody re-derives them.
+### The Research Lane — Complete
 
-**Since then, two more have been answered** and the audit had 81 open items: 13 owner
-decisions, 0 registry reads, 68 settled by a compile, a run or a preprocessor pass. `FMT-9` - the
-question whether the vcpkg `quill` port has an external-fmt feature - was answered by part 18,
-section 2, and was still sitting in the open table; and `TOOL-16` - what CI image would provide
-`gcov-16` - is not a measurement at all, because the project has no CI (`BUILD-5`), so it is
-**contingent on `BUILD-5`'s answer**. Both now live in `open-items.md` section 13, which holds
-the items that carry an ID and are answered or contingent, so that a reference to `VCPKG-1`
-resolves to something.
+The research for all three parts is complete and written down. What remains is the implementation, which is parked.
 
-## What part 19 changed
+### Not Started — Next Steps When Lane Reopens
 
-**Part 19 - what the project actually is, in numbers.** A new part, in one document, with a
-harness behind it. It is research-only: **nothing was built, configured, run or regenerated**, and
-every number was reached without invoking a compiler.
+When the build lane reopens, see [Audit Bundle → Decisions](./okf-bundles/audit/decisions.md#first-10-steps-when-lane-reopens) for the ordered plan:
 
-| what | the number |
-|---|---|
-| the library | 10 files, **967** lines of code |
-| the hand-rolled formatter (`modules/logging/format.hpp`) | **492 lines - 51% of the library** |
-| the tests | 116 lines - **0.12** of the library |
-| the module interface | 70 lines, **0** standard-library includes (the rule, measured) |
-| exported functions the test file never calls | **4** of 12 - `critical`, `debug`, `log`, `trace` |
-| the audit's own coverage | **63% read** (line numbers) / 100% looked at (whole-file paths) |
-| the third-party headers the project reaches | **106** of 460 installed - **23%** |
-| installed packages reached by nothing the project compiles | **11 of 18** |
+1. Fix the level-filtering defect (DEF-1) + test
+2. Add `"fmt"` to `vcpkg.json` (already installed, manifest change only)
+3. Mark `format.hpp` functions `constexpr` (15 functions)
+4. Add `static_assert` formatter tests
+5. Replace `snprintf` with fmt in `format_double`
+6. Use `fmt::format` for cib tag string
+7. Move formatting out of module interface (depends on QUIL-1)
+8. Wire formatting into CMake
+9. Coverage gate at 100%
+10. `import std;` decision — keep status quo
 
-**Three findings change what the audit said.**
+### Open Items Summary
 
-- **The dependency closure is 106, not 77.** The first implementation resolved the project's own
-  `#include` lines and reported 77 headers. **That was wrong**: the resolver started from the
-  project's headers and missed everything the *translation units* pulled in - 29 headers, including
-  27 of Boost.MP11. The right source was already on disk: a Ninja build writes one depfile per
-  translation unit, and the last build left **nine build trees**' worth. **Two compilers, five
-  configurations, all nine agreeing on 106.** Reading a build artifact is not building anything.
-- **Eleven of the eighteen installed packages are reached by nothing the project compiles** -
-  `async`, `cib`, `conc`, `flow`, `interrupt`, `log_fmt`, `lookup`, `match`, `msg`, `nexus`,
-  `seq`. That sharpens part 18's question about the baremetal overlays: they are **transitive
-  dependencies of the `intel-cib` overlay port**, not of the project, so dropping them means
-  diverging the overlay from upstream - which tracks `main`, so they come back on the next bump.
-  They cost install time and disk, not build time or runtime.
-- **The hand-rolled formatter is half the library.** That is the scale of `FMT-14`: the decision is
-  not "is `fmt` better than a 492-line formatter" in the abstract, it is "is `fmt` better than
-  **half the project**".
+| Status | Count |
+|--------|-------|
+| Open (need lane reopen) | 70 |
+| Answered (decisions recorded) | 19 |
+| Contingent (on BUILD-5) | 1 |
 
-**And two corrections to numbers the audit had been carrying.** The audit's own coverage was
-reported as **100%**; that conflated *looked at* (a whole-file path) with *read* (line numbers).
-It is **63% read**. And the first coverage metric divided *code* lines cited by *source* lines,
-and reported **152%** - the numerator and the denominator have to be the same unit, and they now
-are.
+See [Audit Bundle → Open Items](./okf-bundles/audit/open-items.md) for the canonical list.
 
-**No new open item.** The findings sharpen existing ones (`FMT-14`, `COV-1`, `BUILD-7`) or replace
-a claim that was already open. The count stays at 81 open items.
+### Key Defects Still Open
 
-**The harness is a ruler, not a verdict.** Every number here is a count. "492 lines of formatter"
-is not "too much formatter"; that is an argument, and it is the owner's to accept or reject with
-`FMT-14`. The harness is a ruler, and what it cannot measure - coverage percentage, runtime cost,
-binary size, sanitizer cleanliness - it names with the command that would produce each, rather
-than reporting a zero.
+| ID | Title |
+|----|-------|
+| DEF-1 | `set_level()` filters nothing on module path |
+| DEF-2 | `{:f}` divergence — `%g` vs fixed |
+| DEF-3 | Comments overstate standard (GMF "copied") |
+| DEF-4 | Two paths disagree on format dialect |
+| DEF-5 | Module never validates format spec vs type |
+| DEF-6 | Catalog IDs renumber on every regeneration |
+| DEF-7 | Catalog path level mapping inverted at both ends |
+| DEF-8 | Formatter section header names wrong function |
 
-**And the ruler is held to a bar.** The measurements detect *change*. They did not detect
-*regression*, because nothing said what the project must not lose. `docs/cxx26-features-audit/
-acceptance.json` is that bar, and it is **authored rather than derived** - the opposite of
-`audit-index.json`, which is a snapshot of the Markdown. It holds thresholds and never
-observations: the harness reads the tree, so there is no hand-copied number in it to drift.
+See [Audit Bundle → Open Items](./okf-bundles/audit/open-items.md) for all 70 items.
 
-| kind | what it is | today |
-|---|---|---|
-| **constraints** | enforced. A breach is a check failure | **8** |
-| **targets** | direction of travel, reported with the delta. Not gates | **2** |
-| **deferred** | not measurable yet; each names the command that would produce it | **4** |
+### Key Research Findings
 
-The constraints are the project's existing rules, made checkable: the module interface takes **0**
-standard-library includes, the project defines **0** macros, the two compilers agree on the
-closure (**9** build trees, **1** distinct closure size), the closure reaches **106** headers, **11**
-installed packages are reached by nothing, and **4** of the **12** exported functions are untested.
-The two targets are the formatter's share (**51%**, down) and the test-to-library ratio (**0.12**,
-up). The four deferred metrics are coverage %, runtime cost, binary size and sanitizer cleanliness.
+1. **Use fmt, not `std::format`** — fmt's compile-time API includes floating point; `std::format` excludes floats from constant evaluation. Neither libstdc++ 16 nor libc++ 21 implements `constexpr std::format`.
 
-**Three rules the bar follows, and why.**
+2. **Make everything `constexpr` / `consteval` wherever possible** — 15 functions in `format.hpp` can be `constexpr`; turns formatting rules into `static_assert` compiler checks.
 
-- **A metric that cannot be measured is deferred, never failed.** The dependency constraints need
-  build artifacts, so on a machine that has never built they are reported as not comparable and
-  do not fail the check. A check that fails where it cannot answer is worse than no check.
-- **A deferred metric's threshold is set by ratchet, not by guessing** - with **one exception the
-  owner has ruled on**: **code coverage is always 100%**, measured on the **`ut`** suite, the same
-  unit testing library glaze uses and the one this project already writes its tests in. That is
-  the number the tooling design already carries as `CPP_CORE_COVERAGE_THRESHOLD`'s default, and
-  the bar now states it as a floor of **1.0**, not a ratchet. The other three deferred metrics
-  are set from the first reading when the lane reopens, and raised as the project improves.
-- **Only the owner moves a threshold.** A threshold is a standard. The harness reports whether the
-  standard is met; it does not decide what the standard is, and it never edits the file.
+3. **`import std;` works on both toolchains** but removes the standard-library-free constraint only on clang-p2996. On GCC 16 every importing TU would have to stop including standard headers.
 
-A **fifteenth check** and a **thirteenth mutation**: `verify_audit.py` now fails when the bar is
-violated, and `test_verify_audit.py` tightens a constraint to prove it fires. **13/13 mutations
-detected**, and the tree is restored every time. The citation anchor brought the **sixteenth
-check** and the **fourteenth mutation**: **14/14 mutations detected**.
+4. **Static reflection cannot replace anything today** — every `std::meta` range-returning metafunction allocates; neither compiler implements constexpr allocation.
 
-## What part 20 changed
+5. **Intel's `stdx` cannot enter the module interface** — it includes standard headers and fmt.
 
-**The read gap, closed.** The measurement harness counts the library's source lines the audit has
-read at line granularity - cited with a line number, not merely named as a file. On 2026-11-12
-that share was **0.633**: 895 of 1415 lines, with **520 lines** read by nobody, spread over ten
-files. The biggest gaps were the test file (125 of 162 lines unread), the formatter (100 of 602),
-the catalog path's header (66 of 171), the module interface (48 of 153), the standard-library-free
-bridge (47 of 55), the implementation (45 of 169), the application (69 of 83) and the demo (28 of
-31).
+6. **The CIB macros stay** — each macro has a macro-free equivalent but costs verbosity.
 
-**Part 20 read every one of them.** The share is now **1.0** - 1415 of 1415 lines, read at line
-granularity - and the read gap is **zero**. The record is
-[read-gap.md](docs/cxx26-features-audit/read-gap.md): every range, what it says, and what the
-reading found.
+7. **The `set_level()` defect (DEF-1)** — level filtering doesn't work on module path; three-line fix in two call sites.
 
-**The bar ratcheted once, at the end.** `audit.read_coverage_share`'s floor moves from **0.625** to
-**1.0**. That is the one ratchet the owner ruled on: the floor was corrected when the denominator
-was found to be wrong (the harness counted one phantom line per file), and it is raised now that
-the reading is done. **Only the owner moves a threshold**, and this one was moved by the owner's
-own ruling - recorded in the bar's own `why`.
+8. **QUIL-1 is the key blocker** — Can a `quill::Codec` push N fields from one pack element? Required for FMT-14(c).
 
-**Six findings.**
+### All Documentation in OKF Bundles
 
-1. **A new defect, `DEF-7`** - the catalog path's level mapping is inverted at both ends. cib's
-   most severe level (`MAX`) maps to quill's **least** severe one (`TraceL3`), and cib's least
-   severe (`TRACE`) maps to quill's second-least severe. The comment above the mapping says it
-   "preserves the relative order" and prints a table that shows the inversion. The sink drops
-   anything below its threshold (`quill/sinks/Sink.h:204`), so with a sink at `Error` a `MAX`
-   message is dropped and a `FATAL` message is kept. **Nothing misbehaves today** - the project
-   never logs at `MAX` - so it is latent. The count moves from 81 open items to **82**.
-2. **The catalog path carries no function name.** quill's `log_statement_runtime_metadata` takes
-   the function name as its fourth parameter; the module path passes the real one and the catalog
-   path passes an empty string. The cause is upstream - cib's `CIB_LOG` hands the customization
-   point only `__FILE__` and `__LINE__` - and there is no visible effect today, because the
-   project's pattern prints `%(short_source_location)`. Part 6's option (e) fixes it, which makes
-   that option worth more than "the cheap one".
-3. **A dead assignment in the formatter.** `format.hpp:399-401` clamps a `total` that is never
-   read again; the real bound is the `at < capacity` guards at `:404`, `:407` and `:410`. Part 7's
-   coverage table had listed that branch as a thing to cover - it is a no-op.
-4. **Four of the eight tests assert `expect(true)`.** The suite proves the library does not throw
-   and that the source location is right; it proves nothing about what any message says. Six of
-   the eight would pass against a logger that discarded every message it was given.
-5. **A counterexample to the audit's own module matrix.** The project's test translation unit
-   imports the module *and* includes six standard headers (through `ut/ut.hpp`) - the shape part
-   18's matrix says fails on GCC 16 - and it builds. `MOD-11` is the open question that already
-   says so, and the pass confirmed it from the source.
-6. **A misplaced section header, `DEF-8`.** `format.hpp:473` says "The formatter of a whole
-   message" and heads `parse_spec`; `format_message` is 59 lines further down (`format.hpp:532`).
-   A comment defect - the code is right and the comment is wrong - and the smallest thing the
-   reading found. The count moves from 82 open items to **83**.
+| Bundle | Path | Documents |
+|--------|------|-----------|
+| Architecture | `./okf-bundles/architecture/` | 7 documents |
+| Audit | `./okf-bundles/audit/` | 5+ documents |
+| ASAN Leak Check | `./docs/asan-leak-check/README.md` | 1 document |
+| Module Source Location | `./docs/module-source-location/README.md` | 1 document |
 
-**Part 7's plan changed shape.** Every row of the coverage table now says what the test must
-**assert**, not what it must log: the exact output it must produce. And there is a new table of
-the eight existing tests, what each asserts today, and what it must assert instead. The rule the
-assertions follow: **a test asserts a value, never a fact about the code.** "The logger did not
-throw" is not an assertion about the library.
+### When Lane Reopens
 
-**What part 20 did not do.** It did not build anything, change a line of the library, or settle
-anything that needs a compile. The source is byte-identical to the baseline. The pass moved the
-audit, not the code.
+See [Audit Bundle → Decisions → First 10 Steps](./okf-bundles/audit/decisions.md#first-10-steps-when-lane-reopens) for the exact ordered plan.
 
-## What part 21 changed
-
-**Part 21 - can CMake ask the compiler?** The audit has **70 questions settled by a compile, a run
-or a preprocessor pass**, and 30 of them by a compile alone. CMake has a facility for exactly that
-
-- a check that compiles a snippet and keeps the answer - and the question was whether it can carry
-those 30.
-
-**The answer is yes for about 20 of them, and the part says exactly where it stops.** Four limits:
-
-- **a check compiles a snippet, not the project.** It cannot `import com.rsm.logging;` - the module
-  does not exist at configure time - so `MOD-10`, `FMT-4` and `REFL-4` are outside its reach.
-  `FMT-15` had already reached the same conclusion from the other side.
-- **the project's reflection flags do not reach a check.** The toolchain keeps them out of
-  `CMAKE_CXX_FLAGS` on purpose (`cmake/toolchains/cpp-core.cmake:76-80`), and they are a
-  directory-scope `add_compile_options()` in `cmake/cpp-core-check.cmake:40-42` - in a file reached
-  through `CMAKE_PROJECT_INCLUDE`, which CMake does **not** propagate into a try_compile project.
-  So the project's own compiler gate does not run inside a check either, and a `REFL-` check has to
-  pass `-freflection` itself.
-- **a check runs once**, and its answer lives in the build tree as an INTERNAL cache variable. A
-  compiler upgrade under the same preset name keeps the old answer.
-- **a check is not a test.** Its answer is a cache variable, so the coverage gate does not see it
-  and the 100% rule does not apply.
-
-**And one thing it can do that the audit had not credited.** `try_compile` with
-`SOURCES_TYPE CXX_MODULE` (CMake 3.28) builds a real module unit and its importer, in one generated
-project, under the project's own CMake dialect - which is enough to answer `MOD-11`'s question
-about the *shape* even though it cannot answer it about the *module*.
-
-**CMake 4.5.0 was released on 2026-11-12**, and the part walks its whole release note. Five items
-touch this project: `import std;` is now available for all C++20+ code with `CXX_SCAN_FOR_MODULES`
-(the thing `MOD-1`-`MOD-6` price); `CMAKE_CXX_STDLIB_MODULES_JSON` names the `import std` metadata
-file for `MOD-6`; the new `CMD_NON_TARGET_DIRECTIVE` diagnostic names exactly the project's one
-directory-scope directive; `install(TARGETS)` no longer needs a `LIBRARY DESTINATION` for a module
-library; and the new `install_prep/*` targets build the module BMIs an install needs - three loose
-ends of `BUILD-2` closed by the tool. The presets' section lists what the project has **not** used:
-`$schema`, `condition`, `warnings`/`errors`, `installDir`, `packagePresets`,
-`testPresets.output.outputJUnitFile`, `execution.jobs`, `testPassthroughArguments` and 4.5's
-`${configurePresetName}`.
-
-**Two worked examples**, because a design that is only described is not checked: `FMT-13` (a probe
-that fails on purpose, its message carrying the macro value, captured through
-`try_compile(... OUTPUT_VARIABLE ...)`, then one pinned check per value) and `MOD-11` (a throwaway
-module + importer through `SOURCES_TYPE CXX_MODULE`, which reproduces the matrix's shape under the
-project's own `-fmodules-ts`).
-
-**The count moves once.** Part 21 adds the fourteenth owner decision, **`BUILD-9`** - should the
-build gain a feature-check gate - with the recommendation **(c)**: a check only where the answer
-gates a code path, and a test for the rest. Open items go from 83 to **84**; owner decisions from
-13 to **14**; the questions settled by a measurement stay at **70**.
-
-**What part 21 did not do.** No build, no compiler, no CMake, no preset. The facilities are read
-from CMake 4.5.0's own release notes and documentation, and `try_compile`'s propagation behaviour
-from CMake's own `cmCoreTryCompile.cxx` rather than inferred. The library is byte-identical to the
-baseline.
-
-## The automation and the rules
-
-The audit had grown to 19 parts, 8,300 lines of Markdown, 83 items with hand-maintained counts in
-four places, and a verification sweep that was **re-typed by hand eight times** - once after each
-part 18 item. That is now machinery, not memory.
-
-| what | where | what it replaces |
-|---|---|---|
-| **the registry** | `docs/cxx26-features-audit/audit-index.json` | reading `open-items.md` (400 lines) and `decisions.md` (350) to answer a question about the audit. `mise run audit:summary -- --prefix MOD` prints one slice |
-| **the generator** | `scripts/audit_index.py` | the JSON is **derived** from `open-items.md`, never authored. `mise run audit:index` regenerates it; `verify_audit.py` fails when the committed copy is stale |
-| **the sweep** | `scripts/verify_audit.py` | the eight hand-typed sweeps: counts, duplicate IDs, dangling references, the decisions sheet against the open list, the counts the prose claims, table shape, fence balance, relative links, the parts tables, the privacy scan, the vendored copies. One command: `mise run audit:verify` |
-| **the privacy scan** | inside `verify_audit.py` | a scan whose patterns were typed into every run. The patterns are now **derived at run time** - from this machine's git identity, from this repository's own history, from the machine name - so no private value is stored in the repository. An untracked `.audit/privacy-patterns.txt` can add more |
-| **the upstream manifest** | `docs/cxx26-features-audit/upstream/manifest.json` and `scripts/verify_upstream.py` | `upstream/README.md` is the human-readable provenance record; the manifest is its machine-readable half, with a sha256 per vendored file |
-| **the measurements** | `docs/cxx26-features-audit/measurements.json` and `scripts/measure.py` | assertions about the project's shape, its interface discipline, its API surface, its audit coverage and its dependency closure. `mise run audit:measure` prints them; `--write` regenerates the committed baseline; `verify_audit.py` fails when the baseline is stale |
-| **the acceptance bar** | `docs/cxx26-features-audit/acceptance.json` | the absence of a standard. Nothing said what the project must not lose, so a change that made it worse was as invisible as one that made it better. The bar is **authored**, not derived - a standard, not a snapshot - and the harness reads it and never edits it. `mise run audit:acceptance` |
-| **the citation anchor** | `docs/cxx26-features-audit/citations.json` and `scripts/anchor_citations.py` | nothing - there was nothing. A citation is a claim about a range of lines, and **196 of the audit's 291 line citations had drifted off the code they named** after one reformat. The anchor records every citation and a hash of every line it names, and fails when a cited line no longer says what it said. `mise run audit:anchor` |
-| **the drift check** | `scripts/check_overlay_drift.py` | nothing - there was nothing. The README claims the overlay ports are pinned to their upstream's latest commit, and **nothing checked it**. `mise run audit:drift` compares each `REF` against its branch's tip |
-| **the rules** | `AGENTS.md` | the re-derivation, every session, of the lane state, both compilers, the module interface, the privacy rulings and the audit's conventions |
-| **the subagents** | `.opencode/agents/sdlc/*.md` | `qa.md` was told to build, and `research.md` was told to prefer running the compiler - both directly against the parked lane. All five now carry the lane, the privacy rules and the audit's conventions |
-
-**Two defects were found and fixed while building it.** `FMT-9` - the question whether the vcpkg
-`quill` port has an external-fmt feature - had been **answered by part 18, section 2, and was
-still sitting in the open table**; and `TOOL-16` - what CI image would provide `gcov-16` - is not
-a measurement at all, because the project has no CI (`BUILD-5`), so it is **contingent on
-`BUILD-5`'s answer**. Both now live in `open-items.md` section 13, which holds the items that
-carry an ID and are answered or contingent, so that a reference to `VCPKG-1` resolves to
-something. The count went from 83 to 81 for that reason.
-
-**And a third, in the mutation test itself.** The restore writes each mutated file back with
-`path.write_bytes`, which opens with `"wb"` - it **truncates first and writes second**. A signal
-arriving between the two leaves a **zero-byte file**. That is not hypothetical: an interrupted
-run left `PARKED.md` empty, and 671 lines of uncommitted prose were lost with it. The restore is
-now **atomic** - the file is written to a sibling temporary path and moved into place with
-`os.replace`, which on POSIX leaves the target as either the old file or the new one, never a
-half-written one - and `SIGTERM` and `SIGINT` are caught so that the `finally` still runs. The
-verifier's own run is bounded by a timeout, so a hang fails the mutation that caused it instead
-of stalling the suite. **Verified by interrupting a live run with `SIGTERM`: the tree came back
-byte for byte, and the run exited 130 having said so.**
-
-**Nothing here builds.** Every script is stdlib-only Python, and none of them invokes a compiler,
-CMake or a test. The build lane stays parked.
-
-**And the checker is itself checked.** `scripts/test_verify_audit.py` breaks the tree fourteen ways
-
-- a wrong count, a dangling ID, a missing decision heading, a table split by a paragraph, an
-unbalanced fence, a broken link, a home path in a tracked file, a stale registry, a stale
-measurement baseline, a tightened acceptance bar, a citation whose line no longer says what it
-said, two parts tables that disagree, a modified vendored file, and an item that
-is open *and* answered - and asserts that the right check fires and that the tree is restored
-afterwards. `mise run audit:test`.
-
-That test earned its place immediately: it found a **name shadowing bug in the checker itself**
-(a local variable named `relative` hid the path helper, so the link check crashed rather than
-reported), and it found that the first version of the test itself used `git checkout -- .` to
-restore - which reverted every uncommitted change in the tree, including the fix being tested.
-Both are fixed, and the checker now reports a check that raises as a failure instead of aborting
-the sweep.
-
-**And the effect is measured, not asserted.** `mise run audit:metrics` prints what the automation
-is worth, with the "before" figures read from the tree at the commit before it landed:
-
-| | before | after |
-|---|---|---|
-| what a session reads to know where things stand | 538 lines (hurried) / 1,664 lines (thorough) | 140 lines - `AGENTS.md` plus one command |
-| what it costs to verify a change | ~120 lines of Python, re-typed 8 times | one command, 4 lines of output |
-| subagent files carrying the lane | 0 of 5 | **5 of 5** |
-| subagent files carrying the privacy rule | 0 of 5 | **5 of 5** |
-| a drifted overlay pin | **never noticed** - nothing checked it | one command |
-| what the project *is*, in numbers | **in adjectives** - no baseline, no delta | one command, with a committed baseline |
-
-And the metric that matters most, because it is the honest one: **the library is byte-identical
-to the baseline.** This work moved the process, not the code. `DEF-1` to `DEF-6` are all still
-there, the four owner decisions still gate the implementation, and the coverage gate is still a
-run away. What improved is the cost of getting to those answers - the orientation cost, the
-verification cost, the time-to-notice a drift, and the chance that a subagent reads the lane and
-the privacy rules at all.
-
-## State of the working tree
-
-- Committed and clean.
-- `build/coverage-clang/` - an abandoned experiment (clang source-based coverage); the raw-profile
-  version mismatch makes it unusable, it can be deleted.
-- **No source file was changed by part 18, or by the automation that followed it.** Every one of
-  the eighteen parts is documentation, and the build lane stays parked: no builds, no compiler or
-  toolchain installs or configuration, no CMake or preset build runs, no test or ASan runs. The
-  automation is `scripts/`, `AGENTS.md`, `.mise.toml` and the registry - no library source, no
-  CMake file and no preset was touched.
-
-## Open question for the owner (answered, not acted on)
-
-How to set `ZAI_API_KEY` for the `zai-coding-plan` provider was answered: the two saved `Z.AI`
-accounts in `opencode auth list` belong to the `zai` integration (the standard API), not to
-`zai-coding-plan` (the Coding Plan endpoint), so they do not satisfy it. Either
-`opencode service set env ZAI_API_KEY <key>` (stops and restarts the background service) or
-`opencode auth login zai-coding-plan` (a saved account, no restart). The local `opencode.json` only
-registers `glm-4.7` for that provider; `glm-5.3` and `glm-5.3-flash` are in the catalog and would
-have to be added.
+**Do not "just try it" with a compiler.** The lane is parked for a reason — the research is complete, the implementation is not.
