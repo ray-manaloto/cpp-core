@@ -46,12 +46,3 @@ includes = [
   "mise/setup/tasks.toml",
   "mise/render/tasks.toml",
 ]
-
-# Pre-commit and commit-msg via mise
-[pre_commit]
-description = "Run pre-commit checks"
-run = "hk run pre-commit"
-
-[commit_msg]
-description = "Validate commit message"
-run = "hk run commit-msg"
