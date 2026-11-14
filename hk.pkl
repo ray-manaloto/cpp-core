@@ -68,6 +68,17 @@ hooks {
       ["rumdl"] = (Builtins.rumdl) {
         glob = List("**/*.md", "**/*.markdown")
       }
+      ["lychee"] = (Builtins.lychee) {
+        glob = List("**/*.md", "**/*.markdown")
+        exclude =
+          List(
+            "**/docs/asan-leak-check/upstream/**",
+            "**/docs/cxx26-features-audit/upstream/**",
+            "**/docs/module-source-location/upstream/**",
+            "**/docs/asan-leak-check/repro/**",
+            "**/docs/module-source-location/repro/**",
+          )
+      }
       ["shfmt"] = (Builtins.shfmt) {}
       ["shellcheck"] = (Builtins.shellcheck) {
         exclude = List("**/sample_hang.sh")
@@ -184,6 +195,17 @@ hooks {
       ["rumdl"] = (Builtins.rumdl) {
         glob = List("**/*.md", "**/*.markdown")
       }
+      ["lychee"] = (Builtins.lychee) {
+        glob = List("**/*.md", "**/*.markdown")
+        exclude =
+          List(
+            "**/docs/asan-leak-check/upstream/**",
+            "**/docs/cxx26-features-audit/upstream/**",
+            "**/docs/module-source-location/upstream/**",
+            "**/docs/asan-leak-check/repro/**",
+            "**/docs/module-source-location/repro/**",
+          )
+      }
       ["shfmt"] = (Builtins.shfmt) {}
       ["shellcheck"] = (Builtins.shellcheck) {
         exclude = List("**/sample_hang.sh")
@@ -299,6 +321,17 @@ hooks {
       }
       ["rumdl"] = (Builtins.rumdl) {
         glob = List("**/*.md", "**/*.markdown")
+      }
+      ["lychee"] = (Builtins.lychee) {
+        glob = List("**/*.md", "**/*.markdown")
+        exclude =
+          List(
+            "**/docs/asan-leak-check/upstream/**",
+            "**/docs/cxx26-features-audit/upstream/**",
+            "**/docs/module-source-location/upstream/**",
+            "**/docs/asan-leak-check/repro/**",
+            "**/docs/module-source-location/repro/**",
+          )
       }
       ["shfmt"] = (Builtins.shfmt) {}
       ["shellcheck"] = (Builtins.shellcheck) {

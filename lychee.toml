@@ -1,0 +1,94 @@
+# lychee link checker configuration for cpp-core
+# https://github.com/lycheeverse/lychee
+# Generated from lychee.example.toml (lychee-v0.24.2)
+
+#############################  Display  #############################
+
+verbose = "info"
+format = "detailed"
+mode = "emoji"
+no_progress = true
+host_stats = false
+
+#############################  Cache  ###############################
+
+cache = true
+max_cache_age = "2d"
+cache_exclude_status = "500.."
+
+#############################  Runtime  #############################
+
+threads = 2
+max_redirects = 10
+max_retries = 2
+max_concurrency = 10
+default_extension = "md"
+
+# User agent
+user_agent = "lychee/0.24.2 (cpp-core)"
+
+#############################  Requests  ############################
+
+timeout = 30
+retry_wait_time = 2
+
+# Accept additional status codes
+# 429 = Too Many Requests (rate limiting)
+accept = ["200", "201", "202", "203", "204", "429"]
+
+# Proceed for server connections considered insecure (invalid TLS)
+insecure = false
+
+# Only test links with the given schemes
+scheme = ["http", "https", "mailto", "file"]
+
+# When links are available using HTTPS, treat HTTP links as errors
+require_https = false
+
+#############################  Exclusions  ##########################
+
+# Exclude URLs from checking (regex patterns)
+exclude = [
+  ".*localhost.*",
+  ".*127\\.0\\.0\\.1.*",
+  ".*example\\.com.*",
+  # GitHub raw/avatar URLs that may fail
+  ".*githubusercontent\\.com.*",
+  ".*avatars\\.githubusercontent\\.com.*",
+  # This repo has no remote - exclude the main URL
+  "https://github.com/ray-manaloto/cpp-core",
+  # WG21 paper URLs - often timeout or return 502
+  ".*open-std\\.org.*",
+  # Intel stdx - 404
+  ".*github.com/intel/stdx.*",
+  # Intel baremetal repos - 404 (moved/archived)
+  ".*github.com/intel/baremetal.*",
+  # CMake docs - old URLs that 404
+  ".*cmake.org/cmake/help/latest/prop_tgt/CXX_MODULE_STD.html.*",
+  ".*cmake.org/cmake/help/latest/variable/CMAKE_CXX_MODULE_STD.html.*",
+]
+
+# Exclude paths from getting checked (regex patterns)
+# Only exclude binary/source files, not documentation
+exclude_path = [
+  ".*\\.cppm$", # Module interface files
+  ".*\\.hpp$",  # Header files
+  ".*\\.cpp$",  # Source files
+  ".*\\.c$",    # C source files
+  ".*\\.h$",    # C header files
+]
+
+# Check the specified file extensions
+extensions = ["md", "markdown"]
+
+# Exclude all private IPs from checking
+exclude_all_private = true
+
+# Check mail addresses
+include_mail = true
+
+# Check WikiLinks in Markdown files
+include_wikilinks = false
+
+# Accept timeouts (some WG21 sites are slow/unreliable)
+accept_timeouts = true
