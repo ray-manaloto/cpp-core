@@ -166,7 +166,9 @@ def mutate_citation_anchor() -> None:
     text = CITATIONS.read_text(encoding="utf-8")
     for line in text.split("\n"):
         if '"sha256:' in line:
-            CITATIONS.write_text(text.replace(line, line.replace("sha256:", "sha256:0"), 1), "utf-8")
+            CITATIONS.write_text(
+                text.replace(line, line.replace("sha256:", "sha256:0"), 1), "utf-8"
+            )
             return
     raise SystemExit("no hash in citations.json")
 
@@ -202,9 +204,9 @@ def run_verifier() -> tuple[int, str]:
             timeout=VERIFIER_TIMEOUT,
         )
     except subprocess.TimeoutExpired as expired:
-        output = (expired.stdout or "") + (expired.stderr or "")
-        if isinstance(output, bytes):
-            output = output.decode("utf-8", errors="replace")
+        stdout = expired.stdout or b""
+        stderr = expired.stderr or b""
+        output = (stdout + stderr).decode("utf-8", errors="replace")
         return 1, f"the verifier did not finish within {VERIFIER_TIMEOUT}s\n{output}"
     return result.returncode, result.stdout + result.stderr
 
@@ -223,8 +225,16 @@ def git_status() -> str:
 # The only files a mutation may touch. The restore writes these back byte for byte - it does NOT
 # use `git checkout`, which would revert every uncommitted change in the tree, including the
 # work being tested.
-MUTABLE = [PARKED, DECISIONS, OPEN_ITEMS, AUDIT_README, VENDORED, MEASUREMENTS, ACCEPTANCE,
-           CITATIONS]
+MUTABLE = [
+    PARKED,
+    DECISIONS,
+    OPEN_ITEMS,
+    AUDIT_README,
+    VENDORED,
+    MEASUREMENTS,
+    ACCEPTANCE,
+    CITATIONS,
+]
 
 
 def snapshot() -> dict[Path, bytes | None]:
@@ -271,7 +281,7 @@ def install_signal_handlers() -> None:
     mutation stays in the tree. That is how a tracked file was left empty once already.
     """
 
-    def handler(signum, frame):  # noqa: ARG001 - the signal handler's signature is fixed
+    def handler(signum, frame):
         raise Interrupted(f"interrupted by signal {signum}")
 
     for signal_number in (signal.SIGTERM, signal.SIGINT):
@@ -307,7 +317,9 @@ def main() -> int:
                 if code == 0:
                     failures.append(f"{expected}: the verifier exited 0")
                 else:
-                    failures.append(f"{expected}: the verifier failed, but not on this check")
+                    failures.append(
+                        f"{expected}: the verifier failed, but not on this check"
+                    )
         except Interrupted as error:
             # The tree is restored by the `finally` below; then the run stops, because the
             # interruption is not a failure of the checker.
@@ -330,7 +342,9 @@ def main() -> int:
             print(f"  {failure}")
         print(f"\n{passed}/{len(MUTATIONS)} mutations detected")
         return 1
-    print(f"{passed}/{len(MUTATIONS)} mutations detected, and the tree was restored every time")
+    print(
+        f"{passed}/{len(MUTATIONS)} mutations detected, and the tree was restored every time"
+    )
     return 0
 
 

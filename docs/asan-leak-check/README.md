@@ -54,7 +54,7 @@ The GCC hang is therefore **not** caused by this project: a program that does no
 
 `sample` of the hung hello-world (`evidence/gcc16-hello-deadlock-callgraph.txt`):
 
-```
+```text
 main thread                                     helper thread (created by StopTheWorld)
   exit                                             thread_start
     __lsan::DoLeakCheck()                            __sanitizer::get_dyld_hdr()
@@ -116,7 +116,7 @@ refuted by measurement.
 The Darwin stop-the-world implementation is byte-identical in all three trees
 (`upstream/`):
 
-```
+```text
 $ diff gcc16-sanitizer_stoptheworld_mac.cpp gcc-master-sanitizer_stoptheworld_mac.cpp   # identical
 $ diff gcc16-sanitizer_stoptheworld_mac.cpp llvm-main-sanitizer_stoptheworld_mac.cpp   # identical
 ```
@@ -213,7 +213,7 @@ cib, stdx and ut against the SDK's libc++.
 
 Add `cmake/lsan.supp`:
 
-```
+```text
 leak:libobjc
 leak:libdyld
 leak:_dyld_shared_cache_iterate_text
@@ -294,7 +294,7 @@ because it is off "everywhere by choice".
 
 Verified after the change:
 
-```
+```text
 $ cmake --workflow --preset p2996-asan      # 1/1 Test #1: cpp-core-tests ... Passed
 $ ASAN_OPTIONS=detect_leaks=1 <binary>      # without the suppressions: 316 byte(s) leaked in 7 allocation(s)
 $ ASAN_OPTIONS=detect_leaks=1 LSAN_OPTIONS=suppressions=cmake/lsan.supp <binary>
@@ -380,7 +380,7 @@ The files under `upstream/` are verbatim copies, with their license headers inta
 
 They are here so that the review can be done offline, without a network connection.
 
-```
+```text
 README.md                                   this document
 evidence/
   gcc16-hello-deadlock-callgraph.txt       sample output: the two deadlocked threads

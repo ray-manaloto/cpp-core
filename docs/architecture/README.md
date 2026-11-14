@@ -1,6 +1,6 @@
 # cpp-core Architecture Documentation
 
-> **Visual documentation suite for the cpp-core C++26 logging library**  
+> **Visual documentation suite for the cpp-core C++26 logging library**
 > Theme: Modern Minimalist | Generated: 2026-11-14
 
 ---
@@ -102,6 +102,7 @@ graph TD
 ## 🚀 Quick Start for Humans & AI Agents
 
 ### For Humans
+
 1. **Start here** → Read [Component Diagram](01-component-diagram.md) for mental model
 2. **Understand the wire** → [Wire Protocol](02-wire-protocol.md) shows the catalog innovation
 3. **See the flows** → [Sequence Diagrams](03-sequence-diagrams.md) for runtime behavior
@@ -109,6 +110,7 @@ graph TD
 5. **Track decisions** → [Decision Log](06-decision-log.md) for 14 resolved choices
 
 ### For AI Agents
+
 ```yaml
 # Minimal context to understand the project
 project: cpp-core

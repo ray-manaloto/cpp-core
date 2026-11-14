@@ -52,3 +52,265 @@ python3 scripts/test_verify_audit.py
 python3 scripts/audit_summary.py --counts
 python3 scripts/verify_audit.py
 """
+
+# hk-based checks
+[tasks."hk:check"]
+description = "Run all hk checks (format + lint)"
+run = "hk check --all"
+
+[tasks."hk:fix"]
+description = "Auto-fix all hk-checkable files"
+run = "hk fix --all"
+
+[tasks."hk:check:pre-commit"]
+description = "Run hk pre-commit checks"
+run = "hk run pre-commit"
+
+[tasks."hk:check:commit-msg"]
+description = "Validate commit message format"
+run = "hk run commit-msg"
+
+[tasks."hk:validate"]
+description = "Validate hk configuration"
+run = "hk validate"
+
+[tasks."hk:install"]
+description = "Install hk git hooks"
+run = "hk install"
+
+# mise doctor integration
+[tasks."doctor"]
+description = "Run mise doctor checks (project + env)"
+run = "mise doctor && mise doctor project"
+
+[tasks."doctor:full"]
+description = "Run all mise doctor checks including project diagnostics"
+run = "mise doctor && mise doctor project --verbose"
+
+# hk doctor (via mise)
+[tasks."hk:doctor"]
+description = "Run hk doctor to check tool availability"
+run = "hk doctor"
+
+# Format and lint shortcuts
+[tasks."fmt"]
+description = "Format all files with hk"
+run = "hk fix --all"
+
+[tasks."lint"]
+description = "Lint all files with hk"
+run = "hk check --all"
+
+# Format specific languages
+[tasks."fmt:cpp"]
+description = "Format C++ files with clang-format"
+run = "hk fix --step clang-format --all"
+
+[tasks."fmt:cmake"]
+description = "Format CMake files with cmake-format"
+run = "hk fix --step cmake-format --all"
+
+[tasks."fmt:toml"]
+description = "Format TOML files with taplo"
+run = "hk fix --step taplo-format --all"
+
+[tasks."fmt:json"]
+description = "Format JSON files with prettier"
+run = "hk fix --step prettier --all"
+
+[tasks."fmt:yaml"]
+description = "Format YAML files with yamlfmt"
+run = "hk fix --step yamlfmt --all"
+
+[tasks."fmt:md"]
+description = "Format Markdown files with rumdl"
+run = "hk fix --step rumdl-format --all"
+
+[tasks."fmt:sh"]
+description = "Format shell scripts with shfmt"
+run = "hk fix --step shfmt --all"
+
+[tasks."fmt:py"]
+description = "Format Python files with ruff"
+run = "hk fix --step ruff-format --all"
+
+[tasks."lint:cpp"]
+description = "Lint C++ files with cpplint"
+run = "hk check --step cpp-lint --all"
+
+[tasks."lint:toml"]
+description = "Lint TOML files with taplo"
+run = "hk check --step taplo --all"
+
+[tasks."lint:yaml"]
+description = "Lint YAML files with yamllint"
+run = "hk check --step yamllint --all"
+
+[tasks."lint:md"]
+description = "Lint Markdown files with rumdl"
+run = "hk check --step rumdl --all"
+
+[tasks."lint:sh"]
+description = "Lint shell scripts with shellcheck"
+run = "hk check --step shellcheck --all"
+
+[tasks."lint:py"]
+description = "Lint Python files with ruff + ty"
+run = "hk check --step ruff --all && hk check --step ty --all"
+
+[tasks."audit:python"]
+description = "Check Python AST and debug statements"
+run = "hk check --step python-check-ast --all && hk check --step python-debug-statements --all"
+
+# hk util shortcuts
+[tasks."hk:check-merge-conflicts"]
+description = "Check for merge conflict markers"
+run = "hk util check-merge-conflict --all"
+
+[tasks."hk:check-case-conflicts"]
+description = "Check for case-insensitive filename conflicts"
+run = "hk util check-case-conflict --all"
+
+[tasks."hk:check-large-files"]
+description = "Check for large files"
+run = "hk util check-added-large-files --all"
+
+[tasks."hk:check-trailing-whitespace"]
+description = "Check for trailing whitespace"
+run = "hk util trailing-whitespace --all"
+
+[tasks."hk:check-newlines"]
+description = "Check for missing newlines at EOF"
+run = "hk util newlines --all"
+
+[tasks."hk:check-mixed-line-endings"]
+description = "Check for mixed line endings"
+run = "hk util mixed-line-ending --all"
+
+[tasks."hk:fix-smart-quotes"]
+description = "Fix smart quotes"
+run = "hk util fix-smart-quotes --all"
+
+[tasks."hk:check-byte-order-marker"]
+description = "Check for UTF-8 BOM"
+run = "hk util check-byte-order-marker --all"
+
+[tasks."hk:fix-byte-order-marker"]
+description = "Fix UTF-8 BOM"
+run = "hk util fix-byte-order-marker --all"
+
+[tasks."hk:format-diff"]
+description = "Show format diff for files"
+run = "hk util format-diff --all --"
+
+# Combined check: hk + audit
+[tasks."check:all"]
+description = "Run all hk checks + audit verification"
+run = "hk check --all && python3 scripts/verify_audit.py"
+
+[tasks."check:ci"]
+description = "Run CI checks (hk + audit + doctor)"
+run = "mise run hk:check && mise run audit:verify && mise run doctor"
+
+# Pre-commit and commit-msg via mise
+[tasks."pre-commit"]
+description = "Run pre-commit checks"
+run = "hk run pre-commit"
+
+[tasks."commit-msg"]
+description = "Validate commit message"
+run = "hk run commit-msg"
+
+# Install git hooks
+[tasks."hooks:install"]
+description = "Install hk git hooks"
+run = "hk install"
+
+[tasks."hooks:uninstall"]
+description = "Uninstall hk git hooks"
+run = "hk uninstall"
+
+# Setup task: install all tools via mise
+[tasks."setup:tools"]
+description = "Install all hk/mise tools via mise"
+run = """
+mise use yamlfmt yamllint
+mise use rumdl
+mise use shfmt shellcheck
+mise use ruff ty
+mise use taplo
+mise use prettier
+mise use yamlfmt yamllint
+mise use rumdl
+mise use shfmt shellcheck
+mise use ruff ty
+mise use taplo
+mise use prettier
+mise use yamlfmt yamllint
+mise use rumdl
+mise use shfmt shellcheck
+mise use ruff ty
+mise use taplo
+mise use prettier
+mise use clang-format
+mise use pipx:cpplint
+mise use pipx:cmakelang
+mise use pipx:cmakelang
+mise use cargo
+mise use rust
+mise use python
+mise use shfmt shellcheck
+mise use ruff ty
+mise use taplo
+mise use prettier
+mise use yamlfmt yamllint
+mise use rumdl
+mise use shfmt shellcheck
+mise use ruff ty
+mise use taplo
+mise use prettier
+mise use clang-format
+mise use pipx:cpplint
+mise use pipx:cmakelang
+"""
+
+[tasks."setup:all"]
+description = "Full setup: install tools + install hooks + validate"
+run = """
+mise run setup:tools
+mise run hk:install
+mise run hk:validate
+mise run doctor
+"""
+
+# CI integration
+[tasks."ci"]
+description = "Run all CI checks"
+run = "mise run hk:check && mise run audit:verify && mise run doctor"
+
+# Project diagnostics via mise doctor
+[tasks."diag:project"]
+description = "Run mise doctor project diagnostics"
+run = "mise doctor project"
+
+[tasks."diag:env"]
+description = "Run mise doctor environment diagnostics"
+run = "mise doctor"
+
+[tasks."diag:all"]
+description = "Run all mise doctor diagnostics"
+run = "mise doctor && mise doctor project"
+
+[tools]
+clang-format = "23.1.4"
+"pipx:cmakelang" = "0.6.13"
+"pipx:cpplint" = "2.0.2"
+prettier = "3.10.1"
+ruff = { version = "0.17.5", minimum_release_age = "0s" }
+rumdl = { version = "0.3.4", minimum_release_age = "0s" }
+shellcheck = { version = "0.11.0", minimum_release_age = "0s" }
+shfmt = { version = "3.14.1", minimum_release_age = "0s" }
+taplo = "0.10.0"
+ty = { version = "0.0.102", minimum_release_age = "0s" }
+yamlfmt = "0.21.0"
+yamllint = "1.38.0"

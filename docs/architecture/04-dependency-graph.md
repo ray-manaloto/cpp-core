@@ -1,6 +1,6 @@
 # Dependency Graph — Libraries, Versions, and Usage
 
-> **All external dependencies, versions, and how they're used in the project**  
+> **All external dependencies, versions, and how they're used in the project**
 > Theme: Modern Minimalist | Part of [Architecture Documentation](../../README.md)
 
 ---
@@ -92,7 +92,7 @@ graph LR
 | **Source** | vcpkg `fmt` port | Bundled in quill port |
 | **Can be unified?** | **No** — quill 13.1.0 has no external-fmt option | **No** — installs bundled unconditionally |
 
-> **Project Rule**: Custom formatters are written for `fmt` (standalone) only.  
+> **Project Rule**: Custom formatters are written for `fmt` (standalone) only.
 > The catalog path uses quill's `fmtquill`; the module path uses hand-rolled formatter.
 
 ---
@@ -101,7 +101,7 @@ graph LR
 
 From `scripts/measure.py` — 9 build trees measured, all agree:
 
-```
+```text
 Source: depfiles from last build
 460 third-party headers installed
 106 headers reached by project's compiled closure (23%)
@@ -137,11 +137,11 @@ All 5 overlay ports track **upstream main branches**, not the pinned baseline:
 
 | Overlay Port | Upstream | Pinned Baseline | Tracks |
 |--------------|----------|-----------------|--------|
-| `ut` | https://github.com/stephenberry/ut | `v1.2.1` tag | ✅ Upstream main |
-| `intel-cib` | https://github.com/intel/compile-time-init-build | `main` branch | ✅ Upstream main |
-| `intel-cpp-std-extensions` | https://github.com/intel/stdx | `main` branch | ✅ Upstream main |
-| `intel-baremetal-concurrency` | https://github.com/intel/baremetal-concurrency | `main` branch | ✅ Upstream main |
-| `intel-baremetal-senders-receivers` | https://github.com/intel/baremetal-senders-receivers | `main` branch | ✅ Upstream main |
+| `ut` | <https://github.com/stephenberry/ut> | `v1.2.1` tag | ✅ Upstream main |
+| `intel-cib` | <https://github.com/intel/compile-time-init-build> | `main` branch | ✅ Upstream main |
+| `intel-cpp-std-extensions` | <https://github.com/intel/stdx> | `main` branch | ✅ Upstream main |
+| `intel-baremetal-concurrency` | <https://github.com/intel/baremetal-concurrency> | `main` branch | ✅ Upstream main |
+| `intel-baremetal-senders-receivers` | <https://github.com/intel/baremetal-senders-receivers> | `main` branch | ✅ Upstream main |
 
 > **VCPKG-2 verified**: None of these 5 shadow builtin vcpkg ports at the pinned baseline.
 
@@ -150,11 +150,13 @@ All 5 overlay ports track **upstream main branches**, not the pinned baseline:
 ## 🧱 Build System Dependencies
 
 ### CMake Minimum
+
 - **Version**: 3.31 (from `CMakePresets.json`)
 - **Policy**: `CMP0155` (C++ module support) set to NEW
 
 ### Toolchain Files
-```
+
+```text
 cmake/toolchains/cpp-core.cmake
 ├── Compiler selection: gcc16 | clang23 | p2996
 ├── Sanitizer: none | asan | tsan
@@ -168,6 +170,7 @@ cmake/toolchains/cpp-core.cmake
 ```
 
 ### Presets (from `cmake/presets/cpp-core.json`)
+
 - **Schema version**: 10 (CMake 3.31)
 - **Configure presets**: 14 (base + 2 compilers × 4 configs + iwyu)
 - **Build presets**: 8

@@ -690,6 +690,7 @@ audit, not the code.
 
 **Part 21 - can CMake ask the compiler?** The audit has **70 questions settled by a compile, a run
 or a preprocessor pass**, and 30 of them by a compile alone. CMake has a facility for exactly that
+
 - a check that compiles a snippet and keeps the answer - and the question was whether it can carry
 those 30.
 
@@ -784,6 +785,7 @@ byte for byte, and the run exited 130 having said so.**
 CMake or a test. The build lane stays parked.
 
 **And the checker is itself checked.** `scripts/test_verify_audit.py` breaks the tree fourteen ways
+
 - a wrong count, a dangling ID, a missing decision heading, a table split by a paragraph, an
 unbalanced fence, a broken link, a home path in a tracked file, a stale registry, a stale
 measurement baseline, a tightened acceptance bar, a citation whose line no longer says what it

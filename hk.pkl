@@ -1,0 +1,217 @@
+import "package://github.com/jdx/hk/releases/download/v2.12.0/hk@2.12.0#/Builtins.pkl"
+
+hooks {
+  ["check"] {
+    steps {
+      ["clang-format"] = (Builtins.clang_format) {
+        glob = List("**/*.c", "**/*.h", "**/*.cpp", "**/*.hpp", "**/*.cc", "**/*.hh", "**/*.cxx", "**/*.hxx", "**/*.cppm")
+        exclude = List("**/docs/asan-leak-check/upstream/**", "**/docs/cxx26-features-audit/upstream/**", "**/docs/module-source-location/upstream/**")
+      }
+      ["cpp-lint"] = (Builtins.cpp_lint) {
+        glob = List("**/*.c", "**/*.h", "**/*.cpp", "**/*.hpp", "**/*.cc", "**/*.hh", "**/*.cxx", "**/*.hxx", "**/*.cppm")
+        exclude = List("**/docs/asan-leak-check/upstream/**", "**/docs/cxx26-features-audit/upstream/**", "**/docs/module-source-location/upstream/**", "**/docs/asan-leak-check/repro/**", "**/docs/module-source-location/repro/**")
+      }
+      ["taplo-format"] = (Builtins.taplo_format) {
+        glob = List("**/*.toml")
+      }
+      ["taplo"] = (Builtins.taplo) {
+        glob = List("**/*.toml")
+      }
+      ["prettier"] = (Builtins.prettier) {
+        glob = List("**/*.json", "**/*.jsonc", "**/*.json5")
+      }
+      ["yamlfmt"] = (Builtins.yamlfmt) {
+        glob = List("**/*.yml", "**/*.yaml")
+      }
+      ["yamllint"] = (Builtins.yamllint) {
+        glob = List("**/*.yml", "**/*.yaml")
+      }
+      ["rumdl-format"] = (Builtins.rumdl_format) {
+        glob = List("**/*.md", "**/*.markdown")
+      }
+      ["rumdl"] = (Builtins.rumdl) {
+        glob = List("**/*.md", "**/*.markdown")
+      }
+      ["shfmt"] = (Builtins.shfmt) {}
+      ["shellcheck"] = (Builtins.shellcheck) {
+        exclude = List("**/sample_hang.sh")
+      }
+      ["ruff-format"] = (Builtins.ruff_format) {
+        glob = List("**/*.py")
+      }
+      ["ruff"] = (Builtins.ruff) {
+        glob = List("**/*.py")
+      }
+      ["ty"] = (Builtins.ty) {
+        glob = List("**/*.py", "**/*.pyi")
+      }
+      ["python-check-ast"] = (Builtins.python_check_ast) {
+        glob = List("**/*.py")
+      }
+      ["python-debug-statements"] = (Builtins.python_debug_statements) {
+        glob = List("**/*.py")
+      }
+      ["check-merge-conflict"] = (Builtins.check_merge_conflict) {}
+      ["check-case-conflict"] = (Builtins.check_case_conflict) {}
+      ["check-added-large-files"] = (Builtins.check_added_large_files) {
+        allow_binary = true
+      }
+      ["check-executables-have-shebangs"] = (Builtins.check_executables_have_shebangs) {}
+      ["check-shebang-scripts-are-executable"] = (Builtins.check_shebang_scripts_are_executable) {}
+      ["check-symlinks"] = (Builtins.check_symlinks) {
+        allow_symlinks = true
+      }
+      ["trailing-whitespace"] = (Builtins.trailing_whitespace) {}
+      ["newlines"] = (Builtins.newlines) {}
+      ["mixed-line-ending"] = (Builtins.mixed_line_ending) {}
+      ["fix-smart-quotes"] = (Builtins.fix_smart_quotes) {}
+      ["byte-order-marker"] = (Builtins.byte_order_marker) {}
+    }
+  }
+
+  ["pre-commit"] {
+    steps {
+      ["clang-format"] = (Builtins.clang_format) {
+        glob = List("**/*.c", "**/*.h", "**/*.cpp", "**/*.hpp", "**/*.cc", "**/*.hh", "**/*.cxx", "**/*.hxx", "**/*.cppm")
+        exclude = List("**/docs/asan-leak-check/upstream/**", "**/docs/cxx26-features-audit/upstream/**", "**/docs/module-source-location/upstream/**")
+      }
+      ["cpp-lint"] = (Builtins.cpp_lint) {
+        glob = List("**/*.c", "**/*.h", "**/*.cpp", "**/*.hpp", "**/*.cc", "**/*.hh", "**/*.cxx", "**/*.hxx", "**/*.cppm")
+        exclude = List("**/docs/asan-leak-check/upstream/**", "**/docs/cxx26-features-audit/upstream/**", "**/docs/module-source-location/upstream/**", "**/docs/asan-leak-check/repro/**", "**/docs/module-source-location/repro/**")
+      }
+      ["taplo-format"] = (Builtins.taplo_format) {
+        glob = List("**/*.toml")
+      }
+      ["taplo"] = (Builtins.taplo) {
+        glob = List("**/*.toml")
+      }
+      ["prettier"] = (Builtins.prettier) {
+        glob = List("**/*.json", "**/*.jsonc", "**/*.json5")
+      }
+      ["yamlfmt"] = (Builtins.yamlfmt) {
+        glob = List("**/*.yml", "**/*.yaml")
+      }
+      ["yamllint"] = (Builtins.yamllint) {
+        glob = List("**/*.yml", "**/*.yaml")
+      }
+      ["rumdl-format"] = (Builtins.rumdl_format) {
+        glob = List("**/*.md", "**/*.markdown")
+      }
+      ["rumdl"] = (Builtins.rumdl) {
+        glob = List("**/*.md", "**/*.markdown")
+      }
+      ["shfmt"] = (Builtins.shfmt) {}
+      ["shellcheck"] = (Builtins.shellcheck) {
+        exclude = List("**/sample_hang.sh")
+      }
+      ["ruff-format"] = (Builtins.ruff_format) {
+        glob = List("**/*.py")
+      }
+      ["ruff"] = (Builtins.ruff) {
+        glob = List("**/*.py")
+      }
+      ["ty"] = (Builtins.ty) {
+        glob = List("**/*.py", "**/*.pyi")
+      }
+      ["python-check-ast"] = (Builtins.python_check_ast) {
+        glob = List("**/*.py")
+      }
+      ["python-debug-statements"] = (Builtins.python_debug_statements) {
+        glob = List("**/*.py")
+      }
+      ["check-merge-conflict"] = (Builtins.check_merge_conflict) {}
+      ["check-case-conflict"] = (Builtins.check_case_conflict) {}
+      ["check-added-large-files"] = (Builtins.check_added_large_files) {
+        allow_binary = true
+      }
+      ["check-executables-have-shebangs"] = (Builtins.check_executables_have_shebangs) {}
+      ["check-shebang-scripts-are-executable"] = (Builtins.check_shebang_scripts_are_executable) {}
+      ["check-symlinks"] = (Builtins.check_symlinks) {
+        allow_symlinks = true
+      }
+      ["trailing-whitespace"] = (Builtins.trailing_whitespace) {}
+      ["newlines"] = (Builtins.newlines) {}
+      ["mixed-line-ending"] = (Builtins.mixed_line_ending) {}
+      ["fix-smart-quotes"] = (Builtins.fix_smart_quotes) {}
+      ["byte-order-marker"] = (Builtins.byte_order_marker) {}
+    }
+  }
+
+  ["pre-push"] {
+    steps {
+      ["clang-format"] = (Builtins.clang_format) {
+        glob = List("**/*.c", "**/*.h", "**/*.cpp", "**/*.hpp", "**/*.cc", "**/*.hh", "**/*.cxx", "**/*.hxx", "**/*.cppm")
+        exclude = List("**/docs/asan-leak-check/upstream/**", "**/docs/cxx26-features-audit/upstream/**", "**/docs/module-source-location/upstream/**")
+      }
+      ["cpp-lint"] = (Builtins.cpp_lint) {
+        glob = List("**/*.c", "**/*.h", "**/*.cpp", "**/*.hpp", "**/*.cc", "**/*.hh", "**/*.cxx", "**/*.hxx", "**/*.cppm")
+        exclude = List("**/docs/asan-leak-check/upstream/**", "**/docs/cxx26-features-audit/upstream/**", "**/docs/module-source-location/upstream/**", "**/docs/asan-leak-check/repro/**", "**/docs/module-source-location/repro/**")
+      }
+      ["taplo-format"] = (Builtins.taplo_format) {
+        glob = List("**/*.toml")
+      }
+      ["taplo"] = (Builtins.taplo) {
+        glob = List("**/*.toml")
+      }
+      ["prettier"] = (Builtins.prettier) {
+        glob = List("**/*.json", "**/*.jsonc", "**/*.json5")
+      }
+      ["yamlfmt"] = (Builtins.yamlfmt) {
+        glob = List("**/*.yml", "**/*.yaml")
+      }
+      ["yamllint"] = (Builtins.yamllint) {
+        glob = List("**/*.yml", "**/*.yaml")
+      }
+      ["rumdl-format"] = (Builtins.rumdl_format) {
+        glob = List("**/*.md", "**/*.markdown")
+      }
+      ["rumdl"] = (Builtins.rumdl) {
+        glob = List("**/*.md", "**/*.markdown")
+      }
+      ["shfmt"] = (Builtins.shfmt) {}
+      ["shellcheck"] = (Builtins.shellcheck) {
+        exclude = List("**/sample_hang.sh")
+      }
+      ["ruff-format"] = (Builtins.ruff_format) {
+        glob = List("**/*.py")
+      }
+      ["ruff"] = (Builtins.ruff) {
+        glob = List("**/*.py")
+      }
+      ["ty"] = (Builtins.ty) {
+        glob = List("**/*.py", "**/*.pyi")
+      }
+      ["python-check-ast"] = (Builtins.python_check_ast) {
+        glob = List("**/*.py")
+      }
+      ["python-debug-statements"] = (Builtins.python_debug_statements) {
+        glob = List("**/*.py")
+      }
+      ["check-merge-conflict"] = (Builtins.check_merge_conflict) {}
+      ["check-case-conflict"] = (Builtins.check_case_conflict) {}
+      ["check-added-large-files"] = (Builtins.check_added_large_files) {
+        allow_binary = true
+      }
+      ["check-executables-have-shebangs"] = (Builtins.check_executables_have_shebangs) {}
+      ["check-shebang-scripts-are-executable"] = (Builtins.check_shebang_scripts_are_executable) {}
+      ["check-symlinks"] = (Builtins.check_symlinks) {
+        allow_symlinks = true
+      }
+      ["trailing-whitespace"] = (Builtins.trailing_whitespace) {}
+      ["newlines"] = (Builtins.newlines) {}
+      ["mixed-line-ending"] = (Builtins.mixed_line_ending) {}
+      ["fix-smart-quotes"] = (Builtins.fix_smart_quotes) {}
+      ["byte-order-marker"] = (Builtins.byte_order_marker) {}
+    }
+  }
+
+  ["commit-msg"] {
+    steps {
+      ["check-conventional-commit"] = (Builtins.check_conventional_commit) {}
+    }
+  }
+}
+
+misc {
+  use_mise = true
+}

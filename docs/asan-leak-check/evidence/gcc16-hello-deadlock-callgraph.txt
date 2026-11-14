@@ -48,4 +48,3 @@ Sort by top of stack, same collapsed (when >= 5):
         cthread_yield  (in libsystem_pthread.dylib)        20
         DYLD-STUB$$sched_yield  (in libasan.8.dylib)        13
         ???  (in <unknown binary>)  [0x19ac59000]        6
-

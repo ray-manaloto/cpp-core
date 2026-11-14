@@ -25,7 +25,7 @@ module's global module fragment does not reach the importing translation units, 
 The two logging paths share one quill logger and one pattern, so the location field is filled in
 the same way for both. Before the fix:
 
-```
+```text
 14:31:39.170701250 [90840989] app.cpp:28                   LOG_INFO      cpp-core     [cpp_core id=1 mod=0] compile-time formatted: the answer is 42
 14:31:39.170820875 [90840989]                               LOG_INFO      cpp-core     [] cpp-core: C++26 static reflection OK (point has 2 data members)
                                                                  ^^^^^^^^^^^^^ the module path: empty
@@ -63,7 +63,7 @@ module, the macro would have to be defined in the module's global module fragmen
 module fragment is not part of the module's interface: it is copied into every translation unit
 that imports the module, but its *macros* are not exported with it.
 
-```
+```text
 use.cpp:4:22: error: use of undeclared identifier 'GMF_MACRO'
 ```
 
@@ -109,7 +109,7 @@ The obvious shape - defaulted location parameters after the variadic pack - does
 a defaulted parameter after a pack is part of the pack's deduction: the runtime arguments end up
 in the location parameters (`repro/v3_variadic_trailing_defaults/`).
 
-```
+```text
 use.cpp:4:3: error: no matching function for call to 'info'
 mD.cppm:19:6: note: candidate function template not viable: no known conversion from 'int' to 'const char *' for 2nd argument
 ```
@@ -130,21 +130,21 @@ first parameter and the runtime arguments keep their place.
 
 The application, before and after (the module path is the last line):
 
-```
+```text
 before:  14:31:39.170820875 [90840989]                               LOG_INFO      cpp-core     [] cpp-core: C++26 static reflection OK (point has 2 data members)
 after:   14:31:39.170820875 [90840989] reflection_demo.cpp:27       LOG_INFO      cpp-core     [] cpp-core: C++26 static reflection OK (point has 2 data members)
 ```
 
 Both compilers:
 
-```
+```text
 $ ./build/p2996-debug/cpp-core | tail -1
 $ ./build/gcc16-debug/cpp-core | tail -1
 ```
 
 The whole preset matrix passes:
 
-```
+```text
 $ for w in gcc16-debug gcc16-release gcc16-asan p2996-debug p2996-release p2996-asan p2996-tsan p2996-iwyu; do
       cmake --workflow --preset $w
   done
@@ -152,7 +152,7 @@ $ for w in gcc16-debug gcc16-release gcc16-asan p2996-debug p2996-release p2996-
 
 The two new tests fail without the fix (the fix reverted, the rest of the tree unchanged):
 
-```
+```text
 FAILED "a formatted log call carries the source location of the call" .../cpp-core/tests/logging_test.cpp:137
 FAILED "a raw log call carries the source location of the call" .../cpp-core/tests/logging_test.cpp:154
 tests: 8 (6 passed, 2 failed, 0 compile-time)
@@ -164,7 +164,7 @@ A malformed format string inside the `ut` suite is reported in a way that points
 The suite's initializer is evaluated at compile time, and the `consteval` constructor's throw is
 reported as:
 
-```
+```text
 ut.hpp:369:29: error: call to immediate function '(anonymous class)::operator()' is not a constant expression
 logging_test.cpp:17:5: note: non-constexpr function 'set_level' cannot be used in a constant expression
 ```
@@ -172,7 +172,7 @@ logging_test.cpp:17:5: note: non-constexpr function 'set_level' cannot be used i
 The note points at the first non-constexpr call in the suite, not at the format string. The same
 call outside the suite names the real cause:
 
-```
+```text
 error: call to consteval function 'com::rsm::logging::format_string<int>::format_string<6UL>' is not a constant expression
 note: in call to 'format_string<6UL>("probe")'
 ```

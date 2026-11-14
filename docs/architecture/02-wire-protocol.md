@@ -1,6 +1,6 @@
 # Wire Protocol — Quill vs Catalog-Typed Proposal
 
-> **What goes on the queue today vs. the catalog-typed structured logging vision**  
+> **What goes on the queue today vs. the catalog-typed structured logging vision**
 > Theme: Modern Minimalist | Part of [Architecture Documentation](../../README.md)
 
 ---
@@ -100,8 +100,8 @@ sequenceDiagram
 
 ### Core Idea
 
-> **Compile-time:** Each distinct `(format string + parameter types)` → unique **catalog ID** (a type, e.g., `sc::undefined<sc::args<Args...>, -1, ...>`).  
-> **Runtime:** Queue carries **only encoded arguments** + **catalog ID**.  
+> **Compile-time:** Each distinct `(format string + parameter types)` → unique **catalog ID** (a type, e.g., `sc::undefined<sc::args<Args...>, -1, ...>`).
+> **Runtime:** Queue carries **only encoded arguments** + **catalog ID**.
 > **Backend:** Looks up schema by catalog ID, uses fmtlib to **deserialize** into typed fields.
 
 ### Proposed Record Structure
@@ -251,7 +251,7 @@ quill_logger()->template log_statement_runtime_metadata<true>(
 
 ## 📏 Wire Size Comparison (Example)
 
-```
+```text
 Message: LOG("User {name} logged in from {ip}", name, ip)
 Args: name="alice" (5 bytes), ip="192.168.1.1" (11 bytes)
 
@@ -275,7 +275,8 @@ CATALOG-TYPED:
 ## 📖 Source References
 
 All Quill internals read from installed headers:
-```
+
+```text
 /<vcpkg_installed>/include/quill/
   core/MacroMetadata.h          (compile-time metadata, has format string)
   core/DynamicFormatArgStore.h  (holds decoded fmtquill::basic_format_arg)

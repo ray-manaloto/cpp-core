@@ -1,6 +1,6 @@
 # Decision Log — All 14 Owner Decisions
 
-> **Every owner decision recorded with rationale, options, and impact**  
+> **Every owner decision recorded with rationale, options, and impact**
 > Theme: Modern Minimalist | Part of [Architecture Documentation](../../README.md)
 
 ---
@@ -43,9 +43,10 @@
 **Recommendation**: **(c) Use fmtlib** — single formatter for both paths; depends on QUIL-1
 
 **Reasoning**:
+
 - The hand-rolled formatter is **492 of 967 lines (51%)** of the library
 - Acceptance bar target: that share goes **down**
-- Two paths already disagree today: `{:>06}` → `000042` (module) vs `    42` (catalog)
+- Two paths already disagree today: `{:>06}` → `000042` (module) vs `42` (catalog)
 - `info("{:s}", 42)` compiles and is silently ignored where `std::format`/fmt reject it (DEF-5)
 - **Constraint from Part 18**: (b) only coherent if module's *renderer* comes from same library as validator. A check that's present and wrong is worse than no check.
 
@@ -66,7 +67,8 @@
 
 **Answer**: **YAML — add PyYAML via mise; keep `.cmake-format.yaml`**
 
-**Reasoning**: 
+**Reasoning**:
+
 - YAML is perfectly viable once PyYAML is installed and pinned
 - The config is a machine-readable format either way
 - Mise can manage the PyYAML dependency in the project environment
@@ -138,7 +140,8 @@
 
 **Answer**: **Add install/export now** — `FILE_SET CXX_MODULES` + `install(EXPORT CXX_MODULES_DIRECTORY)`
 
-**Reasoning**: 
+**Reasoning**:
+
 - Three obstacles (from Part 18 §7.1): `format.hpp` is PRIVATE but public build-time dep; `internal.hpp` in GMF not in file set; export publishes quill/cib closure
 - These are solved as part of implementation
 - Install rules force API stability discipline earlier
@@ -159,6 +162,7 @@
 **Answer**: **All three PRIVATE** — only `import com.rsm.logging;` is public
 
 **Reasoning**:
+
 - Module BMI is the **only** public interface
 - `internal.hpp` → GMF, needed by importers via BMI
 - `cib_quill.hpp` → catalog path API, reachable only through module's implementation
@@ -228,7 +232,8 @@
 
 **Answer**: **(c) Check only where answer gates code path** — HAVE_REFLECTION, module dialect, import std capability
 
-**Reasoning**: 
+**Reasoning**:
+
 - Cache variable worth having when something branches on it
 - For rest, answer is a fact → coverage gate (100%) or tests
 - Confines stale-answer problem to gating checks (stale = missing code path)

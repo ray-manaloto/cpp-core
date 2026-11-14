@@ -159,7 +159,7 @@ The module's interface does not use the standard library. On both compilers toda
 header that the module's global module fragment depends on collides with the standard headers of
 the translation units that import it:
 
-```
+```text
 GCC:    error: redefinition of 'constexpr bool std::__is_constant_evaluated()'
 Clang:  error: type alias template redefinition with different types ('std::__promote_t')
 ```
@@ -256,7 +256,7 @@ holds three messages (IDs 0 to 2) and one module (`cpp_core`, ID 0):
 
 The IDs are shown in the log line's tag field, next to the cib module:
 
-```
+```text
 07:01:52.811080209 [51816462] app.cpp:28 LOG_INFO  cpp-core [cpp_core id=1 mod=0] compile-time formatted: the answer is 42
 ```
 
@@ -284,7 +284,7 @@ to refer to.
   quill's bundled fmt, which implements the C++26 format-spec grammar and checks it against the
   argument's type; the module path formats with the module's own scanner, which implements the
   *structure* of that grammar but not its validation. So `info("{:>06}", 42)` gives `000042` on the
-  module path and `    42` on the catalog path, and a specification that fmt would reject
+  module path and `42` on the catalog path, and a specification that fmt would reject
   (`{:s}` on an `int`) is accepted and ignored by the module path. The fifteen differences are
   listed in the [features audit](docs/cxx26-features-audit/format-dialect.md).
 - **ODR:** `logging::config<>` is a variable template: every translation unit that logs with the

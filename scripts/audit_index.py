@@ -93,13 +93,25 @@ def kind_for(item_id: str) -> str:
 
 # Owner decision IDs that don't follow the prefix rule
 OWNER_DECISION_IDS = {
-    "FMT-14", "QUIL-9", "TOOL-13", "TOOL-14",
-    "BUILD-1", "BUILD-2", "BUILD-3", "BUILD-4", "BUILD-5",
-    "BUILD-7", "BUILD-8", "BUILD-9", "ENV-2", "ENV-3",
+    "FMT-14",
+    "QUIL-9",
+    "TOOL-13",
+    "TOOL-14",
+    "BUILD-1",
+    "BUILD-2",
+    "BUILD-3",
+    "BUILD-4",
+    "BUILD-5",
+    "BUILD-7",
+    "BUILD-8",
+    "BUILD-9",
+    "ENV-2",
+    "ENV-3",
 }
 
 # Items that are BUILD prefix but NOT owner decisions
 NON_OWNER_BUILD_IDS = {"BUILD-6"}
+
 
 def category_for(item_id: str) -> str:
     """Infer the audit category from the item ID prefix."""
@@ -205,7 +217,9 @@ def parse_open_items(path: Path = OPEN_ITEMS) -> dict:
             if len(cells) < 5:
                 continue
             question, state, answer, evidence = cells[1], cells[2], cells[3], cells[4]
-            state_value = "contingent" if state.lower().startswith("contingent") else "answered"
+            state_value = (
+                "contingent" if state.lower().startswith("contingent") else "answered"
+            )
             answered.append(
                 {
                     "id": item_id,

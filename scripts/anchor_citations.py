@@ -35,7 +35,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
-import citations  # noqa: E402
+import citations
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
 AUDIT_DIR = REPO_ROOT / "docs" / "cxx26-features-audit"
@@ -57,7 +57,9 @@ def current() -> dict[str, dict[str, str]]:
         for number in citation.lines:
             if number < 1 or number > len(lines):
                 continue
-            anchors.setdefault(citation.file, {})[str(number)] = line_hash(lines[number - 1])
+            anchors.setdefault(citation.file, {})[str(number)] = line_hash(
+                lines[number - 1]
+            )
     return anchors
 
 
@@ -152,7 +154,9 @@ def check() -> int:
     """Compare the tree with the baseline."""
     problems: list[str] = []
     if not BASELINE.exists():
-        print(f"problem: missing {BASELINE.relative_to(REPO_ROOT)} - run `mise run audit:anchor`")
+        print(
+            f"problem: missing {BASELINE.relative_to(REPO_ROOT)} - run `mise run audit:anchor`"
+        )
         return 1
     baseline = load()
     known = baseline.get("files", {})
@@ -225,7 +229,9 @@ def report() -> int:
     """What the baseline holds."""
     anchors = current()
     lines = sum(len(values) for values in anchors.values())
-    print(f"{len(citations.all_citations())} citations, {lines} cited lines, {len(anchors)} files")
+    print(
+        f"{len(citations.all_citations())} citations, {lines} cited lines, {len(anchors)} files"
+    )
     for name, values in sorted(anchors.items()):
         print(f"  {name:48s} {len(values):4d} lines")
     return 0
@@ -235,7 +241,9 @@ def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__.split("\n")[0])
     group = parser.add_mutually_exclusive_group()
     group.add_argument("--write", action="store_true", help="regenerate the baseline")
-    group.add_argument("--check", action="store_true", help="compare the tree with the baseline")
+    group.add_argument(
+        "--check", action="store_true", help="compare the tree with the baseline"
+    )
     args = parser.parse_args(argv)
 
     if args.write:

@@ -117,9 +117,10 @@ def build_manifest() -> dict:
 
     files = []
     for entry in entries:
-        path = REPO_ROOT / entry["path"]
+        path_str = str(entry["path"])
+        path = REPO_ROOT / path_str
         data = path.read_bytes()
-        record = dict(entry)
+        record: dict[str, str | bool | None | int] = dict(entry)
         record["sha256"] = hashlib.sha256(data).hexdigest()
         record["bytes"] = len(data)
         files.append(record)
@@ -151,7 +152,9 @@ def main(argv: list[str] | None = None) -> int:
 
     if args.write:
         MANIFEST.write_text(rendered, encoding="utf-8")
-        print(f"wrote {MANIFEST.relative_to(REPO_ROOT)} ({len(manifest['files'])} files)")
+        print(
+            f"wrote {MANIFEST.relative_to(REPO_ROOT)} ({len(manifest['files'])} files)"
+        )
         return 0
 
     if not MANIFEST.exists():

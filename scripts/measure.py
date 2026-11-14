@@ -34,7 +34,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
-from citations import (  # noqa: E402
+from citations import (
     audit_citations,
     library_files,
     physical_lines,
@@ -107,7 +107,9 @@ def public_api() -> list[str]:
     """The functions the module interface exports."""
     text = module_interface().read_text(encoding="utf-8")
     names = set()
-    for match in re.finditer(r"^\s*(?:\[\[nodiscard\]\]\s*)?auto\s+(\w+)\s*\(", text, re.M):
+    for match in re.finditer(
+        r"^\s*(?:\[\[nodiscard\]\]\s*)?auto\s+(\w+)\s*\(", text, re.MULTILINE
+    ):
         names.add(match.group(1))
     return sorted(names)
 
@@ -115,8 +117,10 @@ def public_api() -> list[str]:
 def interface_discipline() -> dict:
     """What the module interface is allowed to include, and what it actually includes."""
     text = module_interface().read_text(encoding="utf-8")
-    includes = re.findall(r'^\s*#\s*include\s*[<"]([^>"]+)[>"]', text, re.M)
-    standard = [name for name in includes if "/" not in name and not name.endswith(".hpp")]
+    includes = re.findall(r'^\s*#\s*include\s*[<"]([^>"]+)[>"]', text, re.MULTILINE)
+    standard = [
+        name for name in includes if "/" not in name and not name.endswith(".hpp")
+    ]
     project = [name for name in includes if name.endswith(".hpp")]
     return {
         "includes": includes,
@@ -133,7 +137,7 @@ def tested_api(api: list[str]) -> dict:
     return {"called": sorted(called), "not_called": sorted(set(api) - set(called))}
 
 
-INCLUDE_RE = re.compile(r'^\s*#\s*include\s*[<"]([^>"]+)[>"]', re.M)
+INCLUDE_RE = re.compile(r'^\s*#\s*include\s*[<"]([^>"]+)[>"]', re.MULTILINE)
 HEADER_SUFFIXES = {".h", ".hpp", ".hxx", ".hh", ".ipp", ".tpp", ".inl"}
 
 # The compiler's own record of what it included. A Ninja tree writes one depfile per
@@ -158,7 +162,9 @@ def depfile_closure(tree: Path) -> dict | None:
     per_unit: dict[str, int] = {}
     for depfile in depfiles:
         text = depfile.read_text(encoding="utf-8", errors="replace")
-        headers = {token for token in HEADER_TOKEN.findall(text) if "vcpkg_installed" in token}
+        headers = {
+            token for token in HEADER_TOKEN.findall(text) if "vcpkg_installed" in token
+        }
         reached.update(headers)
         unit = depfile.name
         per_unit[unit] = len(headers)
@@ -230,7 +236,7 @@ def resolved_closure(root: Path) -> dict:
     reached: set[Path] = set()
 
     while queue:
-        current, parent = queue.pop()
+        current, _parent = queue.pop()
         if current in seen:
             continue
         seen.add(current)
@@ -343,15 +349,13 @@ def macros() -> dict:
     call_sites = []
     for path in library_files():
         text = path.read_text(encoding="utf-8")
-        defined.extend(re.findall(r"^\s*#\s*define\s+(\w+)", text, re.M))
+        defined.extend(re.findall(r"^\s*#\s*define\s+(\w+)", text, re.MULTILINE))
         for number, line in enumerate(text.split("\n"), 1):
             stripped = line.strip()
             if stripped.startswith("//"):
                 continue
             for name in re.findall(r"\bCIB_\w+", stripped):
-                call_sites.append(
-                    f"{path.relative_to(REPO_ROOT)}:{number} {name}"
-                )
+                call_sites.append(f"{path.relative_to(REPO_ROOT)}:{number} {name}")
     return {
         "defined_by_the_project": sorted(set(defined)),
         "cib_call_sites": len(call_sites),
@@ -379,7 +383,9 @@ def measure() -> dict:
             continue
         # The numerator and the denominator have to be the same unit: physical source lines.
         # A cited line is a line someone looked at - whether it is code, a comment or a blank.
-        source_lines = physical_lines(path.read_text(encoding="utf-8", errors="replace"))
+        source_lines = physical_lines(
+            path.read_text(encoding="utf-8", errors="replace")
+        )
         citation_totals[relative] = {
             "source_lines": source_lines,
             "cited_lines": len([line for line in lines if 1 <= line <= source_lines]),
@@ -391,7 +397,9 @@ def measure() -> dict:
         path = REPO_ROOT / relative
         if not path.exists() or relative in citation_totals:
             continue
-        source_lines = physical_lines(path.read_text(encoding="utf-8", errors="replace"))
+        source_lines = physical_lines(
+            path.read_text(encoding="utf-8", errors="replace")
+        )
         citation_totals[relative] = {
             "source_lines": source_lines,
             "cited_lines": 0,
@@ -401,7 +409,9 @@ def measure() -> dict:
     # that happens to live under `modules/`.
     library_set = {str(path.relative_to(REPO_ROOT)) for path in files}
     library_total = sum(
-        physical_lines((REPO_ROOT / relative).read_text(encoding="utf-8", errors="replace"))
+        physical_lines(
+            (REPO_ROOT / relative).read_text(encoding="utf-8", errors="replace")
+        )
         for relative in library_set
     )
     library_cited = sum(
@@ -446,8 +456,12 @@ def measure() -> dict:
             "library_lines_cited_specifically": library_cited,
             "library_lines_cited_whole_file": library_whole_file,
             "library_lines_seen": library_seen,
-            "specific_share": round(library_cited / library_total, 3) if library_total else 0,
-            "seen_share": round(library_seen / library_total, 3) if library_total else 0,
+            "specific_share": round(library_cited / library_total, 3)
+            if library_total
+            else 0,
+            "seen_share": round(library_seen / library_total, 3)
+            if library_total
+            else 0,
             "per_file": dict(sorted(citation_totals.items())),
         },
         "dependencies": include_closure(),
@@ -500,9 +514,13 @@ def acceptance_metrics(current: dict) -> dict:
     if dependencies.get("available"):
         metrics["dependencies.reached_headers"] = dependencies["reached_headers"]
         metrics["dependencies.installed_headers"] = dependencies["installed_headers"]
-        metrics["dependencies.unreached_packages"] = len(dependencies["unreached_packages"])
+        metrics["dependencies.unreached_packages"] = len(
+            dependencies["unreached_packages"]
+        )
         metrics["dependencies.build_trees_measured"] = dependencies["trees_measured"]
-        metrics["dependencies.distinct_closure_sizes"] = dependencies["distinct_closure_sizes"]
+        metrics["dependencies.distinct_closure_sizes"] = dependencies[
+            "distinct_closure_sizes"
+        ]
     return metrics
 
 
@@ -540,17 +558,11 @@ def check_acceptance(current: dict) -> dict:
             continue
         observed = metrics[name]
         if kind == "floor" and observed < threshold:
-            violations.append(
-                f"{name}: {observed} is below the floor of {threshold}"
-            )
+            violations.append(f"{name}: {observed} is below the floor of {threshold}")
         elif kind == "ceiling" and observed > threshold:
-            violations.append(
-                f"{name}: {observed} is above the ceiling of {threshold}"
-            )
+            violations.append(f"{name}: {observed} is above the ceiling of {threshold}")
         else:
-            satisfied.append(
-                f"{name:<40} {observed} {kind} {threshold} - met"
-            )
+            satisfied.append(f"{name:<40} {observed} {kind} {threshold} - met")
 
     for target in bar.get("targets", []):
         name = target["metric"]
@@ -576,8 +588,7 @@ def check_acceptance(current: dict) -> dict:
         else:
             shown = f"{entry['kind']} {threshold}"
         deferred.append(
-            f"{entry['metric']:<40} not measurable here - {shown}"
-            f" - {entry['command']}"
+            f"{entry['metric']:<40} not measurable here - {shown} - {entry['command']}"
         )
 
     return {
@@ -594,7 +605,9 @@ def relative_to_repo(path: Path) -> str:
 
 def print_acceptance(current: dict) -> None:
     report = check_acceptance(current)
-    print("\nTHE ACCEPTANCE BAR - what the project must not lose, and where it is headed")
+    print(
+        "\nTHE ACCEPTANCE BAR - what the project must not lose, and where it is headed"
+    )
     if report["violations"]:
         print(f"  {len(report['violations'])} VIOLATION(S):")
         for violation in report["violations"]:
@@ -624,7 +637,9 @@ def source_derived(current: dict) -> dict:
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__.split("\n")[0])
     parser.add_argument("--write", action="store_true", help="write the baseline")
-    parser.add_argument("--check", action="store_true", help="exit non-zero if the baseline is stale")
+    parser.add_argument(
+        "--check", action="store_true", help="exit non-zero if the baseline is stale"
+    )
     parser.add_argument(
         "--acceptance",
         action="store_true",
@@ -639,7 +654,9 @@ def main(argv: list[str] | None = None) -> int:
     # checked against the tree, not against a snapshot of the tree.
     if args.acceptance:
         report = check_acceptance(current)
-        print("THE ACCEPTANCE BAR - what the project must not lose, and where it is headed")
+        print(
+            "THE ACCEPTANCE BAR - what the project must not lose, and where it is headed"
+        )
         if report["violations"]:
             print(f"  {len(report['violations'])} VIOLATION(S):")
             for violation in report["violations"]:
@@ -652,7 +669,9 @@ def main(argv: list[str] | None = None) -> int:
         print("  the targets - direction of travel, not gates:")
         for target in report["targets"]:
             print(f"    {target}")
-        print("  the deferred metrics - named with the command that would produce each:")
+        print(
+            "  the deferred metrics - named with the command that would produce each:"
+        )
         for entry in report["deferred"]:
             print(f"    {entry}")
         return 1 if report["violations"] else 0
@@ -664,7 +683,9 @@ def main(argv: list[str] | None = None) -> int:
         return 0
 
     if not MEASUREMENTS.exists():
-        print(f"missing {MEASUREMENTS.relative_to(REPO_ROOT)} - run `mise run audit:measure --write`")
+        print(
+            f"missing {MEASUREMENTS.relative_to(REPO_ROOT)} - run `mise run audit:measure --write`"
+        )
         return 1
 
     baseline = json.loads(MEASUREMENTS.read_text(encoding="utf-8"))
@@ -701,7 +722,9 @@ def main(argv: list[str] | None = None) -> int:
     old_dependencies = baseline.get("dependencies", {})
     new_dependencies = current.get("dependencies", {})
     if old_dependencies.get("available") and new_dependencies.get("available"):
-        if old_dependencies.get("reached_headers") != new_dependencies.get("reached_headers"):
+        if old_dependencies.get("reached_headers") != new_dependencies.get(
+            "reached_headers"
+        ):
             stale.append(
                 "dependencies.reached_headers: "
                 f"{old_dependencies.get('reached_headers')} -> "
@@ -731,22 +754,32 @@ def print_summary(current: dict) -> None:
 
     print("THE LIBRARY")
     print(f"  {library['files']} files, {library['code_lines']} lines of code")
-    print(f"  the module interface is {library['module_interface_lines']} lines;"
-          f" the hand-rolled formatter is {library['hand_rolled_formatter_lines']}"
-          f" ({library['hand_rolled_formatter_share']:.0%} of the library)")
-    print(f"  the tests are {library['test_lines']} lines"
-          f" ({library['test_to_library_ratio']:.2f} of the library)")
+    print(
+        f"  the module interface is {library['module_interface_lines']} lines;"
+        f" the hand-rolled formatter is {library['hand_rolled_formatter_lines']}"
+        f" ({library['hand_rolled_formatter_share']:.0%} of the library)"
+    )
+    print(
+        f"  the tests are {library['test_lines']} lines"
+        f" ({library['test_to_library_ratio']:.2f} of the library)"
+    )
 
     print("\nTHE INTERFACE DISCIPLINE")
-    print(f"  standard-library includes in the module interface: "
-          f"{interface['standard_library_includes']} (the rule is 0)")
-    print(f"  project includes in the module interface: "
-          f"{', '.join(interface['project_includes']) or 'none'}")
+    print(
+        f"  standard-library includes in the module interface: "
+        f"{interface['standard_library_includes']} (the rule is 0)"
+    )
+    print(
+        f"  project includes in the module interface: "
+        f"{', '.join(interface['project_includes']) or 'none'}"
+    )
 
     print("\nTHE PUBLIC API")
     print(f"  {api['public_functions']} exported functions")
     if api["not_tested_at_source_level"]:
-        print(f"  not called by the test file: {', '.join(api['not_tested_at_source_level'])}")
+        print(
+            f"  not called by the test file: {', '.join(api['not_tested_at_source_level'])}"
+        )
     else:
         print("  every exported function is called by the test file")
     macros = current["macros"]
@@ -755,11 +788,17 @@ def print_summary(current: dict) -> None:
 
     print("\nTHE AUDIT'S OWN COVERAGE - where the research has actually been")
     print(f"  {coverage['library_source_lines']} library source lines in total")
-    print(f"  {coverage['library_lines_cited_specifically']} cited with line numbers"
-          f" ({coverage['specific_share']:.0%}) - read")
-    print(f"  {coverage['library_lines_cited_whole_file']} credited from a whole-file path"
-          f" - looked at")
-    print(f"  {coverage['library_lines_seen']} seen in total ({coverage['seen_share']:.0%})")
+    print(
+        f"  {coverage['library_lines_cited_specifically']} cited with line numbers"
+        f" ({coverage['specific_share']:.0%}) - read"
+    )
+    print(
+        f"  {coverage['library_lines_cited_whole_file']} credited from a whole-file path"
+        f" - looked at"
+    )
+    print(
+        f"  {coverage['library_lines_seen']} seen in total ({coverage['seen_share']:.0%})"
+    )
     uncited = []
     library_set = {str(path.relative_to(REPO_ROOT)) for path in library_files()}
     for relative, entry in sorted(coverage["per_file"].items()):
@@ -796,26 +835,42 @@ def print_summary(current: dict) -> None:
     print("\nTHE DEPENDENCY CLOSURE")
     if dependencies.get("available"):
         print(f"  source: {dependencies['source']}")
-        print(f"  {dependencies['installed_headers']} third-party headers are installed;"
-              f" the project's compiled closure reaches {dependencies['reached_headers']}")
-        print("  by package: "
-              + ", ".join(f"{k} ({v})" for k, v in list(dependencies["packages"].items())[:8]))
+        print(
+            f"  {dependencies['installed_headers']} third-party headers are installed;"
+            f" the project's compiled closure reaches {dependencies['reached_headers']}"
+        )
+        print(
+            "  by package: "
+            + ", ".join(
+                f"{k} ({v})" for k, v in list(dependencies["packages"].items())[:8]
+            )
+        )
         reached = dependencies["reached_headers"]
         installed = dependencies["installed_headers"]
         if installed:
-            print(f"  the closure reaches {reached / installed:.0%} of what is installed")
+            print(
+                f"  the closure reaches {reached / installed:.0%} of what is installed"
+            )
         if dependencies.get("per_tree"):
             trees = dependencies["per_tree"]
-            verdict = "all agree" if dependencies.get("trees_agreeing") else "THEY DISAGREE"
-            print(f"  {len(trees)} build trees measured: {verdict}"
-                  f" ({', '.join(t['tree'] for t in trees)})")
+            verdict = (
+                "all agree" if dependencies.get("trees_agreeing") else "THEY DISAGREE"
+            )
+            print(
+                f"  {len(trees)} build trees measured: {verdict}"
+                f" ({', '.join(t['tree'] for t in trees)})"
+            )
         fallback = dependencies.get("resolved_fallback")
         if fallback:
             gap = reached - fallback["reached_headers"]
-            print(f"  the include-line resolver says {fallback['reached_headers']} headers"
-                  f" - {gap} fewer than the compiler's record")
+            print(
+                f"  the include-line resolver says {fallback['reached_headers']} headers"
+                f" - {gap} fewer than the compiler's record"
+            )
             print("    (it starts from the project's headers, so it misses what the")
-            print("     translation units pulled in; the compiler's number is the real one)")
+            print(
+                "     translation units pulled in; the compiler's number is the real one)"
+            )
     else:
         print("  not measured: there is no populated install tree")
 

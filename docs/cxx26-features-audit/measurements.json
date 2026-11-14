@@ -14,12 +14,7 @@
       "trace",
       "warning"
     ],
-    "not_tested_at_source_level": [
-      "critical",
-      "debug",
-      "log",
-      "trace"
-    ],
+    "not_tested_at_source_level": ["critical", "debug", "log", "trace"],
     "public_functions": 12,
     "tested_at_source_level": [
       "current_level",
@@ -566,10 +561,7 @@
   },
   "generated_by": "scripts/measure.py",
   "interface": {
-    "project_includes": [
-      "cpp-core/logging/internal.hpp",
-      "format.hpp"
-    ],
+    "project_includes": ["cpp-core/logging/internal.hpp", "format.hpp"],
     "standard_library_include_names": [],
     "standard_library_includes": 0
   },

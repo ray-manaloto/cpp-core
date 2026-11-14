@@ -1,6 +1,6 @@
 # Sequence Diagrams — Runtime Flows
 
-> **Detailed runtime flows: initialization, logging paths, flush, reflection**  
+> **Detailed runtime flows: initialization, logging paths, flush, reflection**
 > Theme: Modern Minimalist | Part of [Architecture Documentation](../../README.md)
 
 ---

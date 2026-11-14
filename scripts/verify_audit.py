@@ -21,11 +21,12 @@ import re
 import socket
 import subprocess
 import sys
+from collections.abc import Callable
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
-import audit_index  # noqa: E402
+import audit_index
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
 AUDIT_DIR = REPO_ROOT / "docs" / "cxx26-features-audit"
@@ -66,7 +67,7 @@ STRUCTURAL_PATTERNS = [
     (r"\b[a-z0-9][a-z0-9.-]*\.ts\.net\b", "a tailnet host name"),
 ]
 
-CHECKS: list[tuple[str, object]] = []
+CHECKS: list[tuple[str, Callable[[], list[str]]]] = []
 
 
 def check(name):
@@ -129,8 +130,10 @@ def check_registry_fresh() -> list[str]:
     expected = audit_index.render(audit_index.build_index())
     if read(INDEX_PATH) != expected:
         return [
-            f"{relative(INDEX_PATH)} is stale - run `mise run audit:index` "
-            f"and commit the result"
+            (
+                f"{relative(INDEX_PATH)} is stale - run `mise run audit:index` "
+                f"and commit the result"
+            )
         ]
     return []
 
@@ -138,7 +141,9 @@ def check_registry_fresh() -> list[str]:
 @check("the committed measurement baseline is up to date")
 def check_measurements_fresh() -> list[str]:
     if not MEASUREMENTS_PATH.exists():
-        return [f"missing {relative(MEASUREMENTS_PATH)} - run `mise run audit:measure --write`"]
+        return [
+            f"missing {relative(MEASUREMENTS_PATH)} - run `mise run audit:measure --write`"
+        ]
     result = subprocess.run(
         [sys.executable, str(MEASURE / "measure.py"), "--check"],
         cwd=REPO_ROOT,
@@ -149,8 +154,10 @@ def check_measurements_fresh() -> list[str]:
     if result.returncode == 0:
         return []
     return [
-        f"{relative(MEASUREMENTS_PATH)} is stale - run `mise run audit:measure --write` "
-        f"and commit the result"
+        (
+            f"{relative(MEASUREMENTS_PATH)} is stale - run `mise run audit:measure --write` "
+            f"and commit the result"
+        )
     ]
 
 
@@ -171,7 +178,7 @@ def check_citations_anchored() -> list[str]:
     for line in (result.stdout + result.stderr).split("\n"):
         stripped = line.strip()
         if stripped.startswith("problem:"):
-            problems.append(stripped[len("problem:"):].strip())
+            problems.append(stripped[len("problem:") :].strip())
     if not problems:
         problems.append(
             "the citations have drifted - re-anchor them and run `mise run audit:anchor`"
@@ -182,7 +189,9 @@ def check_citations_anchored() -> list[str]:
 @check("the acceptance bar holds")
 def check_acceptance_bar() -> list[str]:
     if not ACCEPTANCE_PATH.exists():
-        return [f"missing {relative(ACCEPTANCE_PATH)} - the bar is a standard; write it down"]
+        return [
+            f"missing {relative(ACCEPTANCE_PATH)} - the bar is a standard; write it down"
+        ]
     result = subprocess.run(
         [sys.executable, str(MEASURE / "measure.py"), "--acceptance"],
         cwd=REPO_ROOT,
@@ -196,7 +205,7 @@ def check_acceptance_bar() -> list[str]:
     for line in (result.stdout + result.stderr).split("\n"):
         stripped = line.strip()
         if stripped.startswith("violation:"):
-            problems.append(stripped[len("violation:"):].strip())
+            problems.append(stripped[len("violation:") :].strip())
     if not problems:
         problems.append(
             "the acceptance bar is violated - run `mise run audit:measure -- --acceptance`"
@@ -223,7 +232,9 @@ def check_dangling_ids() -> list[str]:
     known = {item["id"] for item in index["items"] + index["answered_items"]}
     # An ID that is only ever mentioned in prose about another document's history is still known
     # if the registry knows it; the check below is about IDs that resolve to nothing at all.
-    pattern = re.compile(r"\b((?:DEF|FMT|QUIL|TOOL|MOD|REFL|MAC|COV|BUILD|VCPKG|ENV)-\d+)\b")
+    pattern = re.compile(
+        r"\b((?:DEF|FMT|QUIL|TOOL|MOD|REFL|MAC|COV|BUILD|VCPKG|ENV)-\d+)\b"
+    )
     problems = []
     for path in MARKDOWN_DOCS:
         for number, line in enumerate(read(path).split("\n"), 1):
@@ -253,13 +264,19 @@ def check_decisions() -> list[str]:
         item["id"] for item in index["items"] if item["category"] == "owner-decision"
     )
     owner_answered = sorted(
-        item["id"] for item in index["answered_items"] if item["category"] == "owner-decision"
+        item["id"]
+        for item in index["answered_items"]
+        if item["category"] == "owner-decision"
     )
     owner = sorted(set(owner_open) | set(owner_answered))
-    headings = sorted(re.findall(r"^### ([A-Z]+-\d+)\b", read(DECISIONS), re.M))
+    headings = sorted(re.findall(r"^### ([A-Z]+-\d+)\b", read(DECISIONS), re.MULTILINE))
     problems = []
     for item_id in sorted(set(owner) ^ set(headings)):
-        where = "the open/answered list only" if item_id in owner else "the decisions sheet only"
+        where = (
+            "the open/answered list only"
+            if item_id in owner
+            else "the decisions sheet only"
+        )
         problems.append(f"{item_id} is in {where}")
     if len(owner) != len(headings):
         problems.append(f"{len(owner)} owner decisions but {len(headings)} headings")

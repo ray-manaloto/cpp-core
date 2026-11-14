@@ -62,7 +62,9 @@ def format_item(item: dict, detail: bool = False) -> str:
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__.split("\n")[0])
     parser.add_argument("--prefix", help="only this prefix, e.g. MOD")
-    parser.add_argument("--owner", action="store_true", help="only the owner's decisions")
+    parser.add_argument(
+        "--owner", action="store_true", help="only the owner's decisions"
+    )
     parser.add_argument("--category", help="only this category, e.g. compile")
     parser.add_argument("--state", help="only this state: open, answered, contingent")
     parser.add_argument("--id", dest="item_id", help="one item, in full")

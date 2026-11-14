@@ -72,29 +72,17 @@
     {
       "name": "gcc16-debug",
       "displayName": "GCC 16.2 debug",
-      "inherits": [
-        "cc-gcc16",
-        "cc-debug",
-        "cc-base"
-      ]
+      "inherits": ["cc-gcc16", "cc-debug", "cc-base"]
     },
     {
       "name": "gcc16-release",
       "displayName": "GCC 16.2 release",
-      "inherits": [
-        "cc-gcc16",
-        "cc-release",
-        "cc-base"
-      ]
+      "inherits": ["cc-gcc16", "cc-release", "cc-base"]
     },
     {
       "name": "gcc16-asan",
       "displayName": "GCC 16.2 asan",
-      "inherits": [
-        "cc-gcc16",
-        "cc-asan",
-        "cc-base"
-      ],
+      "inherits": ["cc-gcc16", "cc-asan", "cc-base"],
       "cacheVariables": {
         "VCPKG_TARGET_TRIPLET": "arm64-osx-gcc16-asan"
       }
@@ -102,29 +90,17 @@
     {
       "name": "p2996-debug",
       "displayName": "clang-p2996 debug",
-      "inherits": [
-        "cc-p2996",
-        "cc-debug",
-        "cc-base"
-      ]
+      "inherits": ["cc-p2996", "cc-debug", "cc-base"]
     },
     {
       "name": "p2996-release",
       "displayName": "clang-p2996 release",
-      "inherits": [
-        "cc-p2996",
-        "cc-release",
-        "cc-base"
-      ]
+      "inherits": ["cc-p2996", "cc-release", "cc-base"]
     },
     {
       "name": "p2996-asan",
       "displayName": "clang-p2996 asan",
-      "inherits": [
-        "cc-p2996",
-        "cc-asan",
-        "cc-base"
-      ],
+      "inherits": ["cc-p2996", "cc-asan", "cc-base"],
       "cacheVariables": {
         "VCPKG_TARGET_TRIPLET": "arm64-osx-p2996-asan"
       }
@@ -132,11 +108,7 @@
     {
       "name": "p2996-tsan",
       "displayName": "clang-p2996 tsan",
-      "inherits": [
-        "cc-p2996",
-        "cc-tsan",
-        "cc-base"
-      ],
+      "inherits": ["cc-p2996", "cc-tsan", "cc-base"],
       "cacheVariables": {
         "VCPKG_TARGET_TRIPLET": "arm64-osx-p2996-tsan"
       }
@@ -144,11 +116,7 @@
     {
       "name": "p2996-iwyu",
       "displayName": "clang-p2996 include-what-you-use",
-      "inherits": [
-        "cc-p2996",
-        "cc-debug",
-        "cc-base"
-      ],
+      "inherits": ["cc-p2996", "cc-debug", "cc-base"],
       "cacheVariables": {
         "CPP_CORE_IWYU_ENABLED": true
       }
@@ -186,9 +154,7 @@
     {
       "name": "p2996-iwyu",
       "configurePreset": "p2996-iwyu",
-      "targets": [
-        "iwyu"
-      ]
+      "targets": ["iwyu"]
     },
     {
       "name": "p2996-iwyu-build",

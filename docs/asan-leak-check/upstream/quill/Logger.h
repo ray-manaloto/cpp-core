@@ -20,23 +20,23 @@
 #include "quill/core/ThreadPrimitives.h"
 
 #ifndef QUILL_MODULE
-  #include <atomic>
-  #include <cstddef>
-  #include <cstdint>
-  #include <cstring>
-  #include <memory>
-  #include <string>
-  #include <string_view>
-  #include <type_traits>
-  #include <vector>
+#include <atomic>
+#include <cstddef>
+#include <cstdint>
+#include <cstring>
+#include <memory>
+#include <string>
+#include <string_view>
+#include <type_traits>
+#include <vector>
 #endif
 
 QUILL_BEGIN_NAMESPACE
 
 #if defined(_WIN32) && defined(_MSC_VER)
-  // silence msvc warning C4702: unreachable code
-  #pragma warning(push)
-  #pragma warning(disable : 4702)
+// silence msvc warning C4702: unreachable code
+#pragma warning(push)
+#pragma warning(disable : 4702)
 #endif
 
 /** Forward Declarations **/
@@ -46,15 +46,12 @@ class Sink;
 
 QUILL_END_EXPORT
 
-namespace detail
-{
+namespace detail {
 class LoggerManager;
 
 class BackendWorker;
 
-template <typename Arg>
-constexpr bool can_pass_slow_path_arg_by_value() noexcept
-{
+template <typename Arg> constexpr bool can_pass_slow_path_arg_by_value() noexcept {
   using arg_t = remove_cvref_t<Arg>;
 
   // The Microsoft x64 ABI passes 16-byte aggregates indirectly, so copying them into a
@@ -67,12 +64,11 @@ constexpr bool can_pass_slow_path_arg_by_value() noexcept
 #endif
 
   return std::is_trivially_copyable_v<arg_t> && std::is_trivially_copy_constructible_v<arg_t> &&
-    !std::is_array_v<arg_t> && (sizeof(arg_t) <= max_by_value_size);
+         !std::is_array_v<arg_t> && (sizeof(arg_t) <= max_by_value_size);
 }
 
-template <typename Arg>
-using slow_path_arg_t =
-  std::conditional_t<can_pass_slow_path_arg_by_value<Arg>(), remove_cvref_t<Arg>, Arg&&>;
+template <typename Arg> using slow_path_arg_t =
+  std::conditional_t<can_pass_slow_path_arg_by_value<Arg>(), remove_cvref_t<Arg>, Arg &&>;
 } // namespace detail
 
 QUILL_BEGIN_EXPORT
@@ -82,9 +78,7 @@ QUILL_BEGIN_EXPORT
  *
  * Logger must be obtained from create_or_get_logger(), therefore, constructors are private
  */
-template <typename TFrontendOptions>
-class LoggerImpl : public detail::LoggerBase
-{
+template <typename TFrontendOptions> class LoggerImpl : public detail::LoggerBase {
 public:
   using frontend_options_t = TFrontendOptions;
 
@@ -96,9 +90,9 @@ public:
     std::conditional_t<using_unbounded_queue, detail::UnboundedSPSCQueue, detail::BoundedSPSCQueue>;
 
   /***/
-  LoggerImpl(LoggerImpl const&) = delete;
+  LoggerImpl(LoggerImpl const &) = delete;
 
-  LoggerImpl& operator=(LoggerImpl const&) = delete;
+  LoggerImpl &operator=(LoggerImpl const &) = delete;
 
   ~LoggerImpl() override = default;
 
@@ -114,8 +108,7 @@ public:
    * @return true if the message is written to the queue, false if it is dropped
    */
   template <bool enable_immediate_flush, typename... Args>
-  QUILL_ATTRIBUTE_HOT bool log_statement(MacroMetadata const* macro_metadata, Args&&... fmt_args)
-  {
+  QUILL_ATTRIBUTE_HOT bool log_statement(MacroMetadata const *macro_metadata, Args &&...fmt_args) {
     QUILL_ASSERT(
       macro_metadata->event() != MacroMetadata::Event::LogWithRuntimeMetadataDeepCopy &&
         macro_metadata->event() != MacroMetadata::Event::LogWithRuntimeMetadataShallowCopy &&
@@ -125,39 +118,36 @@ public:
     QUILL_ASSERT(_valid.load(std::memory_order_acquire),
                  "Attempting to log with an invalidated logger");
 
-    if (_clock_source != ClockSourceType::Tsc)
-    {
+    if (_clock_source != ClockSourceType::Tsc) {
       return _log_statement_noinline<enable_immediate_flush, Args...>(
-        macro_metadata, 0, static_cast<Args&&>(fmt_args)...);
+        macro_metadata, 0, static_cast<Args &&>(fmt_args)...);
     }
 
     uint64_t const current_timestamp = detail::rdtsc();
-    detail::ThreadContext* const thread_context = _thread_context;
+    detail::ThreadContext *const thread_context = _thread_context;
 
-    if (QUILL_UNLIKELY(thread_context == nullptr))
-    {
+    if (QUILL_UNLIKELY(thread_context == nullptr)) {
       return _log_statement_noinline<enable_immediate_flush, Args...>(
-        macro_metadata, current_timestamp, static_cast<Args&&>(fmt_args)...);
+        macro_metadata, current_timestamp, static_cast<Args &&>(fmt_args)...);
     }
 
-    queue_t& queue = thread_context->get_spsc_queue<frontend_options_t::queue_type>();
+    queue_t &queue = thread_context->get_spsc_queue<frontend_options_t::queue_type>();
 
-    size_t total_size = s_header_size +
-      detail::compute_encoded_size_and_cache_string_lengths(
-                          thread_context->get_conditional_arg_size_cache(), fmt_args...);
+    size_t total_size =
+      s_header_size + detail::compute_encoded_size_and_cache_string_lengths(
+                        thread_context->get_conditional_arg_size_cache(), fmt_args...);
 
     auto const reservation = queue.prepare_write_reserve_cached(total_size);
 
-    if (QUILL_UNLIKELY(reservation.write_buffer == nullptr))
-    {
+    if (QUILL_UNLIKELY(reservation.write_buffer == nullptr)) {
       return _log_statement_noinline<enable_immediate_flush, Args...>(
-        macro_metadata, current_timestamp, static_cast<Args&&>(fmt_args)...);
+        macro_metadata, current_timestamp, static_cast<Args &&>(fmt_args)...);
     }
 
-    std::byte* write_buffer = reservation.write_buffer;
+    std::byte *write_buffer = reservation.write_buffer;
 
 #if defined(QUILL_ENABLE_ASSERTIONS) || !defined(NDEBUG)
-    std::byte const* const write_begin = write_buffer;
+    std::byte const *const write_begin = write_buffer;
 #endif
 
     write_buffer = _encode_header(
@@ -165,7 +155,7 @@ public:
       reinterpret_cast<uintptr_t>(this), reinterpret_cast<uintptr_t>(detail::decoder_ptr<Args...>));
 
     detail::encode(write_buffer, thread_context->get_conditional_arg_size_cache(),
-                   static_cast<decltype(fmt_args)&&>(fmt_args)...);
+                   static_cast<decltype(fmt_args) &&>(fmt_args)...);
 
     QUILL_ASSERT_WITH_FMT(
       write_buffer > write_begin,
@@ -174,7 +164,8 @@ public:
     QUILL_ASSERT_WITH_FMT(
       total_size == static_cast<size_t>(write_buffer - write_begin),
       "Encoded bytes mismatch in log_statement(): total_size=%zu, actual_encoded=%zu, msg=\"%s\"",
-      total_size, static_cast<size_t>(write_buffer - write_begin), macro_metadata->message_format());
+      total_size, static_cast<size_t>(write_buffer - write_begin),
+      macro_metadata->message_format());
 
     _commit_log_statement_reservation(reservation.bounded_queue,
                                       reservation.writer_pos + total_size, enable_immediate_flush);
@@ -195,8 +186,7 @@ public:
    *
    * @return true if the metric sample is written to the queue, false if it is dropped
    */
-  QUILL_ATTRIBUTE_HOT bool publish_metric(MetricMetadata const* metric_metadata, double value)
-  {
+  QUILL_ATTRIBUTE_HOT bool publish_metric(MetricMetadata const *metric_metadata, double value) {
     QUILL_ASSERT(metric_metadata != nullptr,
                  "publish_metric() requires a valid MetricMetadata pointer");
 
@@ -206,42 +196,40 @@ public:
     QUILL_ASSERT(_valid.load(std::memory_order_acquire),
                  "Attempting to log with an invalidated logger");
 
-    if (_clock_source != ClockSourceType::Tsc)
-    {
+    if (_clock_source != ClockSourceType::Tsc) {
       return _publish_metric_noinline(metric_metadata, 0, value);
     }
 
     uint64_t const current_timestamp = detail::rdtsc();
-    detail::ThreadContext* const thread_context = _thread_context;
+    detail::ThreadContext *const thread_context = _thread_context;
 
-    if (QUILL_UNLIKELY(thread_context == nullptr))
-    {
+    if (QUILL_UNLIKELY(thread_context == nullptr)) {
       return _publish_metric_noinline(metric_metadata, current_timestamp, value);
     }
 
-    queue_t& queue = thread_context->get_spsc_queue<frontend_options_t::queue_type>();
+    queue_t &queue = thread_context->get_spsc_queue<frontend_options_t::queue_type>();
 
     size_t total_size = s_header_size;
 
     auto const reservation = queue.prepare_write_reserve_cached(total_size);
 
-    if (QUILL_UNLIKELY(reservation.write_buffer == nullptr))
-    {
+    if (QUILL_UNLIKELY(reservation.write_buffer == nullptr)) {
       return _publish_metric_noinline(metric_metadata, current_timestamp, value);
     }
 
-    std::byte* write_buffer = reservation.write_buffer;
+    std::byte *write_buffer = reservation.write_buffer;
 
 #if defined(QUILL_ENABLE_ASSERTIONS) || !defined(NDEBUG)
-    std::byte const* const write_begin = write_buffer;
+    std::byte const *const write_begin = write_buffer;
 #endif
 
     // Since the decoder ptr is unused in the header we can use it to store the value
     uint64_t value_bits;
     std::memcpy(&value_bits, &value, sizeof(value_bits));
 
-    write_buffer = _encode_header(write_buffer, current_timestamp, reinterpret_cast<uintptr_t>(metric_metadata),
-                                  reinterpret_cast<uintptr_t>(this), value_bits);
+    write_buffer =
+      _encode_header(write_buffer, current_timestamp, reinterpret_cast<uintptr_t>(metric_metadata),
+                     reinterpret_cast<uintptr_t>(this), value_bits);
 
     QUILL_ASSERT_WITH_FMT(
       write_buffer > write_begin,
@@ -252,7 +240,8 @@ public:
       total_size == static_cast<size_t>(write_buffer - write_begin),
       "Encoded bytes mismatch in publish_metric(): total_size=%zu, actual_encoded=%zu, "
       "metric_source=\"%s\"",
-      total_size, static_cast<size_t>(write_buffer - write_begin), metric_metadata->source_location());
+      total_size, static_cast<size_t>(write_buffer - write_begin),
+      metric_metadata->source_location());
 
     queue.finish_and_commit_write_reservation(reservation.writer_pos + total_size);
     return true;
@@ -267,13 +256,12 @@ public:
    * @note This function is thread-safe. Input strings may be changed or destroyed after it returns.
    * @return true if queued, false if dropped by the configured queue policy
    */
-  bool publish_dynamic_metric(std::string_view metric_name, std::vector<MetricLabel> const& labels, double value)
-  {
+  bool publish_dynamic_metric(std::string_view metric_name, std::vector<MetricLabel> const &labels,
+                              double value) {
     QUILL_ASSERT(_valid.load(std::memory_order_acquire),
                  "Attempting to log with an invalidated logger");
 
-    if (QUILL_UNLIKELY(metric_name.empty()))
-    {
+    if (QUILL_UNLIKELY(metric_name.empty())) {
       QUILL_THROW(QuillError{"Metric name must not be empty"});
     }
 
@@ -283,43 +271,42 @@ public:
     uint64_t const timestamp =
       (_clock_source == ClockSourceType::Tsc) ? detail::rdtsc() : _get_non_tsc_timestamp();
 
-    if (QUILL_UNLIKELY(_thread_context == nullptr))
-    {
+    if (QUILL_UNLIKELY(_thread_context == nullptr)) {
       _thread_context = detail::get_local_thread_context<frontend_options_t>();
     }
 
-    detail::ThreadContext* const thread_context = _thread_context;
-    auto& size_cache = thread_context->get_conditional_arg_size_cache();
+    detail::ThreadContext *const thread_context = _thread_context;
+    auto &size_cache = thread_context->get_conditional_arg_size_cache();
 
     size_t const label_count = labels.size();
     size_t total_size = s_header_size;
-    total_size += detail::compute_encoded_size_and_cache_string_lengths(size_cache, metric_name, label_count);
+    total_size +=
+      detail::compute_encoded_size_and_cache_string_lengths(size_cache, metric_name, label_count);
 
-    for (MetricLabel const& label : labels)
-    {
+    for (MetricLabel const &label : labels) {
       total_size +=
         detail::compute_encoded_size_and_cache_string_lengths(size_cache, label.key, label.value);
     }
 
-    queue_t& queue = thread_context->get_spsc_queue<frontend_options_t::queue_type>();
+    queue_t &queue = thread_context->get_spsc_queue<frontend_options_t::queue_type>();
 
-    std::byte* write_buffer = _reserve_queue_space(queue, total_size, &macro_metadata, thread_context);
+    std::byte *write_buffer =
+      _reserve_queue_space(queue, total_size, &macro_metadata, thread_context);
 
-    if (QUILL_UNLIKELY(write_buffer == nullptr))
-    {
+    if (QUILL_UNLIKELY(write_buffer == nullptr)) {
       return false;
     }
 
     uint64_t value_bits;
     std::memcpy(&value_bits, &value, sizeof(value_bits));
 
-    write_buffer = _encode_header(write_buffer, timestamp, reinterpret_cast<uintptr_t>(&macro_metadata),
-                                  reinterpret_cast<uintptr_t>(this), value_bits);
+    write_buffer =
+      _encode_header(write_buffer, timestamp, reinterpret_cast<uintptr_t>(&macro_metadata),
+                     reinterpret_cast<uintptr_t>(this), value_bits);
 
     detail::encode(write_buffer, size_cache, metric_name, label_count);
 
-    for (MetricLabel const& label : labels)
-    {
+    for (MetricLabel const &label : labels) {
       detail::encode(write_buffer, size_cache, label.key, label.value);
     }
 
@@ -337,9 +324,7 @@ public:
    * and is temporarily full, this function retries until the control event is queued.
    * An event larger than a bounded queue's capacity is rejected with QuillError.
    */
-  template <typename... Args>
-  void set_mdc(Args&&... args)
-  {
+  template <typename... Args> void set_mdc(Args &&...args) {
     static_assert(sizeof...(Args) > 0, "logger->set_mdc(...) expects key, value pairs");
     static_assert(
       (sizeof...(Args) % 2u) == 0u,
@@ -348,10 +333,8 @@ public:
     static constexpr MacroMetadata macro_metadata{
       "", "", "", nullptr, LogLevel::Critical, MacroMetadata::Event::MdcSet};
 
-    while (!this->template log_statement<false>(&macro_metadata, static_cast<Args&&>(args)...))
-    {
-      if (QUILL_UNLIKELY(detail::LoggerBase::is_current_thread_backend_thread()))
-      {
+    while (!this->template log_statement<false>(&macro_metadata, static_cast<Args &&>(args)...)) {
+      if (QUILL_UNLIKELY(detail::LoggerBase::is_current_thread_backend_thread())) {
         return;
       }
 
@@ -365,18 +348,14 @@ public:
    * Missing keys are ignored. On frontend threads, the operation retries until queued when a
    * dropping queue is temporarily full.
    */
-  template <typename... Keys>
-  void erase_mdc(Keys&&... keys)
-  {
+  template <typename... Keys> void erase_mdc(Keys &&...keys) {
     static_assert(sizeof...(Keys) > 0, "logger->erase_mdc(...) expects one or more keys");
 
     static constexpr MacroMetadata macro_metadata{
       "", "", "", nullptr, LogLevel::Critical, MacroMetadata::Event::MdcErase};
 
-    while (!this->template log_statement<false>(&macro_metadata, static_cast<Keys&&>(keys)...))
-    {
-      if (QUILL_UNLIKELY(detail::LoggerBase::is_current_thread_backend_thread()))
-      {
+    while (!this->template log_statement<false>(&macro_metadata, static_cast<Keys &&>(keys)...)) {
+      if (QUILL_UNLIKELY(detail::LoggerBase::is_current_thread_backend_thread())) {
         return;
       }
 
@@ -390,15 +369,12 @@ public:
    * On frontend threads, the operation retries until queued when a dropping queue is temporarily
    * full.
    */
-  void clear_mdc()
-  {
+  void clear_mdc() {
     static constexpr MacroMetadata macro_metadata{
       "", "", "", nullptr, LogLevel::Critical, MacroMetadata::Event::MdcClear};
 
-    while (!this->template log_statement<false>(&macro_metadata))
-    {
-      if (QUILL_UNLIKELY(detail::LoggerBase::is_current_thread_backend_thread()))
-      {
+    while (!this->template log_statement<false>(&macro_metadata)) {
+      if (QUILL_UNLIKELY(detail::LoggerBase::is_current_thread_backend_thread())) {
         return;
       }
 
@@ -424,17 +400,17 @@ public:
    * @return true if the message is written to the queue, false if it is dropped
    */
   template <bool enable_immediate_flush, typename... Args>
-  QUILL_ATTRIBUTE_HOT bool log_statement_runtime_metadata(MacroMetadata const* macro_metadata,
-                                                          char const* fmt, char const* file_path,
-                                                          char const* function_name,
-                                                          char const* tags, uint32_t line_number,
-                                                          LogLevel log_level, Args&&... fmt_args)
-  {
-    QUILL_ASSERT(macro_metadata->event() == MacroMetadata::Event::LogWithRuntimeMetadataDeepCopy ||
-                   macro_metadata->event() == MacroMetadata::Event::LogWithRuntimeMetadataHybridCopy ||
-                   macro_metadata->event() == MacroMetadata::Event::LogWithRuntimeMetadataShallowCopy,
-                 "log_statement_runtime_metadata() should only be called with "
-                 "MacroMetadata::Event::LogWithRuntimeMetadata");
+  QUILL_ATTRIBUTE_HOT bool log_statement_runtime_metadata(MacroMetadata const *macro_metadata,
+                                                          char const *fmt, char const *file_path,
+                                                          char const *function_name,
+                                                          char const *tags, uint32_t line_number,
+                                                          LogLevel log_level, Args &&...fmt_args) {
+    QUILL_ASSERT(
+      macro_metadata->event() == MacroMetadata::Event::LogWithRuntimeMetadataDeepCopy ||
+        macro_metadata->event() == MacroMetadata::Event::LogWithRuntimeMetadataHybridCopy ||
+        macro_metadata->event() == MacroMetadata::Event::LogWithRuntimeMetadataShallowCopy,
+      "log_statement_runtime_metadata() should only be called with "
+      "MacroMetadata::Event::LogWithRuntimeMetadata");
 
     QUILL_ASSERT(_valid.load(std::memory_order_acquire),
                  "Attempting to log with an invalidated logger");
@@ -442,81 +418,67 @@ public:
     uint64_t const current_timestamp =
       (_clock_source == ClockSourceType::Tsc) ? detail::rdtsc() : _get_non_tsc_timestamp();
 
-    if (QUILL_UNLIKELY(_thread_context == nullptr))
-    {
+    if (QUILL_UNLIKELY(_thread_context == nullptr)) {
       _thread_context = detail::get_local_thread_context<frontend_options_t>();
     }
 
-    detail::ThreadContext* const thread_context = _thread_context;
-    queue_t& queue = thread_context->get_spsc_queue<frontend_options_t::queue_type>();
+    detail::ThreadContext *const thread_context = _thread_context;
+    queue_t &queue = thread_context->get_spsc_queue<frontend_options_t::queue_type>();
 
     size_t total_size{s_header_size};
     uint32_t hybrid_fmt_len{0};
     uint32_t hybrid_tags_len{0};
 
-    if (macro_metadata->event() == MacroMetadata::Event::LogWithRuntimeMetadataDeepCopy)
-    {
+    if (macro_metadata->event() == MacroMetadata::Event::LogWithRuntimeMetadataDeepCopy) {
       total_size += detail::compute_encoded_size_and_cache_string_lengths(
         thread_context->get_conditional_arg_size_cache(), fmt, file_path, function_name, tags,
         line_number, log_level, fmt_args...);
-    }
-    else if (macro_metadata->event() == MacroMetadata::Event::LogWithRuntimeMetadataShallowCopy)
-    {
+    } else if (macro_metadata->event() == MacroMetadata::Event::LogWithRuntimeMetadataShallowCopy) {
       total_size += detail::compute_encoded_size_and_cache_string_lengths(
-        thread_context->get_conditional_arg_size_cache(), static_cast<void const*>(fmt),
-        static_cast<void const*>(file_path), static_cast<void const*>(function_name),
-        static_cast<void const*>(tags), line_number, log_level, fmt_args...);
-    }
-    else if (macro_metadata->event() == MacroMetadata::Event::LogWithRuntimeMetadataHybridCopy)
-    {
+        thread_context->get_conditional_arg_size_cache(), static_cast<void const *>(fmt),
+        static_cast<void const *>(file_path), static_cast<void const *>(function_name),
+        static_cast<void const *>(tags), line_number, log_level, fmt_args...);
+    } else if (macro_metadata->event() == MacroMetadata::Event::LogWithRuntimeMetadataHybridCopy) {
       // The hybrid path owns only fmt and tags. Cache their lengths in locals so the generic
       // argument-size cache is reserved for the format arguments and does not need four metadata
       // dispatches on every macro-free log call.
       hybrid_fmt_len = detail::clamp_encoded_string_length(detail::safe_strnlen(fmt) + 1u);
       hybrid_tags_len = detail::clamp_encoded_string_length(detail::safe_strnlen(tags) + 1u);
-      total_size += hybrid_fmt_len + (sizeof(void const*) * 2u) + hybrid_tags_len +
-        sizeof(line_number) + sizeof(log_level);
+      total_size += hybrid_fmt_len + (sizeof(void const *) * 2u) + hybrid_tags_len +
+                    sizeof(line_number) + sizeof(log_level);
       total_size += detail::compute_encoded_size_and_cache_string_lengths(
         thread_context->get_conditional_arg_size_cache(), fmt_args...);
-    }
-    else
-    {
+    } else {
       return false;
     }
 
-    std::byte* write_buffer = _reserve_queue_space(queue, total_size, macro_metadata, thread_context);
+    std::byte *write_buffer =
+      _reserve_queue_space(queue, total_size, macro_metadata, thread_context);
 
-    if (QUILL_UNLIKELY(write_buffer == nullptr))
-    {
+    if (QUILL_UNLIKELY(write_buffer == nullptr)) {
       return false;
     }
 
 #if defined(QUILL_ENABLE_ASSERTIONS) || !defined(NDEBUG)
-    std::byte const* const write_begin = write_buffer;
+    std::byte const *const write_begin = write_buffer;
 #endif
 
     write_buffer = _encode_header(
       write_buffer, current_timestamp, reinterpret_cast<uintptr_t>(macro_metadata),
       reinterpret_cast<uintptr_t>(this), reinterpret_cast<uintptr_t>(detail::decoder_ptr<Args...>));
 
-    if (macro_metadata->event() == MacroMetadata::Event::LogWithRuntimeMetadataDeepCopy)
-    {
-      detail::encode(write_buffer, thread_context->get_conditional_arg_size_cache(), fmt, file_path, function_name,
-                     tags, line_number, log_level, static_cast<decltype(fmt_args)&&>(fmt_args)...);
-    }
-    else if (macro_metadata->event() == MacroMetadata::Event::LogWithRuntimeMetadataShallowCopy)
-    {
+    if (macro_metadata->event() == MacroMetadata::Event::LogWithRuntimeMetadataDeepCopy) {
+      detail::encode(write_buffer, thread_context->get_conditional_arg_size_cache(), fmt, file_path,
+                     function_name, tags, line_number, log_level,
+                     static_cast<decltype(fmt_args) &&>(fmt_args)...);
+    } else if (macro_metadata->event() == MacroMetadata::Event::LogWithRuntimeMetadataShallowCopy) {
       detail::encode(write_buffer, thread_context->get_conditional_arg_size_cache(),
-                     static_cast<void const*>(fmt), static_cast<void const*>(file_path),
-                     static_cast<void const*>(function_name), static_cast<void const*>(tags),
-                     line_number, log_level, static_cast<decltype(fmt_args)&&>(fmt_args)...);
-    }
-    else if (macro_metadata->event() == MacroMetadata::Event::LogWithRuntimeMetadataHybridCopy)
-    {
-      auto encode_c_string = [](std::byte*& buffer, char const* value, uint32_t len) noexcept
-      {
-        if (QUILL_LIKELY(value != nullptr))
-        {
+                     static_cast<void const *>(fmt), static_cast<void const *>(file_path),
+                     static_cast<void const *>(function_name), static_cast<void const *>(tags),
+                     line_number, log_level, static_cast<decltype(fmt_args) &&>(fmt_args)...);
+    } else if (macro_metadata->event() == MacroMetadata::Event::LogWithRuntimeMetadataHybridCopy) {
+      auto encode_c_string = [](std::byte *&buffer, char const *value, uint32_t len) noexcept {
+        if (QUILL_LIKELY(value != nullptr)) {
           std::memcpy(buffer, value, len - 1u);
         }
         buffer[len - 1u] = std::byte{'\0'};
@@ -525,11 +487,13 @@ public:
 
       encode_c_string(write_buffer, fmt, hybrid_fmt_len);
       detail::encode(write_buffer, thread_context->get_conditional_arg_size_cache(),
-                     static_cast<void const*>(file_path), static_cast<void const*>(function_name));
+                     static_cast<void const *>(file_path),
+                     static_cast<void const *>(function_name));
       encode_c_string(write_buffer, tags, hybrid_tags_len);
-      detail::encode(write_buffer, thread_context->get_conditional_arg_size_cache(), line_number, log_level);
+      detail::encode(write_buffer, thread_context->get_conditional_arg_size_cache(), line_number,
+                     log_level);
       detail::encode(write_buffer, thread_context->get_conditional_arg_size_cache(),
-                     static_cast<decltype(fmt_args)&&>(fmt_args)...);
+                     static_cast<decltype(fmt_args) &&>(fmt_args)...);
     }
 
     QUILL_ASSERT_WITH_FMT(write_buffer > write_begin,
@@ -553,10 +517,8 @@ public:
    * @param flush_level If this logger logs any message higher or equal to this severity level, the backtrace will also get flushed.
    * Default level is None meaning the user has to call flush_backtrace explicitly
    */
-  void init_backtrace(uint32_t max_capacity, LogLevel flush_level = LogLevel::None)
-  {
-    if (QUILL_UNLIKELY(max_capacity == 0))
-    {
+  void init_backtrace(uint32_t max_capacity, LogLevel flush_level = LogLevel::None) {
+    if (QUILL_UNLIKELY(max_capacity == 0)) {
       QUILL_THROW(QuillError{"logger->init_backtrace(...) requires max_capacity > 0"});
     }
 
@@ -566,10 +528,8 @@ public:
 
     // we pass this message to the queue and also pass capacity as arg
     // We do not want to drop the message if a dropping queue is used
-    while (!this->template log_statement<false>(&macro_metadata, max_capacity))
-    {
-      if (QUILL_UNLIKELY(detail::LoggerBase::is_current_thread_backend_thread()))
-      {
+    while (!this->template log_statement<false>(&macro_metadata, max_capacity)) {
+      if (QUILL_UNLIKELY(detail::LoggerBase::is_current_thread_backend_thread())) {
         return;
       }
 
@@ -583,17 +543,14 @@ public:
   /**
    * Dump any stored backtrace messages
    */
-  void flush_backtrace()
-  {
+  void flush_backtrace() {
     // we do not care about the other fields, except MacroMetadata::Event::Flush
     static constexpr MacroMetadata macro_metadata{
       "", "", "", nullptr, LogLevel::Critical, MacroMetadata::Event::FlushBacktrace};
 
     // We do not want to drop the message if a dropping queue is used
-    while (!this->template log_statement<false>(&macro_metadata))
-    {
-      if (QUILL_UNLIKELY(detail::LoggerBase::is_current_thread_backend_thread()))
-      {
+    while (!this->template log_statement<false>(&macro_metadata)) {
+      if (QUILL_UNLIKELY(detail::LoggerBase::is_current_thread_backend_thread())) {
         return;
       }
 
@@ -618,10 +575,8 @@ public:
    *       then you should ideally avoid calling this function as you can block for long period of times unless
    *       you use another thread that calls Backend::notify()
    */
-  void flush_log(uint32_t sleep_duration_ns = 100)
-  {
-    if (QUILL_UNLIKELY(detail::LoggerBase::is_current_thread_backend_thread()))
-    {
+  void flush_log(uint32_t sleep_duration_ns = 100) {
+    if (QUILL_UNLIKELY(detail::LoggerBase::is_current_thread_backend_thread())) {
       // flush_log() would wait on the backend worker to process the flush event,
       // but we are the backend worker — surface the misuse instead of self-deadlocking.
       QUILL_THROW(
@@ -632,30 +587,23 @@ public:
       "", "", "", nullptr, LogLevel::Critical, MacroMetadata::Event::Flush};
 
     std::atomic<bool> backend_thread_flushed{false};
-    std::atomic<bool>* backend_thread_flushed_ptr = &backend_thread_flushed;
+    std::atomic<bool> *backend_thread_flushed_ptr = &backend_thread_flushed;
 
     // We do not want to drop the message if a dropping queue is used
-    while (!this->log_statement<false>(&macro_metadata, reinterpret_cast<uintptr_t>(backend_thread_flushed_ptr)))
-    {
-      if (sleep_duration_ns > 0)
-      {
+    while (!this->log_statement<false>(&macro_metadata,
+                                       reinterpret_cast<uintptr_t>(backend_thread_flushed_ptr))) {
+      if (sleep_duration_ns > 0) {
         detail::sleep_for_ns(sleep_duration_ns);
-      }
-      else
-      {
+      } else {
         detail::yield_thread();
       }
     }
 
     // The caller thread keeps checking the flag until the backend thread flushes
-    while (!backend_thread_flushed.load())
-    {
-      if (sleep_duration_ns > 0)
-      {
+    while (!backend_thread_flushed.load()) {
+      if (sleep_duration_ns > 0) {
         detail::sleep_for_ns(sleep_duration_ns);
-      }
-      else
-      {
+      } else {
         detail::yield_thread();
       }
     }
@@ -677,52 +625,48 @@ private:
   /***/
   LoggerImpl(std::string logger_name, std::vector<std::shared_ptr<Sink>> sinks,
              PatternFormatterOptions pattern_formatter_options, ClockSourceType clock_source,
-             UserClockSource* user_clock)
-    : detail::LoggerBase(static_cast<std::string&&>(logger_name),
-                         static_cast<std::vector<std::shared_ptr<Sink>>&&>(sinks),
-                         static_cast<PatternFormatterOptions&&>(pattern_formatter_options),
-                         user_clock ? ClockSourceType::User : clock_source, user_clock)
-  {
-  }
+             UserClockSource *user_clock)
+    : detail::LoggerBase(static_cast<std::string &&>(logger_name),
+                         static_cast<std::vector<std::shared_ptr<Sink>> &&>(sinks),
+                         static_cast<PatternFormatterOptions &&>(pattern_formatter_options),
+                         user_clock ? ClockSourceType::User : clock_source, user_clock) {}
 
   /**
    * Slow path for publish_metric. Mirrors _log_statement_noinline but uses a decoder that simply
    * consumes the queued metric value without involving the fmt argument store.
    */
-  QUILL_NODISCARD QUILL_NOINLINE bool _publish_metric_noinline(MetricMetadata const* metric_metadata,
-                                                               uint64_t current_timestamp, double value)
-  {
-    if (current_timestamp == 0)
-    {
+  QUILL_NODISCARD QUILL_NOINLINE bool _publish_metric_noinline(
+    MetricMetadata const *metric_metadata, uint64_t current_timestamp, double value) {
+    if (current_timestamp == 0) {
       current_timestamp = _get_non_tsc_timestamp();
     }
 
-    if (QUILL_UNLIKELY(_thread_context == nullptr))
-    {
+    if (QUILL_UNLIKELY(_thread_context == nullptr)) {
       _thread_context = detail::get_local_thread_context<frontend_options_t>();
     }
 
-    detail::ThreadContext* const thread_context = _thread_context;
-    queue_t& queue = thread_context->get_spsc_queue<frontend_options_t::queue_type>();
+    detail::ThreadContext *const thread_context = _thread_context;
+    queue_t &queue = thread_context->get_spsc_queue<frontend_options_t::queue_type>();
 
     size_t total_size = s_header_size;
 
-    std::byte* write_buffer = _reserve_queue_space(queue, total_size, metric_metadata, thread_context);
+    std::byte *write_buffer =
+      _reserve_queue_space(queue, total_size, metric_metadata, thread_context);
 
-    if (QUILL_UNLIKELY(write_buffer == nullptr))
-    {
+    if (QUILL_UNLIKELY(write_buffer == nullptr)) {
       return false;
     }
 
 #if defined(QUILL_ENABLE_ASSERTIONS) || !defined(NDEBUG)
-    std::byte const* const write_begin = write_buffer;
+    std::byte const *const write_begin = write_buffer;
 #endif
 
     uint64_t value_bits;
     std::memcpy(&value_bits, &value, sizeof(value_bits));
 
-    write_buffer = _encode_header(write_buffer, current_timestamp, reinterpret_cast<uintptr_t>(metric_metadata),
-                                  reinterpret_cast<uintptr_t>(this), value_bits);
+    write_buffer =
+      _encode_header(write_buffer, current_timestamp, reinterpret_cast<uintptr_t>(metric_metadata),
+                     reinterpret_cast<uintptr_t>(this), value_bits);
 
     QUILL_ASSERT_WITH_FMT(write_buffer > write_begin,
                           "write_buffer must be greater than write_begin after encoding in "
@@ -745,44 +689,42 @@ private:
    * If current_timestamp is 0, a non-TSC timestamp is fetched.
    */
   template <bool enable_immediate_flush, typename... OriginalArgs>
-  QUILL_NODISCARD QUILL_NOINLINE bool _log_statement_noinline(MacroMetadata const* macro_metadata,
-                                                              uint64_t current_timestamp,
-                                                              detail::slow_path_arg_t<OriginalArgs>... fmt_args)
-  {
-    if (current_timestamp == 0)
-    {
+  QUILL_NODISCARD QUILL_NOINLINE bool _log_statement_noinline(
+    MacroMetadata const *macro_metadata, uint64_t current_timestamp,
+    detail::slow_path_arg_t<OriginalArgs>... fmt_args) {
+    if (current_timestamp == 0) {
       current_timestamp = _get_non_tsc_timestamp();
     }
 
-    if (QUILL_UNLIKELY(_thread_context == nullptr))
-    {
+    if (QUILL_UNLIKELY(_thread_context == nullptr)) {
       _thread_context = detail::get_local_thread_context<frontend_options_t>();
     }
 
-    detail::ThreadContext* const thread_context = _thread_context;
-    queue_t& queue = thread_context->get_spsc_queue<frontend_options_t::queue_type>();
+    detail::ThreadContext *const thread_context = _thread_context;
+    queue_t &queue = thread_context->get_spsc_queue<frontend_options_t::queue_type>();
 
-    size_t total_size = s_header_size +
-      detail::compute_encoded_size_and_cache_string_lengths(
-                          thread_context->get_conditional_arg_size_cache(), fmt_args...);
+    size_t total_size =
+      s_header_size + detail::compute_encoded_size_and_cache_string_lengths(
+                        thread_context->get_conditional_arg_size_cache(), fmt_args...);
 
-    std::byte* write_buffer = _reserve_queue_space(queue, total_size, macro_metadata, thread_context);
+    std::byte *write_buffer =
+      _reserve_queue_space(queue, total_size, macro_metadata, thread_context);
 
-    if (QUILL_UNLIKELY(write_buffer == nullptr))
-    {
+    if (QUILL_UNLIKELY(write_buffer == nullptr)) {
       return false;
     }
 
 #if defined(QUILL_ENABLE_ASSERTIONS) || !defined(NDEBUG)
-    std::byte const* const write_begin = write_buffer;
+    std::byte const *const write_begin = write_buffer;
 #endif
 
-    write_buffer = _encode_header(write_buffer, current_timestamp, reinterpret_cast<uintptr_t>(macro_metadata),
-                                  reinterpret_cast<uintptr_t>(this),
-                                  reinterpret_cast<uintptr_t>(detail::decoder_ptr<OriginalArgs...>));
+    write_buffer =
+      _encode_header(write_buffer, current_timestamp, reinterpret_cast<uintptr_t>(macro_metadata),
+                     reinterpret_cast<uintptr_t>(this),
+                     reinterpret_cast<uintptr_t>(detail::decoder_ptr<OriginalArgs...>));
 
     detail::encode(write_buffer, thread_context->get_conditional_arg_size_cache(),
-                   static_cast<OriginalArgs&&>(fmt_args)...);
+                   static_cast<OriginalArgs &&>(fmt_args)...);
 
     QUILL_ASSERT_WITH_FMT(write_buffer > write_begin,
                           "write_buffer must be greater than write_begin after encoding in "
@@ -803,15 +745,12 @@ private:
    * @brief Non-TSC timestamp path, kept noinline so that the compiler does not pull
    * the System/UserClock loads and branches into the caller.
    */
-  QUILL_NODISCARD QUILL_NOINLINE uint64_t _get_non_tsc_timestamp() const
-  {
-    if (_clock_source == ClockSourceType::System)
-    {
+  QUILL_NODISCARD QUILL_NOINLINE uint64_t _get_non_tsc_timestamp() const {
+    if (_clock_source == ClockSourceType::System) {
       return detail::get_system_time_ns();
     }
 
-    if (_user_clock)
-    {
+    if (_user_clock) {
       return _user_clock->now();
     }
 
@@ -827,17 +766,14 @@ private:
    * @param thread_context The thread context, used to increment failure counter if needed
    * @return std::byte* Pointer to the reserved space in the queue, or nullptr if space cannot be allocated
    */
-  QUILL_NODISCARD QUILL_ATTRIBUTE_HOT std::byte* _reserve_queue_space(queue_t& queue, size_t total_size,
-                                                                      MacroMetadata const* macro_metadata,
-                                                                      detail::ThreadContext* thread_context)
-  {
-    std::byte* write_buffer = queue.prepare_write(total_size);
+  QUILL_NODISCARD QUILL_ATTRIBUTE_HOT std::byte *_reserve_queue_space(
+    queue_t &queue, size_t total_size, MacroMetadata const *macro_metadata,
+    detail::ThreadContext *thread_context) {
+    std::byte *write_buffer = queue.prepare_write(total_size);
 
     if constexpr ((frontend_options_t::queue_type == QueueType::BoundedDropping) ||
-                  (frontend_options_t::queue_type == QueueType::UnboundedDropping))
-    {
-      if (QUILL_UNLIKELY(write_buffer == nullptr))
-      {
+                  (frontend_options_t::queue_type == QueueType::UnboundedDropping)) {
+      if (QUILL_UNLIKELY(write_buffer == nullptr)) {
         // Not enough space to push: bump the shared failure counter for both log and metric
         // drops so that neither silently disappears. Metrics reuse the existing counter rather
         // than adding a parallel one; the error-notifier message reflects the combined count.
@@ -850,27 +786,20 @@ private:
             (event == MacroMetadata::Event::LogWithRuntimeMetadataDeepCopy) ||
             (event == MacroMetadata::Event::LogWithRuntimeMetadataHybridCopy) ||
             (event == MacroMetadata::Event::LogWithRuntimeMetadataShallowCopy) ||
-            (event == MacroMetadata::Event::Metric) || (event == MacroMetadata::Event::DynamicMetric))
-        {
+            (event == MacroMetadata::Event::Metric) ||
+            (event == MacroMetadata::Event::DynamicMetric)) {
           thread_context->increment_failure_counter();
-        }
-        else if constexpr (frontend_options_t::queue_type == QueueType::BoundedDropping)
-        {
-          if (QUILL_UNLIKELY(total_size > queue.capacity()))
-          {
+        } else if constexpr (frontend_options_t::queue_type == QueueType::BoundedDropping) {
+          if (QUILL_UNLIKELY(total_size > queue.capacity())) {
             QUILL_THROW(
               QuillError{"Control event size exceeds the configured bounded queue capacity: " +
                          std::to_string(total_size) + " > " + std::to_string(queue.capacity())});
           }
         }
       }
-    }
-    else if constexpr (frontend_options_t::queue_type == QueueType::BoundedBlocking)
-    {
-      if (QUILL_UNLIKELY(write_buffer == nullptr))
-      {
-        if (QUILL_UNLIKELY(total_size > queue.capacity()))
-        {
+    } else if constexpr (frontend_options_t::queue_type == QueueType::BoundedBlocking) {
+      if (QUILL_UNLIKELY(write_buffer == nullptr)) {
+        if (QUILL_UNLIKELY(total_size > queue.capacity())) {
           QUILL_THROW(
             QuillError{"Logging a single message larger than the configured bounded "
                        "queue capacity is not possible.\n"
@@ -881,8 +810,7 @@ private:
                        std::to_string(queue.capacity()) + " bytes"});
         }
 
-        if (QUILL_UNLIKELY(detail::LoggerBase::is_current_thread_backend_thread()))
-        {
+        if (QUILL_UNLIKELY(detail::LoggerBase::is_current_thread_backend_thread())) {
           // The backend is the only consumer of this queue, so waiting here would self-deadlock.
           // Do not increment the failure counter: reporting this drop through error_notifier could
           // recursively fill the same queue.
@@ -894,10 +822,8 @@ private:
         (void)macro_metadata;
         thread_context->increment_failure_counter();
 
-        do
-        {
-          if constexpr (frontend_options_t::blocking_queue_retry_interval_ns > 0)
-          {
+        do {
+          if constexpr (frontend_options_t::blocking_queue_retry_interval_ns > 0) {
             detail::sleep_for_ns(frontend_options_t::blocking_queue_retry_interval_ns);
           }
 
@@ -905,13 +831,9 @@ private:
           write_buffer = queue.prepare_write(total_size);
         } while (write_buffer == nullptr);
       }
-    }
-    else if constexpr (frontend_options_t::queue_type == QueueType::UnboundedBlocking)
-    {
-      if (QUILL_UNLIKELY(write_buffer == nullptr))
-      {
-        if (QUILL_UNLIKELY(detail::LoggerBase::is_current_thread_backend_thread()))
-        {
+    } else if constexpr (frontend_options_t::queue_type == QueueType::UnboundedBlocking) {
+      if (QUILL_UNLIKELY(write_buffer == nullptr)) {
+        if (QUILL_UNLIKELY(detail::LoggerBase::is_current_thread_backend_thread())) {
           // The backend is the only consumer of this queue, so waiting here would self-deadlock.
           // Do not increment the failure counter: reporting this drop through error_notifier could
           // recursively fill the same queue.
@@ -923,10 +845,8 @@ private:
         (void)macro_metadata;
         thread_context->increment_failure_counter();
 
-        do
-        {
-          if constexpr (frontend_options_t::blocking_queue_retry_interval_ns > 0)
-          {
+        do {
+          if constexpr (frontend_options_t::blocking_queue_retry_interval_ns > 0) {
             detail::sleep_for_ns(frontend_options_t::blocking_queue_retry_interval_ns);
           }
 
@@ -951,8 +871,8 @@ private:
    * @param total_size The total size in bytes of the committed log message
    * @param enable_immediate_flush Whether to honor per-logger immediate-flush thresholds
    */
-  QUILL_ATTRIBUTE_HOT inline void _commit_log_statement(queue_t& queue, size_t total_size, bool enable_immediate_flush)
-  {
+  QUILL_ATTRIBUTE_HOT inline void _commit_log_statement(queue_t &queue, size_t total_size,
+                                                        bool enable_immediate_flush) {
     queue.finish_and_commit_write(total_size);
 
     _flush_after_log_statement_if_needed(enable_immediate_flush);
@@ -970,9 +890,8 @@ private:
    *
    * See `_commit_log_statement` for why `enable_immediate_flush` is a runtime parameter.
    */
-  QUILL_ATTRIBUTE_HOT inline void _commit_log_statement_reservation(detail::BoundedSPSCQueue* bounded_queue,
-                                                                    size_t new_writer_pos, bool enable_immediate_flush)
-  {
+  QUILL_ATTRIBUTE_HOT inline void _commit_log_statement_reservation(
+    detail::BoundedSPSCQueue *bounded_queue, size_t new_writer_pos, bool enable_immediate_flush) {
     bounded_queue->finish_and_commit_write_reservation(new_writer_pos);
 
     _flush_after_log_statement_if_needed(enable_immediate_flush);
@@ -985,37 +904,30 @@ private:
    * a flush event. In that case the message remains queued and is processed after the callback
    * returns to the backend loop.
    */
-  QUILL_ATTRIBUTE_HOT inline void _flush_after_log_statement_if_needed(bool enable_immediate_flush)
-  {
-    if (!enable_immediate_flush)
-    {
+  QUILL_ATTRIBUTE_HOT inline void _flush_after_log_statement_if_needed(
+    bool enable_immediate_flush) {
+    if (!enable_immediate_flush) {
       return;
     }
 
     uint32_t const threshold = _message_flush_threshold.load(std::memory_order_relaxed);
-    if (QUILL_LIKELY(threshold == 0))
-    {
+    if (QUILL_LIKELY(threshold == 0)) {
       return;
     }
 
-    if (threshold == 1)
-    {
-      if (QUILL_LIKELY(!detail::LoggerBase::is_current_thread_backend_thread()))
-      {
+    if (threshold == 1) {
+      if (QUILL_LIKELY(!detail::LoggerBase::is_current_thread_backend_thread())) {
         this->flush_log();
       }
       return;
     }
 
     uint32_t message_count = _messages_since_last_flush.fetch_add(1, std::memory_order_relaxed) + 1;
-    while (message_count >= threshold)
-    {
+    while (message_count >= threshold) {
       // Only the thread that successfully resets the counter is allowed to flush.
       if (_messages_since_last_flush.compare_exchange_weak(
-            message_count, 0, std::memory_order_relaxed, std::memory_order_relaxed))
-      {
-        if (QUILL_LIKELY(!detail::LoggerBase::is_current_thread_backend_thread()))
-        {
+            message_count, 0, std::memory_order_relaxed, std::memory_order_relaxed)) {
+        if (QUILL_LIKELY(!detail::LoggerBase::is_current_thread_backend_thread())) {
           this->flush_log();
         }
         return;
@@ -1028,10 +940,11 @@ private:
    *
    * @return Updated pointer to the write buffer after encoding the header.
    */
-  QUILL_NODISCARD QUILL_ATTRIBUTE_HOT static std::byte* _encode_header(std::byte* write_buffer,
-                                                                       uint64_t timestamp, uint64_t metadata,
-                                                                       uint64_t logger, uint64_t decoder) noexcept
-  {
+  QUILL_NODISCARD QUILL_ATTRIBUTE_HOT static std::byte *_encode_header(std::byte *write_buffer,
+                                                                       uint64_t timestamp,
+                                                                       uint64_t metadata,
+                                                                       uint64_t logger,
+                                                                       uint64_t decoder) noexcept {
     // Keep the header as four individual qword copies. Combining them into two 16-byte copies can
     // introduce stack temporaries and vector-register reloads; with variable-length arguments,
     // that code shape can also add spills around the following memcpy.
@@ -1053,7 +966,7 @@ using Logger = LoggerImpl<FrontendOptions>;
 QUILL_END_EXPORT
 
 #if defined(_WIN32) && defined(_MSC_VER)
-  #pragma warning(pop)
+#pragma warning(pop)
 #endif
 
 QUILL_END_NAMESPACE

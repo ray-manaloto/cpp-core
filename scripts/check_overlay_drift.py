@@ -24,10 +24,8 @@ from pathlib import Path
 REPO_ROOT = Path(__file__).resolve().parent.parent
 PORTS_DIR = REPO_ROOT / "ports"
 
-FROM_GITHUB_RE = re.compile(
-    r"vcpkg_from_github\((.*?)\n\)", re.S
-)
-FIELD_RE = re.compile(r"^\s*(REPO|REF|HEAD_REF|SHA512)\s+(\S+)\s*$", re.M)
+FROM_GITHUB_RE = re.compile(r"vcpkg_from_github\((.*?)\n\)", re.DOTALL)
+FIELD_RE = re.compile(r"^\s*(REPO|REF|HEAD_REF|SHA512)\s+(\S+)\s*$", re.MULTILINE)
 
 
 def read_port(path: Path) -> dict:
@@ -114,7 +112,9 @@ def main(argv: list[str] | None = None) -> int:
         tip = ls_remote(url, target)
         if tip is None:
             unreachable.append(name)
-            print("    tip      (could not be read - no network, or the ref does not exist)")
+            print(
+                "    tip      (could not be read - no network, or the ref does not exist)"
+            )
             continue
         state = "at the tip" if tip == ref else "BEHIND the tip"
         print(f"    tip      {tip} ({state})")
@@ -122,7 +122,9 @@ def main(argv: list[str] | None = None) -> int:
             drifting.append((name, ref, tip))
 
     if args.offline or not args.network:
-        print("\n(the network check was not run - pass --network to compare against upstream)")
+        print(
+            "\n(the network check was not run - pass --network to compare against upstream)"
+        )
         return 0
 
     print()

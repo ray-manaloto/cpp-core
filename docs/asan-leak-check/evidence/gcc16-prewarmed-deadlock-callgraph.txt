@@ -34,4 +34,3 @@ Sort by top of stack, same collapsed (when >= 5):
         __sanitizer::Semaphore::Wait()  (in libasan.8.dylib)        44
         cthread_yield  (in libsystem_pthread.dylib)        26
         DYLD-STUB$$sched_yield  (in libasan.8.dylib)        16
-

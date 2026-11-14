@@ -147,9 +147,7 @@
       "tests/logging_test.cpp:83-90",
       "tests/logging_test.cpp:92-98"
     ],
-    "decision-brief.md": [
-      "modules/logging/logging.cppm:89"
-    ],
+    "decision-brief.md": ["modules/logging/logging.cppm:89"],
     "decisions.md": [
       "cmake/cpp-core-check.cmake:40-42",
       "modules/logging/logging.cppm:89",
@@ -296,9 +294,7 @@
       "src/logging/quill_logger.cpp:131-137",
       "src/logging/quill_logger.cpp:150-155"
     ],
-    "import-std.md": [
-      "modules/logging/logging.cppm:59-60"
-    ],
+    "import-std.md": ["modules/logging/logging.cppm:59-60"],
     "intel-libraries.md": [
       "include/cpp-core/logging/cib_quill.hpp:157-159",
       "include/cpp-core/logging/cib_quill.hpp:68-88",

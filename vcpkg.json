@@ -4,9 +4,5 @@
   "version": "0.1.0",
   "description": "Dependencies for cpp-core. Add ports here as features; the overlay ports and triplets live in ports/ and triplets/.",
   "builtin-baseline": "245d37306671ea67d8f313081a81aae8079f8916",
-  "dependencies": [
-    "intel-cib",
-    "quill",
-    "ut"
-  ]
+  "dependencies": ["intel-cib", "quill", "ut"]
 }

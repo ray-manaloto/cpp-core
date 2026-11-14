@@ -49,7 +49,12 @@ LIBRARY_GLOBS = [
     "tests/**/*.cpp",
 ]
 # The build.
-BUILD_GLOBS = ["CMakeLists.txt", "cmake/**/*.cmake", "cmake/**/*.json", "CMakePresets.json"]
+BUILD_GLOBS = [
+    "CMakeLists.txt",
+    "cmake/**/*.cmake",
+    "cmake/**/*.json",
+    "CMakePresets.json",
+]
 # The dependency contract: the manifest and the overlay ports.
 DEPENDENCY_GLOBS = ["ports/**/*.cmake", "ports/**/*.json", "vcpkg.json"]
 
@@ -254,7 +259,7 @@ def scan_document(text: str, document: str) -> tuple[list[Citation], set[str]]:
                     continue
                 first = int(start)
                 last = int(match.group("end") or first)
-                citations.append(Citation(document, number, context, first, last))
+                citations.append(Citation(document, number, context or "", first, last))
                 previous_end = match.end()
                 previous_span = _span_of(spans, match.start())
                 continue
@@ -271,16 +276,19 @@ def scan_document(text: str, document: str) -> tuple[list[Citation], set[str]]:
             # A bare range after a comma: `format.hpp:239-241, 270`. It continues the
             # citation before it, and only when both are in the same inline-code span -
             # which is what keeps `2,048 bytes` from being read as two line numbers.
-            if context is not None and previous_end is not None:
-                if not line[previous_end : match.start()].strip():
-                    span = _span_of(spans, match.start())
-                    if span is not None and span == previous_span:
-                        first = int(match.group("bstart"))
-                        last = int(match.group("bend") or first)
-                        citations.append(Citation(document, number, context, first, last))
-                        previous_end = match.end()
-                        previous_span = span
-                        continue
+            if (
+                context is not None
+                and previous_end is not None
+                and not line[previous_end : match.start()].strip()
+            ):
+                span = _span_of(spans, match.start())
+                if span is not None and span == previous_span:
+                    first = int(match.group("bstart"))
+                    last = int(match.group("bend") or first)
+                    citations.append(Citation(document, number, context, first, last))
+                    previous_end = match.end()
+                    previous_span = span
+                    continue
             previous_end = None
 
     return citations, {name for name in mentions if name}
@@ -290,7 +298,9 @@ def all_citations() -> list[Citation]:
     """Every citation the audit makes."""
     found: list[Citation] = []
     for document in sorted(AUDIT_DIR.glob("*.md")):
-        citations, _ = scan_document(document.read_text(encoding="utf-8"), document.name)
+        citations, _ = scan_document(
+            document.read_text(encoding="utf-8"), document.name
+        )
         found.extend(citations)
     return found
 
@@ -305,7 +315,9 @@ def audit_citations() -> tuple[dict[str, set[int]], set[str]]:
     cited: dict[str, set[int]] = {}
     whole_files: set[str] = set()
     for document in sorted(AUDIT_DIR.glob("*.md")):
-        citations, mentions = scan_document(document.read_text(encoding="utf-8"), document.name)
+        citations, mentions = scan_document(
+            document.read_text(encoding="utf-8"), document.name
+        )
         for citation in citations:
             cited.setdefault(citation.file, set()).update(citation.lines)
         whole_files |= mentions

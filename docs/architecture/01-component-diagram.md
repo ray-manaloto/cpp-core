@@ -1,6 +1,6 @@
 # Component Diagram — cpp-core Architecture
 
-> **System components, modules, data flow, and boundaries**  
+> **System components, modules, data flow, and boundaries**
 > Theme: Modern Minimalist | Part of [Architecture Documentation](../../README.md)
 
 ---
@@ -16,7 +16,7 @@ graph TB
 
     subgraph "cpp-core Library"
         direction TB
-        
+
         subgraph "Module Path (Public API)"
             MODULE[com.rsm.logging<br/>C++ Module]
             CPPM[logging.cppm<br/>Module Interface]

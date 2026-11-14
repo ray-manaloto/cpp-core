@@ -13,14 +13,13 @@ template <typename T> using type_identity_t = typename type_identity<T>::type;
 
 export namespace com::rsm::logging {
 
-template <typename... Wrapped>
-class format_string {
+template <typename... Wrapped> class format_string {
 public:
   template <unsigned long N>
   consteval format_string(char const (&text)[N], char const *file = __builtin_FILE(),
-                           unsigned line = __builtin_LINE(),
-                           char const *function = __builtin_FUNCTION())
-      : text(text), file(file), line(line), function(function) {}
+                          unsigned line = __builtin_LINE(),
+                          char const *function = __builtin_FUNCTION())
+    : text(text), file(file), line(line), function(function) {}
   char const *text;
   char const *file;
   unsigned line;

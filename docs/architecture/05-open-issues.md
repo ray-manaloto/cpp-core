@@ -1,6 +1,6 @@
 # Open Issues — Visual Tracker
 
-> **All 70 open items + 19 answered + 1 contingent, visualized**  
+> **All 70 open items + 19 answered + 1 contingent, visualized**
 > Theme: Modern Minimalist | Part of [Architecture Documentation](../../README.md)
 
 ---
@@ -180,20 +180,20 @@ pie title "Resolution Status"
 graph TD
     QUIL1[QUIL-1: Codec N fields?] --> FMT14c[FMT-14(c): move formatting]
     FMT14c --> STEP7[Plan Step 7: move formatting out]
-    
+
     BUILD5[BUILD-5: no CI] --> TOOL16[TOOL-16: CI image]
-    
+
     FMT13[FMT-13: feature-test macros] -.-> FMT14[FMT-14 decision]
     FMT14 --> FMT14c
-    
+
     MOD11[MOD-11: GCC matrix] -.-> MOD6[MOD-6: --compile-std-module]
     MOD11 -.-> MOD1[MOD-1: GCC migration size]
-    
+
     DEF1[DEF-1: level filter] --> COV2[COV-2: filter test]
     DEF7[DEF-7: catalog level map] --> COV7[COV-7: catalog path test]
-    
+
     FMT15[FMT-15: must-not-compile] --> BUILD_LANE[Build lane reopen]
-    
+
     QUIL1 -.->|If YES| STEP7
     QUIL1 -.->|If NO| FMT14ab[Fallback: FMT-14(a) or (b)]
 ```

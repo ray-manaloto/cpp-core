@@ -1,0 +1,10 @@
+# rumdl configuration for the cpp-core project
+
+# Disable line length rule (MD013) - many lines exceed 80 chars in documentation
+# Disable MD041 - first line should be h1 (agent files don't need h1)
+# Disable MD052 - reference not found (some references are internal)
+# Disable MD033 - inline HTML (some HTML is needed for formatting)
+disable = ["MD013", "MD041", "MD052", "MD033"]
+
+# Other settings
+line-length = 120
