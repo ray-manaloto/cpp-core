@@ -32,6 +32,7 @@ Offline mirror of the [hk builtins catalogue](https://hk.jdx.dev/builtins.html) 
 
 - [lychee](./lychee.md) - Fast, async, stream-based link checker
 - [lychee-extended](./lychee-extended.md) - Flint's repository-aware link check (requires flint and lychee)
+- [lychee vs lychee-extended](./lychee-vs-lychee-extended.md) - **Comparison & recommendation**
 
 ### Overview
 
@@ -47,6 +48,7 @@ With `HK_MISE=1`, hk resolves the mise environment for the step's directory, so 
 |---------|--------------|-----------------|-------------|
 | lychee | `Builtins.lychee` | `mise use lychee` | Fast, async, stream-based link checker |
 | lychee-extended | `Builtins.lychee_extended` | `mise use packslip:grafana/flint lychee` | Flint's repository-aware link check |
+| **Comparison** | — | — | [lychee vs lychee-extended](./lychee-vs-lychee-extended.md) - Features, pros/cons, recommendation |
 
 ### Usage
 
