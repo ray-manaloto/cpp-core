@@ -63,6 +63,7 @@ sink->_pattern_formatter->format(
 ```
 
 The formatter receives:
+
 - The **format string** from `macro_metadata->message_format()`
 - The **decoded arguments** from `DynamicFormatArgStore`
 - It produces `log_message` (the fully formatted string) using fmtlib
@@ -95,18 +96,21 @@ The formatter receives:
 ## 4. Can quill support this today?
 
 ### 4.1 What exists
+
 - `Codec` encodes arbitrary `Args...` into a byte buffer (the payload part)
 - `DynamicFormatArgStore` holds decoded args for fmtlib
 - `MacroMetadata` carries compile-time metadata (but includes format string)
 - The SPSC queue is just bytes — payload format is up to the encoder/decoder
 
 ### 4.2 What's missing / would need change
+
 1. **No catalog-ID encoder**: The header encodes `metadata_ptr` (pointer to `MacroMetadata`). A catalog-typed path would encode a **catalog ID** (integer) instead.
 2. **Decoder per catalog ID**: Today `decoder_ptr` is per call-site (`Args...`). The catalog path needs one decoder **per catalog ID**, shared across all call sites that map to that ID.
 3. **Backend deserialization**: Today the backend uses `PatternFormatter` with the format string from `MacroMetadata`. The catalog path needs a **catalog-aware formatter** that looks up the schema by ID and deserializes directly.
 4. **`log_statement_runtime_metadata` path**: This is what `cib_quill.hpp` uses (Logger.h:426-547). It passes `fmt` (format string) as a runtime string in the payload. The catalog path must **not** send `fmt`.
 
 ### 4.3 The key question: QUIL-1
+
 > **Can a `Codec` push three arguments from one pack element?**
 
 The catalog path wants: one catalog type = one `Args...` pack. But quill's `Codec` encodes **each argument separately**. If the catalog type is a single struct with 3 fields, the `Codec` for that struct would need to encode all 3 fields. This is what `DeferredFormatCodec` / `DirectFormatCodec` are for — but they require a custom formatter.
@@ -175,7 +179,8 @@ So today, **the catalog path still sends the format string on the queue** — it
 ## 9. Source references
 
 All quill source read from:
-```
+
+```text
 `<vcpkg_installed>/include/quill/`
   core/MacroMetadata.h           (compile-time metadata, has format string)
   core/DynamicFormatArgStore.h   (holds decoded fmtquill::basic_format_arg)

@@ -69,7 +69,7 @@ or read the file in pieces.
 | `copy_text`, the capacity branch | `format.hpp:305-307` | an argument longer than 1024 bytes is cut at **1024** bytes, and the message continues after it |
 | `digit_char`, the uppercase table | `format.hpp:325-326` | `"{:X}"` of `255` gives `FF` - and not `ff` |
 | `format_integer`, base 16 / 16-upper / 8 / 2 | `format.hpp:333-352` | `"{:x}"`, `"{:X}"`, `"{:o}"`, `"{:b}"` of `255` give `ff`, `FF`, `377`, `11111111` |
-| `format_integer`, the `+` and space signs | `format.hpp:368-372` | `"{:+}"` of `42` gives `+42`; `"{: }"` gives ` 42` - one space, not a plus |
+| `format_integer`, the `+` and space signs | `format.hpp:368-372` | `"{:+}"` of `42` gives `+42`; `"{: }"` gives `42` - one space, not a plus |
 | `format_integer`, the `#` alternate form | `format.hpp:373-383` | `"{:#x}"`, `"{:#o}"`, `"{:#b}"` of `255` give `0xff`, `0377`, `0b11111111` |
 | `format_integer`, the zero padding | `format.hpp:395-398`, `:407-409` | `"{:08}"` of `42` gives `00000042` - and `"{:08}"` of `-42` gives `-0000042`, the sign **before** the zeros |
 | **the truncation at the capacity** | `format.hpp:399-401` | **corrected by part 20: this branch does nothing.** `total` is clamped and never read again; the real bound is the `at < capacity` guards at `format.hpp:404`, `:407`, `:410`. The test to write is "an integer wider than the 1024-byte argument buffer" → assert the message is cut at 1024 bytes and does not overrun |

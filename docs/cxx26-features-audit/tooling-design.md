@@ -34,24 +34,24 @@ Status is: **no supported configuration for module projects; checking a module i
 Evidence (all URLs verified during this research):
 
 1. **Issue llvm/llvm-project#63939 - "[Clang Tidy][C++20 Modules] Clang Tidy too slow and buggy on modules"** (opened 2023-07-18, still **open**, updated 2026-08-25). With `import std;`, 33 listed checks crash (`bugprone-dangling-handle`, `bugprone-narrowing-conversions`, `bugprone-use-after-move`, `cppcoreguidelines-narrowing-conversions`, `cppcoreguidelines-missing-std-forward`, `cppcoreguidelines-pro-bounds-array-to-pointer-decay`, `cppcoreguidelines-rvalue-reference-param-not-moved`, `google-build-explicit-make-pair`, `misc-const-correctness`, `modernize-make-unique`, `modernize-make-shared`, `modernize-use-nullptr`, `modernize-use-transparent-functors`, `performance-avoid-endl`, `performance-move-const-arg`, `performance-unnecessary-value-param`, `portability-std-allocator-const`, `readability-redundant-*`, `readability-uppercase-literal-suffix`, ...). `misc-include-cleaner` does not crash but cannot see `std::` from `import std;`. ChuanqiXu9 (clang modules author): **"Yeah, it reveals that we lack a design (and the corresponding implementation) for modules in clang-tidy."**
-   - https://github.com/llvm/llvm-project/issues/63939
+   - <https://github.com/llvm/llvm-project/issues/63939>
 2. **Issue llvm/llvm-project#62258 - "`clang-tidy` fails on CXX modules"** (open since 2023-04-20, label clang:frontend). CMAKE_CXX_CLANG_TIDY + Ninja dyndep → `error: unable to handle compilation, expected exactly one compiler job in '' [clang-diagnostic-error]`. ChuanqiXu9 (2025-04-08): **"In practice, we run clang-tidy after build so that clang-tidy can find them."**
-   - https://github.com/llvm/llvm-project/issues/62258
+   - <https://github.com/llvm/llvm-project/issues/62258>
 3. **CMake discourse, "clang-tidy + cxx_modules"** (April 2023): `CMAKE_CXX_CLANG_TIDY` + `-E __run_co_compile --tidy=...` on a `.ixx` fails with `error: unable to handle compilation, expected exactly one compiler job` / `module 'foo' not found [clang-diagnostic-error]`. The workaround documented there is `-fprebuilt-module-path=<dir with the .pcm/.gcm>` after a completed build; `@module.modmap` arguments are invisible to compile_commands.json. **A compilation database does not carry enough information for clang-tidy to compile module TUs.**
-   - https://discourse.cmake.org/t/clang-tidy-cxx-modules/7938
+   - <https://discourse.cmake.org/t/clang-tidy-cxx-modules/7938>
 4. **ChuanqiXu9, "Clang doesn't find standard C++ modules ..." (discourse.llvm.org #71326):** BMIs are required and are not in the compilation database; downstream workaround is (2) build first then run tools against the BMIs; **"No, the required information to use just `compile_commands.json` for `clang-tidy` is not available yet."** And the broader statement: **clangd-like tools must compute the module DAG and build BMIs themselves; clang-tidy is accepted to use a "build first, then analyze" workflow; the required build-mode is not provided for clang-tidy.**
-   - https://discourse.llvm.org/t/clang-tidy-doesnt-find-standard-c-modules-despite-providing-compilation-database-and-prebuilt-modules-path/71326
-   - https://chuanqixu9.github.io/c++/2025/12/03/Clangd-support-for-Modules.en.html
+   - <https://discourse.llvm.org/t/clang-tidy-doesnt-find-standard-c-modules-despite-providing-compilation-database-and-prebuilt-modules-path/71326>
+   - <https://chuanqixu9.github.io/c++/2025/12/03/Clangd-support-for-Modules.en.html>
 5. **Issue #145628 → PR #145630 - "[clang-tidy] [Modules] Skip checking decls in clang-tidy"** (issue created 2025-06-25; PR **merged 2026-03-19**). When a TU imports module `a`, clang-tidy warned about the bodies of decls from `a` (e.g. cppcoreguidelines-narrowing-conversions fired for `use.cpp`). The fix sets `ASTMatchFinder::MatchFinderOptions SkipDeclsInModules = true` globally (the fix lives in ASTMatchers, not in clang-tidy itself - author unsure it is the right fix) and adds test `clang-tools-extra/test/clang-tidy/checkers/cxx20-modules.cppm`. This mitigates *duplicate* diagnostics from imported modules; it does **not** make `.cppm` invocations valid.
-   - https://github.com/llvm/llvm-project/pull/145630
-   - https://github.com/llvm/llvm-project/issues/145628
+   - <https://github.com/llvm/llvm-project/pull/145630>
+   - <https://github.com/llvm/llvm-project/issues/145628>
 6. **PR #178471 - "[clang-tidy] Fix performance-trivially-destructible with C++20 modules"** (merged 2026-04-07). False positive: a class seen through both header include and module import gets its implicit destructor declared multiple times in the redeclaration chain, breaking `isFirstDecl()`. Fix: `unless(isImplicit())`. This confirms that even "correct" checks carry modules-specific false-positive/negative modes being fixed ad-hoc - there is no systematic modules QA for the check inventory.
-   - https://github.com/llvm/llvm-project/pull/178471
+   - <https://github.com/llvm/llvm-project/pull/178471>
 7. **Default-set changes: 22.1.0 removed `clang-analyzer-*` from the default checks** (users must now opt in explicitly), and **clang-tidy now displays diagnostics from all non-system headers by default** (`-header-filter` now defaults to `.*`). **23.1.0 removed the `hicpp` module entirely** (all checks moved to their homes - e.g. `hicpp-special-member-functions` → `cppcoreguidelines-special-member-functions`) and deprecated `zircon`.
-   - https://releases.llvm.org/22.1.0/tools/clang/tools/extra/docs/ReleaseNotes.html
-   - https://releases.llvm.org/23.1.0/tools/clang/tools/extra/docs/ReleaseNotes.html
+   - <https://releases.llvm.org/22.1.0/tools/clang/tools/extra/docs/ReleaseNotes.html>
+   - <https://releases.llvm.org/23.1.0/tools/clang/tools/extra/docs/ReleaseNotes.html>
 8. **Documentation (clang-tidy index)**: `-checks` is a glob list processed in order; `.clang-tidy` is YAML, discovered per-file from the closest parent dir; keys include `Checks`, `WarningsAsErrors`, `HeaderFilterRegex`, `ExcludeHeaderFilterRegex`, `ImplementationFileExtensions` (default `c,cc,cpp,cxx` - **`cppm` is NOT a default implementation-file extension**), `HeaderFileExtensions`, `SystemHeaders`, `ExcludeHeaderFilterRegex`; command-line overrides file; `--verify-config` validates configs; **`--enable-module-headers-parsing` exists** ("preprocessor-level module header parsing for C++20 and above, empowering specific checks to detect macro definitions within modules... experimental... may cause performance and parsing issues"); `-p` takes the build dir; `--dump-config` prints the effective configuration. Default header filter is `.*` (22.1.0+).
-   - https://clang.llvm.org/extra/clang-tidy/index.html
+   - <https://clang.llvm.org/extra/clang-tidy/index.html>
 
 ### 1.2 Can clang-tidy check a module interface unit at all?
 
@@ -229,7 +229,7 @@ At **80 cols (default)**: those 19 C0301 become **~90** (every long comment line
 ### 2.6 cmake-format/cmake-lint command lines and CI behaviour
 
 - In place: `cmake-format -i <files...>` (writes, exit 0 on success; exit 1 on internal error). Check: `cmake-format --check <files...>` - **silent success; on any delta raises "Check failed: <file>", exit 1**. [measured; source lines 613-622, 530-535]
-- Lint: `cmake-lint <files...>` - prints per-file sections + summary; **exit 1 if any findings** (as opposed to 2 on internal errors). [source: lint/__main__.py 134-180]
+- Lint: `cmake-lint <files...>` - prints per-file sections + summary; **exit 1 if any findings** (as opposed to 2 on internal errors). [source: lint/**main**.py 134-180]
 - Note [measured]: lint's `--suppress-decorations` reduces output to bare findings; use it in CI logs.
 - Exit-code contract for the wrapperlint targets: non-zero = gate failed → the `cmake-lint`/`cmake-format-check` targets fail → `cmake --build --preset <x> --target <t>` fails. The wrapperlint aggregate returns the first failing sub-target's code.
 - `cmake-format` reads stdin if `-` is passed as file arg (irrelevant for CMake).
@@ -330,12 +330,14 @@ artifact and not an object-named-anything. The concrete risks, in order of sever
 `cmake/clang-tidy.cmake`, `cmake/format.cmake`, `cmake/coverage.cmake` + `cmake/coverage/gcov_json_gate.py`. Presets: **`p2996-tidy`** (clang-tidy; IWYU-style opt-in), **`gcc16-coverage`** (coverage; GCC-only), **`cmake-checks`** (no compiler needed - runs the formatter/lint targets; still expressed as preset for uniformity). Existing presets untouched.
 
 Variables:
+
 - `CPP_CORE_TIDY_ENABLED` (option, default OFF) - `cmake/clang-tidy.cmake`, mirrors `CPP_CORE_IWYU_ENABLED`
 - `CPP_CORE_CMAKE_FORMAT_ENABLED` / fold into `CPP_CORE_TIDY_ENABLED`? - **separate**: `CPP_CORE_CMAKE_FORMAT_ENABLED` (OFF default) for `cmake/format.cmake`
 - `CPP_CORE_COVERAGE_ENABLED` (BOOL, default OFF) - consumed by the toolchain; implies the coverage preset's cache vars
 - `CPP_CORE_COVERAGE_THRESHOLD` (STRING, default `100`) - the gate
 
 Toolchain `cmake/toolchains/cpp-core.cmake` extension (behind `NOT CPP_CORE_PORT_BUILD`):
+
 ```cmake
 # Coverage: -fprofile-arcs -ftest-coverage -fprofile-abs-path + -fprofile-arcs at link.
 # GCC only. Not for vcpkg ports. Implemented like CPP_CORE_SANITIZER handling.
@@ -344,9 +346,11 @@ if(CPP_CORE_COVERAGE)
   list(APPEND _cpp_core_link -fprofile-arcs -lgcov)
 endif()
 ```
+
 `cpp-core-check.cmake`: no change (CPP_CORE_COVERAGE independent of COMPILER guard).
 
 `cmake/clang-tidy.cmake` (style = iwyu.cmake):
+
 ```cmake
 find_program(CPP_CORE_CLANG_TIDY_EXECUTABLE NAMES clang-tidy
   PATHS /opt/homebrew/opt/llvm/bin NO_DEFAULT_PATH)
@@ -372,6 +376,7 @@ add_custom_target(tidy DEPENDS ${CPP_CORE_TIDY_CHECK_TARGETS})
 ```
 
 `cmake/format.cmake`:
+
 ```cmake
 find_program(CPP_CORE_CMAKE_FORMAT_EXECUTABLE NAMES cmake-format
   PATHS ${PROJECT_SOURCE_DIR}/../_tools  $ENV{HOME}/.local/share/mise/installs/pipx-cmakelang
@@ -390,9 +395,11 @@ add_custom_target(cmake-format-check  COMMAND ${CPP_CORE_CMAKE_FORMAT_EXECUTABLE
 add_custom_target(cmake-lint          COMMAND ${CPP_CORE_CMAKE_LINT_EXECUTABLE} --suppress-decorations ${CPP_CORE_CMAKE_SOURCES} ...)
 add_custom_target(cmake-checks DEPENDS cmake-format-check cmake-lint)
 ```
+
 (.clang-format wired the same way: `clang-format -i` / `clang-format --dry-run --Werror` targets `format`/`format-check` - the PARKED.md next step; noted here for completeness, not expanded.)
 
 `cmake/coverage.cmake`:
+
 ```cmake
 find_program(CPP_CORE_GCOV_EXECUTABLE NAMES gcov-16 REQUIRED)  # never bare gcov (Apple LLVM 21)
 find_package(Python3 REQUIRED COMPONENTS Interpreter)          # already required by catalog
@@ -404,6 +411,7 @@ find_package(Python3 REQUIRED COMPONENTS Interpreter)          # already require
 #              --threshold ${CPP_CORE_COVERAGE_THRESHOLD}
 add_custom_target(coverage COMMAND ... )   # fails on non-zero; not USES_TERMINAL (CI-friendly)
 ```
+
 The Python gate (design): walk `build/gcc16-coverage/**/*.gcno` (excluding `vcpkg_installed`),
 invoke `gcov-16 --json-format` per object into a scratch dir, merge lines by
 `(abs_file, line_number) -> count>0?`, print per-file table + uncovered lines, exit 1 below
@@ -429,6 +437,7 @@ Presets to add to `cmake/presets/cpp-core.json` (configure + build + test + work
 Naming follows the existing `<compiler>-<config>` + IWYU pattern (`p2996-iwyu` is the precedent for `p2996-tidy`/`gcc16-coverage`). `cmake-checks` is the first compiler-free preset; if that reads oddly, fold `cmake-checks` into `p2996-tidy` as an additional dependency and keep **three** new presets total.
 
 `dev-mode.cmake` extension: after the IWYU include,
+
 ```cmake
 if(CPP_CORE_TIDY_ENABLED)
   include(cmake/clang-tidy.cmake)
@@ -437,6 +446,7 @@ if(CPP_CORE_CMAKE_FORMAT_ENABLED)
   include(cmake/format.cmake)
 endif()
 ```
+
 `coverage.cmake` is included **unconditionally** from `dev-mode.cmake` but only builds the `coverage` target; the GCC-gate lives behind `gcc16-coverage` (cache var `CPP_CORE_COVERAGE=ON`), the gate target is a no-op-with-message otherwise? - No: keep it simple - create targets only when `CPP_CORE_COVERAGE` is ON (mirrors iwyu).
 
 CI recommendation: a `checks` job runs `cmake --workflow --preset cmake-checks` + `--preset p2996-tidy` + `--preset gcc16-coverage`; the normal matrix stays unchanged.

@@ -41,6 +41,7 @@ one.
 
 That is **independent corroboration of the owner's decision**. The two organisations that had to
 solve "formatting at compile time" - one for a logging library, one for a freestanding C++ library
+
 - both reached for fmt's compile-time API, and neither wrote a constexpr formatter of their own.
 
 Two more things fall out of the same source.

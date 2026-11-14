@@ -108,7 +108,6 @@ The other seven, in the order they were found:
 | **DEF-7** | **the catalog path's level mapping is inverted at both ends** - cib's most severe level (`MAX`) maps to quill's least severe (`TraceL3`), and cib's least severe (`TRACE`) maps to quill's second-least severe | with a sink at `Error`, a `MAX` message is dropped and a `FATAL` message is kept - the exact opposite of the intent. Latent: the project never logs at `MAX` | 20 |
 | **DEF-8** | **the formatter's section header names the wrong function** - `format.hpp:473` says "The formatter of a whole message" and heads `parse_spec`; `format_message` is 59 lines further down | a comment defect: the code is right and the comment is wrong. Nothing depends on it, and nothing breaks | 20 |
 
-
 ## The verdict in one paragraph
 
 The project's own code is in good shape: it defines **no macros of its own**, and the one place a

@@ -333,9 +333,11 @@ namespace logging::fmt {
 3. **The format string** — as a compile-time `stdx::ct_string` via `STDX_CT_FORMAT(__VA_ARGS__)`
 
 The macro expands to:
+
 ```cpp
 logging::log<cib_log_env_t>(__FILE__, __LINE__, STDX_CT_FORMAT(__VA_ARGS__))
 ```
+
 where `STDX_CT_FORMAT` is itself a macro that wraps the format string and arguments into a `stdx::ct_format` call, producing a `format_result` whose `.str` is a `ct_string` (the format string with compile-time arguments folded in) and `.args` is a tuple of runtime arguments.
 
 A function template cannot capture `__FILE__` and `__LINE__` from the call site — those are **preprocessor-only** values. The macro is the *only* way to inject them into the type system. The `logging::log` function itself is a non-macro template, but it requires the caller to provide the file, line, and pre-formatted `format_result` — which in practice can only be constructed at the call site via the macro.

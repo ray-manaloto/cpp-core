@@ -70,7 +70,7 @@ fails, this path is dead and we fall back to (a) or (b).
 code - 51% of it**. The acceptance bar's target is that share going **down**. The question is not
 "is fmt better than a 492-line formatter" in the abstract; it is "is fmt better than **half the
 project**". And **the two paths already disagree today**: `{:>06}` renders `000042` on the module
-path and `    42` on the catalog path, and `info("{:s}", 42)` compiles and is silently ignored
+path and `42` on the catalog path, and `info("{:s}", 42)` compiles and is silently ignored
 where `std::format` and fmt reject it - that is **DEF-5**.
 
 **Full argument:** [decisions.md](decisions.md#fmt-14---what-should-the-module-paths-format-strings-do).
@@ -167,6 +167,7 @@ module.
 **What this means.** Add `install(TARGETS ... FILE_SET CXX_MODULES ...)` and
 `install(EXPORT ... CXX_MODULES_DIRECTORY ...)` now, for the current API shape. Three obstacles
 noted in Part 18 §7.1:
+
 - `format.hpp` is PRIVATE but a **public build-time dependency** of the installed module
 - `internal.hpp` is in the global module fragment, not in a file set
 - The export publishes quill's and cib's whole closure
@@ -188,6 +189,7 @@ is currently an accident.
 
 **What this means.** The module BMI (`import com.rsm.logging;`) is the **only** public interface.
 All three headers (`internal.hpp`, `cib_quill.hpp`, `quill_logger.hpp`) become PRIVATE:
+
 - `internal.hpp` — global module fragment, needed by importers via BMI
 - `cib_quill.hpp` — catalog path API, reachable only through the module's implementation
 - `quill_logger.hpp` — implementation detail (5 lines, 21 unread lines)

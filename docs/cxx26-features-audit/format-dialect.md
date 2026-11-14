@@ -28,7 +28,7 @@ textual `#include` in a module unit yields global-module declarations). So the m
 
 From the C++26 draft, [format.string.std] (`https://eel.is/c++draft/format.string`):
 
-```
+```text
 std-format-spec : fill-and-align_opt sign_opt #_opt 0_opt width_opt precision_opt L_opt type_opt
 fill-and-align  : fill_opt align
 fill            : any character other than { or }

@@ -455,6 +455,7 @@ with the C++ language, so it re-reads CMake's own `GNU-CXX.cmake` and gets **the
 `CMAKE_CXX_SCAN_FOR_MODULES`, is one of the ones CMake propagates into a check. It also gets
 `CMAKE_CXX_STANDARD 26` and the sanitizer and hardening flags. It does **not** get
 `-freflection` - the reflection flags are a directory-scope directive in a file a check never runs
+
 - which is harmless here, because the probe uses no reflection, and is exactly why a `REFL-` check
 would have to set `CMAKE_REQUIRED_FLAGS` by hand.
 

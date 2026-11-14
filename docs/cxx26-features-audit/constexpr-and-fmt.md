@@ -104,7 +104,7 @@ The module's interface is standard-library-free because a textual `#include` ins
 produces declarations **attached to the global module**, and those collide with the importing
 translation unit's own standard headers:
 
-```
+```text
 GCC:    error: redefinition of 'constexpr bool std::__is_constant_evaluated()'
 Clang:  error: type alias template redefinition with different types ('std::__promote_t')
 ```

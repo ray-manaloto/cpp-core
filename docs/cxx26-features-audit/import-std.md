@@ -13,7 +13,7 @@ the top of the file:
 > module's interface depends on would end up next to the standard headers of any translation unit
 > that includes them, and the two copies collide:
 >
-> ```
+> ```text
 > GCC:    error: redefinition of 'constexpr bool std::__is_constant_evaluated()'
 > Clang:  error: type alias template redefinition with different types ('std::__promote_t')
 > ```

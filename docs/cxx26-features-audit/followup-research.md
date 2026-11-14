@@ -391,7 +391,7 @@ and reflection flags can change under the project - is the weakest link in the w
 `git ls-remote` can report the upstream's current tip without cloning. The check is one command
 per port and it works today:
 
-```
+```text
 git ls-remote https://github.com/intel/compile-time-init-build.git HEAD
 ```
 
@@ -900,7 +900,7 @@ bundled fmt. Two of the differences change output today:
 
 | call | module path | catalog path | the standard |
 |---|---|---|---|
-| `info("{:>06}", 42)` | `000042` | `    42` | `    42` |
+| `info("{:>06}", 42)` | `000042` | `42` | `42` |
 | `info("{}", 1234567.0)` | `1.23457e+06` | `1234567` | `1234567` |
 
 and one is not a formatting difference at all: the module **never validates the format
@@ -916,7 +916,7 @@ which would make the finding permanent instead of historical, and is the test th
 anything the test can see. The project's sink is a `quill::ConsoleSink` on stdout, and its pattern
 is fixed (`quill_logger.cpp:33-35`):
 
-```
+```text
 %(time) [%(thread_id)] %(short_source_location:<28) LOG_%(log_level:<9) %(logger:<12) [%(tags)] %(message)
 ```
 
@@ -1002,7 +1002,7 @@ starts out as a list of failures**, and the test has two possible shapes.
 | **B - agreement** | `module == catalog` **and** `catalog == <the standard's value>` | after `FMT-14` is answered (b) or (c) |
 
 **Mode A is the default, and it is not a compromise.** It says: *"the module path prints `000042`
-here and the catalog path prints `    42`, and that is what both of them do today."* That makes the
+here and the catalog path prints `42`, and that is what both of them do today."* That makes the
 divergence **permanent and visible** instead of historical - which is exactly what part 13 asked
 for - and it turns any change to either formatter into a test failure that names the case.
 
@@ -1772,7 +1772,7 @@ The evidence, in three independent places in CMake's own tree at `v4.5.0`:
 
 **1. The release notes**, `Help/release/4.5.rst`, under "Languages":
 
-> * ``import std`` is now available for all C++ 20 and later code with
+> - ``import std`` is now available for all C++ 20 and later code with
 >   :prop_tgt:`CXX_SCAN_FOR_MODULES` enabled.
 
 **2. The manual**, `Help/manual/cmake-cxxmodules.7.rst`. In 4.4.5 the "`import std` Support"
@@ -1804,10 +1804,10 @@ in place below.
 
 **And the toolchain matrix changed in the project's favour.** CMake 4.5.0's manual now lists:
 
-> * Clang 18.1.2 and newer with standard library ``libc++`` or ``libstdc++``
-> * MSVC toolset 14.36 and newer (provided with Visual Studio 17.6 and newer)
-> * GCC 15 and newer, with the exception of MacOS
-> * **GCC 16 and newer on MacOS**
+> - Clang 18.1.2 and newer with standard library ``libc++`` or ``libstdc++``
+> - MSVC toolset 14.36 and newer (provided with Visual Studio 17.6 and newer)
+> - GCC 15 and newer, with the exception of MacOS
+> - **GCC 16 and newer on MacOS**
 
 CMake 4.4.5's matrix said only *"GCC 15 and newer"* - so **GCC 16 on macOS was not in the
 supported set**, and 4.5.0 adds it. **That is the project's exact configuration.**
@@ -1846,7 +1846,7 @@ branch) on 2026-11-12:
 
 **1. The feature-test macro is there.** `libstdc++-v3/include/bits/version.def`:
 
-> ```
+> ```text
 > ftms = { name = constexpr_format; // 202511 P3391R2 constexpr std::format
 >          values = { v = 202511; cxxmin = 26; hosted = yes;
 >                     extra_cond = "__cpp_lib_constexpr_exceptions >= 202502L" } };
@@ -1854,7 +1854,7 @@ branch) on 2026-11-12:
 
 **2. And it is published.** `libstdc++-v3/include/bits/version.h`:
 
-> ```
+> ```text
 > #if !defined(__cpp_lib_constexpr_format)
 > # if (__cplusplus > 202302L) && _GLIBCXX_USE_CXX11_ABI && _GLIBCXX_HOSTED && (__cpp_lib_constexpr_exceptions >= 202502L)
 > #  define __glibcxx_constexpr_format 202511L
@@ -1867,7 +1867,7 @@ branch) on 2026-11-12:
 
 **3. And the implementation is marked.** `libstdc++-v3/include/std/format:67-71`:
 
-> ```
+> ```text
 > #ifdef __glibcxx_constexpr_format // C++ >= 26 && HOSTED && CXX11 strings
 > # define _GLIBCXX_CONSTEXPR_FORMAT constexpr
 > #else

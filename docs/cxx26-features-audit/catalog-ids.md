@@ -14,7 +14,7 @@ JSON and the XML.
 
 The ID ends up in the log line's tag field:
 
-```
+```text
 07:01:52.811080209 [51816462] app.cpp:28 LOG_INFO  cpp-core [cpp_core id=1 mod=0] compile-time formatted: the answer is 42
 ```
 
@@ -72,7 +72,7 @@ and the log call instantiates `catalog<Message>()`, where `Message` carries the 
 characters as a `char` pack (`encoder.hpp:113-124`, `mipi_builder.hpp:144`). The `-1` in the
 symbol is the *id placeholder*: the symbol reads
 
-```
+```text
 unsigned int catalog<sc::message<sc::undefined<sc::args<>, -1,
     sc::string<(char)99, (char)111, (char)109, ...>, sc::tags<>, sc::named_args<>>>>()
 ```
@@ -203,7 +203,7 @@ collateral**, and the IDs are its wire identifiers:
 The project's `cmake/catalog.cmake` does not pass `STABLE_JSON`, so the flag reaches argparse with
 an empty list:
 
-```
+```text
 --xml_output .../cpp-core-catalog.xml --stable_json --client_name cpp-core --version 0.1.0
 ```
 

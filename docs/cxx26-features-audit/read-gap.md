@@ -186,6 +186,7 @@ line (`log/log.hpp:63-64`):
 ```
 
 There is no function name in the interface, so there is none to pass. **No visible effect today**
+
 - the project's pattern prints `%(short_source_location)`, not `%(caller_function)` - but quill's
 `%(caller_function)` attribute would show the module path's function and nothing at all for the
 catalog path. Part 6's option (e) (`std::source_location::current()`) is the way to fix it, and

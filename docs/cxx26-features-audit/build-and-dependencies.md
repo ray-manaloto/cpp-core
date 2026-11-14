@@ -25,14 +25,14 @@ Every file below was read in full:
 **The project's `vcpkg.json` lists only `intel-cib`, `quill` and `ut`. fmt is not one of them.** But
 fmt 12.2.1 **is** in the installed tree, because `intel-cpp-std-extensions` depends on it:
 
-```
+```text
 ports/intel-cpp-std-extensions/vcpkg.json
   "dependencies": ["boost-mp11", "fmt", "intel-baremetal-concurrency"]
 ```
 
 and the installed package list confirms it:
 
-```
+```text
 build/p2996-debug/vcpkg_installed/vcpkg/info/fmt_12.2.1_arm64-osx-p2996.list
 build/p2996-debug/vcpkg_installed/vcpkg/info/intel-cpp-std-extensions_2026-11-09_arm64-osx-p2996.list
 ```
@@ -48,7 +48,7 @@ on the registry for `ut`.)
 
 The vcpkg `quill` port installs **only** `quill/bundled/fmt/`:
 
-```
+```text
 build/p2996-debug/vcpkg_installed/vcpkg/info/quill_13.1.0_arm64-osx-p2996.list
   arm64-osx-p2996/include/quill/bundled/fmt/
   arm64-osx-p2996/include/quill/bundled/fmt/args.h
@@ -179,7 +179,7 @@ system cannot reach. Either it gets a triplet and a preset, or the support comes
 There is no `.github/` directory - the repository has no GitHub Actions workflow, no other CI
 configuration, and no git remote:
 
-```
+```text
 git remote -v     -> (empty)
 ```
 

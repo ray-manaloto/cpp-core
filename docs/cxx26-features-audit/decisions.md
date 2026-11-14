@@ -44,7 +44,7 @@ Two of the differences change output today:
 
 | call | module path | catalog path | the standard |
 |---|---|---|---|
-| `info("{:>06}", 42)` | `000042` | `    42` | `    42` - the `0` is ignored when an alignment is given |
+| `info("{:>06}", 42)` | `000042` | `42` | `42` - the `0` is ignored when an alignment is given |
 | `info("{}", 1234567.0)` | `1.23457e+06` | `1234567` | `1234567` - the shortest round-trip |
 
 and one of them is not a formatting difference at all: the module **never validates the format
@@ -216,6 +216,7 @@ module.
 **What this means.** Add `install(TARGETS ... FILE_SET CXX_MODULES ...)` and
 `install(EXPORT ... CXX_MODULES_DIRECTORY ...)` now, for the current API shape. Three obstacles
 noted in Part 18 §7.1:
+
 - `format.hpp` is PRIVATE but a **public build-time dependency** of the installed module
 - `internal.hpp` is in the global module fragment, not in a file set
 - The export publishes quill's and cib's whole closure
@@ -238,6 +239,7 @@ is currently an accident.
 
 **What this means.** The module BMI (`import com.rsm.logging;`) is the **only** public interface.
 All three headers (`internal.hpp`, `cib_quill.hpp`, `quill_logger.hpp`) become PRIVATE:
+
 - `internal.hpp` — global module fragment, needed by importers via BMI
 - `cib_quill.hpp` — catalog path API, reachable only through the module's implementation
 - `quill_logger.hpp` — implementation detail (5 lines, 21 unread lines)
