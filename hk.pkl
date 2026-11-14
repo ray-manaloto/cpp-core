@@ -1,15 +1,50 @@
 import "package://github.com/jdx/hk/releases/download/v2.12.0/hk@2.12.0#/Builtins.pkl"
+import "package://github.com/jdx/hk/releases/download/v2.12.0/hk@2.12.0#/Config.pkl" as Config
 
 hooks {
   ["check"] {
     steps {
       ["clang-format"] = (Builtins.clang_format) {
-        glob = List("**/*.c", "**/*.h", "**/*.cpp", "**/*.hpp", "**/*.cc", "**/*.hh", "**/*.cxx", "**/*.hxx", "**/*.cppm")
-        exclude = List("**/docs/asan-leak-check/upstream/**", "**/docs/cxx26-features-audit/upstream/**", "**/docs/module-source-location/upstream/**")
+        glob =
+          List(
+            "**/*.c",
+            "**/*.h",
+            "**/*.cpp",
+            "**/*.hpp",
+            "**/*.cc",
+            "**/*.hh",
+            "**/*.cxx",
+            "**/*.hxx",
+            "**/*.cppm",
+          )
+        exclude =
+          List(
+            "**/docs/asan-leak-check/upstream/**",
+            "**/docs/cxx26-features-audit/upstream/**",
+            "**/docs/module-source-location/upstream/**",
+          )
       }
       ["cpp-lint"] = (Builtins.cpp_lint) {
-        glob = List("**/*.c", "**/*.h", "**/*.cpp", "**/*.hpp", "**/*.cc", "**/*.hh", "**/*.cxx", "**/*.hxx", "**/*.cppm")
-        exclude = List("**/docs/asan-leak-check/upstream/**", "**/docs/cxx26-features-audit/upstream/**", "**/docs/module-source-location/upstream/**", "**/docs/asan-leak-check/repro/**", "**/docs/module-source-location/repro/**")
+        glob =
+          List(
+            "**/*.c",
+            "**/*.h",
+            "**/*.cpp",
+            "**/*.hpp",
+            "**/*.cc",
+            "**/*.hh",
+            "**/*.cxx",
+            "**/*.hxx",
+            "**/*.cppm",
+          )
+        exclude =
+          List(
+            "**/docs/asan-leak-check/upstream/**",
+            "**/docs/cxx26-features-audit/upstream/**",
+            "**/docs/module-source-location/upstream/**",
+            "**/docs/asan-leak-check/repro/**",
+            "**/docs/module-source-location/repro/**",
+          )
         check = "cpplint --config=.cpplint {{files}}"
       }
       ["taplo-format"] = (Builtins.taplo_format) {
@@ -67,18 +102,65 @@ hooks {
       ["mixed-line-ending"] = (Builtins.mixed_line_ending) {}
       ["fix-smart-quotes"] = (Builtins.fix_smart_quotes) {}
       ["byte-order-marker"] = (Builtins.byte_order_marker) {}
+      ["pkl-format"] = (Config.Step) {
+        glob = List("**/*.pkl")
+        check = "pkl format --diff-name-only {{files}}"
+        fix = "pkl format --write {{files}}"
+      }
+      ["mise-fmt"] = (Config.Step) {
+        glob = List("mise.toml", ".mise.toml", "mise.local.toml", ".mise.local.toml")
+        check = "mise fmt --check"
+        fix = "mise fmt --write"
+      }
+      ["hk-validate"] = (Config.Step) {
+        check = "hk validate"
+      }
     }
   }
 
   ["pre-commit"] {
     steps {
       ["clang-format"] = (Builtins.clang_format) {
-        glob = List("**/*.c", "**/*.h", "**/*.cpp", "**/*.hpp", "**/*.cc", "**/*.hh", "**/*.cxx", "**/*.hxx", "**/*.cppm")
-        exclude = List("**/docs/asan-leak-check/upstream/**", "**/docs/cxx26-features-audit/upstream/**", "**/docs/module-source-location/upstream/**")
+        glob =
+          List(
+            "**/*.c",
+            "**/*.h",
+            "**/*.cpp",
+            "**/*.hpp",
+            "**/*.cc",
+            "**/*.hh",
+            "**/*.cxx",
+            "**/*.hxx",
+            "**/*.cppm",
+          )
+        exclude =
+          List(
+            "**/docs/asan-leak-check/upstream/**",
+            "**/docs/cxx26-features-audit/upstream/**",
+            "**/docs/module-source-location/upstream/**",
+          )
       }
       ["cpp-lint"] = (Builtins.cpp_lint) {
-        glob = List("**/*.c", "**/*.h", "**/*.cpp", "**/*.hpp", "**/*.cc", "**/*.hh", "**/*.cxx", "**/*.hxx", "**/*.cppm")
-        exclude = List("**/docs/asan-leak-check/upstream/**", "**/docs/cxx26-features-audit/upstream/**", "**/docs/module-source-location/upstream/**", "**/docs/asan-leak-check/repro/**", "**/docs/module-source-location/repro/**")
+        glob =
+          List(
+            "**/*.c",
+            "**/*.h",
+            "**/*.cpp",
+            "**/*.hpp",
+            "**/*.cc",
+            "**/*.hh",
+            "**/*.cxx",
+            "**/*.hxx",
+            "**/*.cppm",
+          )
+        exclude =
+          List(
+            "**/docs/asan-leak-check/upstream/**",
+            "**/docs/cxx26-features-audit/upstream/**",
+            "**/docs/module-source-location/upstream/**",
+            "**/docs/asan-leak-check/repro/**",
+            "**/docs/module-source-location/repro/**",
+          )
         check = "cpplint --config=.cpplint {{files}}"
       }
       ["taplo-format"] = (Builtins.taplo_format) {
@@ -136,18 +218,65 @@ hooks {
       ["mixed-line-ending"] = (Builtins.mixed_line_ending) {}
       ["fix-smart-quotes"] = (Builtins.fix_smart_quotes) {}
       ["byte-order-marker"] = (Builtins.byte_order_marker) {}
+      ["pkl-format"] = (Config.Step) {
+        glob = List("**/*.pkl")
+        check = "pkl format --diff-name-only {{files}}"
+        fix = "pkl format --write {{files}}"
+      }
+      ["mise-fmt"] = (Config.Step) {
+        glob = List("mise.toml", ".mise.toml", "mise.local.toml", ".mise.local.toml")
+        check = "mise fmt --check"
+        fix = "mise fmt --write"
+      }
+      ["hk-validate"] = (Config.Step) {
+        check = "hk validate"
+      }
     }
   }
 
   ["pre-push"] {
     steps {
       ["clang-format"] = (Builtins.clang_format) {
-        glob = List("**/*.c", "**/*.h", "**/*.cpp", "**/*.hpp", "**/*.cc", "**/*.hh", "**/*.cxx", "**/*.hxx", "**/*.cppm")
-        exclude = List("**/docs/asan-leak-check/upstream/**", "**/docs/cxx26-features-audit/upstream/**", "**/docs/module-source-location/upstream/**")
+        glob =
+          List(
+            "**/*.c",
+            "**/*.h",
+            "**/*.cpp",
+            "**/*.hpp",
+            "**/*.cc",
+            "**/*.hh",
+            "**/*.cxx",
+            "**/*.hxx",
+            "**/*.cppm",
+          )
+        exclude =
+          List(
+            "**/docs/asan-leak-check/upstream/**",
+            "**/docs/cxx26-features-audit/upstream/**",
+            "**/docs/module-source-location/upstream/**",
+          )
       }
       ["cpp-lint"] = (Builtins.cpp_lint) {
-        glob = List("**/*.c", "**/*.h", "**/*.cpp", "**/*.hpp", "**/*.cc", "**/*.hh", "**/*.cxx", "**/*.hxx", "**/*.cppm")
-        exclude = List("**/docs/asan-leak-check/upstream/**", "**/docs/cxx26-features-audit/upstream/**", "**/docs/module-source-location/upstream/**", "**/docs/asan-leak-check/repro/**", "**/docs/module-source-location/repro/**")
+        glob =
+          List(
+            "**/*.c",
+            "**/*.h",
+            "**/*.cpp",
+            "**/*.hpp",
+            "**/*.cc",
+            "**/*.hh",
+            "**/*.cxx",
+            "**/*.hxx",
+            "**/*.cppm",
+          )
+        exclude =
+          List(
+            "**/docs/asan-leak-check/upstream/**",
+            "**/docs/cxx26-features-audit/upstream/**",
+            "**/docs/module-source-location/upstream/**",
+            "**/docs/asan-leak-check/repro/**",
+            "**/docs/module-source-location/repro/**",
+          )
         check = "cpplint --config=.cpplint {{files}}"
       }
       ["taplo-format"] = (Builtins.taplo_format) {
@@ -205,6 +334,19 @@ hooks {
       ["mixed-line-ending"] = (Builtins.mixed_line_ending) {}
       ["fix-smart-quotes"] = (Builtins.fix_smart_quotes) {}
       ["byte-order-marker"] = (Builtins.byte_order_marker) {}
+      ["pkl-format"] = (Config.Step) {
+        glob = List("**/*.pkl")
+        check = "pkl format --diff-name-only {{files}}"
+        fix = "pkl format --write {{files}}"
+      }
+      ["mise-fmt"] = (Config.Step) {
+        glob = List("mise.toml", ".mise.toml", "mise.local.toml", ".mise.local.toml")
+        check = "mise fmt --check"
+        fix = "mise fmt --write"
+      }
+      ["hk-validate"] = (Config.Step) {
+        check = "hk validate"
+      }
     }
   }
 
