@@ -1,0 +1,37 @@
+# Format specific languages via hk
+
+[fmt]
+description = "Format all files with hk"
+run = "hk fix --all"
+
+[fmt_cpp]
+description = "Format C++ files with clang-format"
+run = "hk fix --step clang-format --all"
+
+[fmt_cmake]
+description = "Format CMake files with cmake-format"
+run = "hk fix --step cmake-format --all"
+
+[fmt_toml]
+description = "Format TOML files with taplo"
+run = "hk fix --step taplo-format --all"
+
+[fmt_json]
+description = "Format JSON files with prettier"
+run = "hk fix --step prettier --all"
+
+[fmt_yaml]
+description = "Format YAML files with yamlfmt"
+run = "hk fix --step yamlfmt --all"
+
+[fmt_md]
+description = "Format Markdown files with rumdl"
+run = "hk fix --step rumdl-format --all"
+
+[fmt_sh]
+description = "Format shell scripts with shfmt"
+run = "hk fix --step shfmt --all"
+
+[fmt_py]
+description = "Format Python files with ruff"
+run = "hk fix --step ruff-format --all"

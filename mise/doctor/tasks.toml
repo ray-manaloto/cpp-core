@@ -1,0 +1,27 @@
+# mise doctor integration
+
+[doctor]
+description = "Run mise doctor checks (project + env)"
+run = "mise doctor && mise doctor project"
+
+[doctor_full]
+description = "Run all mise doctor checks including project diagnostics"
+run = "mise doctor && mise doctor project --verbose"
+
+# hk doctor (via mise)
+[hk_doctor]
+description = "Run hk doctor to check tool availability"
+run = "hk doctor"
+
+# Project diagnostics via mise doctor
+[diag_project]
+description = "Run mise doctor project diagnostics"
+run = "mise doctor project"
+
+[diag_env]
+description = "Run mise doctor environment diagnostics"
+run = "mise doctor"
+
+[diag_all]
+description = "Run all mise doctor diagnostics"
+run = "mise doctor && mise doctor project"

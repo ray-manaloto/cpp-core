@@ -1,0 +1,25 @@
+# Lint specific languages via hk
+
+[lint_cpp]
+description = "Lint C++ files with cpplint"
+run = "hk check --step cpp-lint --all"
+
+[lint_toml]
+description = "Lint TOML files with taplo"
+run = "hk check --step taplo --all"
+
+[lint_yaml]
+description = "Lint YAML files with yamllint"
+run = "hk check --step yamllint --all"
+
+[lint_md]
+description = "Lint Markdown files with rumdl"
+run = "hk check --step rumdl --all"
+
+[lint_sh]
+description = "Lint shell scripts with shellcheck"
+run = "hk check --step shellcheck --all"
+
+[lint_py]
+description = "Lint Python files with ruff + ty"
+run = "hk check --step ruff --all && hk check --step ty --all"

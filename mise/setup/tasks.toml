@@ -1,0 +1,54 @@
+# Setup tasks - install tools, hooks, validate
+
+[hooks_install]
+description = "Install hk git hooks"
+run = "hk install"
+
+[hooks_uninstall]
+description = "Uninstall hk git hooks"
+run = "hk uninstall"
+
+# Pre-commit and commit-msg via mise
+[pre_commit]
+description = "Run pre-commit checks"
+run = "hk run pre-commit"
+
+[commit_msg]
+description = "Validate commit message"
+run = "hk run commit-msg"
+
+# Setup task: install all tools via mise
+[setup_tools]
+description = "Install all hk/mise tools via mise"
+run = """
+mise use yamlfmt yamllint
+mise use rumdl
+mise use shfmt shellcheck
+mise use ruff ty
+mise use taplo
+mise use prettier
+mise use yamlfmt yamllint
+mise use rumdl
+mise use shfmt shellcheck
+mise use ruff ty
+mise use taplo
+mise use prettier
+mise use yamlfmt yamllint
+mise use rumdl
+mise use shfmt shellcheck
+mise use ruff ty
+mise use taplo
+mise use prettier
+mise use clang-format
+mise use pipx:cpplint
+mise use pipx:cmakelang
+"""
+
+[setup_all]
+description = "Full setup: install tools + install hooks + validate"
+run = """
+mise run setup_tools
+mise run hooks_install
+mise run hk_validate
+mise run doctor
+"""

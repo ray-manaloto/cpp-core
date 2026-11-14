@@ -2,326 +2,20 @@
 #
 # The tasks here are the project's verbs. The build lane is parked - there is deliberately no
 # build, test or coverage task - so every task below runs without a compiler.
+#
+# Modular task files organized by category:
+# - mise/audit/tasks.toml    - Audit verification (C++26 features audit)
+# - mise/hk/tasks.toml       - hk-based checks and utilities
+# - mise/ci/tasks.toml       - CI pipeline (parallelized)
+# - mise/lint/tasks.toml     - Language-specific linting via hk
+# - mise/format/tasks.toml   - Language-specific formatting via hk
+# - mise/doctor/tasks.toml   - mise/hk doctor diagnostics
+# - mise/setup/tasks.toml    - Tool installation, hooks, validation
+# - mise/render/tasks.toml   - Render tasks (placeholder)
 
-# Audit tasks with sources/outputs for incremental builds
-[tasks."audit:verify"]
-description = "Run every check that does not need a compiler"
-sources = [
-  "PARKED.md",
-  "decisions.md",
-  "docs/cxx26-features-audit/",
-  "scripts/verify_audit.py",
-]
-run = "python3 scripts/verify_audit.py"
+#:schema https://mise.jdx.dev/schema/mise.json
 
-[tasks."audit:index"]
-description = "Regenerate the audit's item registry from the Markdown"
-sources = ["docs/cxx26-features-audit/open-items.md", "scripts/audit_index.py"]
-outputs = ["docs/cxx26-features-audit/audit-index.json"]
-run = "python3 scripts/audit_index.py --write"
-
-[tasks."audit:anchor"]
-description = "Re-anchor the audit's citations: hash every source line they name"
-sources = [
-  "docs/cxx26-features-audit/citations.json",
-  "scripts/anchor_citations.py",
-]
-outputs = ["docs/cxx26-features-audit/citations.json"]
-run = "python3 scripts/anchor_citations.py --write"
-
-[tasks."audit:summary"]
-description = "The audit's items, sliced: --prefix MOD, --owner, --category, --state, --id, --counts"
-sources = [
-  "docs/cxx26-features-audit/audit-index.json",
-  "scripts/audit_summary.py",
-]
-run = "python3 scripts/audit_summary.py"
-
-[tasks."audit:upstream"]
-description = "Check the vendored upstream copies against the manifest"
-sources = [
-  "docs/cxx26-features-audit/upstream/manifest.json",
-  "scripts/verify_upstream.py",
-]
-run = "python3 scripts/verify_upstream.py"
-
-[tasks."audit:test"]
-description = "Break the tree 14 ways and assert that the checker catches each one"
-sources = ["scripts/test_verify_audit.py", "scripts/verify_audit.py"]
-run = "python3 scripts/test_verify_audit.py"
-
-[tasks."audit:metrics"]
-description = "What the automation is worth, measured rather than asserted"
-sources = [
-  "docs/cxx26-features-audit/audit-index.json",
-  "scripts/audit_metrics.py",
-]
-run = "python3 scripts/audit_metrics.py"
-
-[tasks."audit:measure"]
-description = "Measure the project: its shape, its discipline, its API, its audit coverage, its dependencies"
-sources = ["scripts/measure.py"]
-raw_args = true
-run = "python3 scripts/measure.py"
-
-[tasks."audit:acceptance"]
-description = "Check the project against the acceptance bar: what it must not lose, and where it is headed"
-sources = [
-  "docs/cxx26-features-audit/acceptance.json",
-  "docs/cxx26-features-audit/measurements.json",
-  "scripts/measure.py",
-]
-run = "python3 scripts/measure.py --acceptance"
-
-[tasks."audit:drift"]
-description = "Compare the overlay ports' pins with their upstreams' current tips"
-sources = ["ports/", "scripts/check_overlay_drift.py"]
-run = "python3 scripts/check_overlay_drift.py --network"
-
-# Parallelizable audit subtasks - run independent checks in parallel
-[tasks."audit:checks"]
-description = "Run all audit verification checks in parallel"
-run = "mise run audit:verify audit:test audit:metrics audit:acceptance"
-
-# Full audit pipeline - index first, then parallel checks
-[tasks."audit"]
-description = "Regenerate the registry, test the checker, then run every check"
-run = """
-mise run audit:index
-mise run audit:checks
-"""
-
-# hk-based checks (already parallelized by hk)
-[tasks."hk:check"]
-description = "Run all hk checks (format + lint)"
-run = "hk check --all"
-
-[tasks."hk:fix"]
-description = "Auto-fix all hk-checkable files"
-run = "hk fix --all"
-
-[tasks."hk:check:pre-commit"]
-description = "Run hk pre-commit checks"
-run = "hk run pre-commit"
-
-[tasks."hk:check:commit-msg"]
-description = "Validate commit message format"
-run = "hk run commit-msg"
-
-[tasks."hk:validate"]
-description = "Validate hk configuration"
-sources = [".cpplint", ".rumdl.toml", "hk.pkl"]
-run = "hk validate"
-
-[tasks."hk:install"]
-description = "Install hk git hooks"
-run = "hk install"
-
-# mise doctor integration (already runs in parallel)
-[tasks."doctor"]
-description = "Run mise doctor checks (project + env)"
-run = "mise doctor && mise doctor project"
-
-[tasks."doctor:full"]
-description = "Run all mise doctor checks including project diagnostics"
-run = "mise doctor && mise doctor project --verbose"
-
-# hk doctor (via mise)
-[tasks."hk:doctor"]
-description = "Run hk doctor to check tool availability"
-run = "hk doctor"
-
-# Format and lint shortcuts
-[tasks."fmt"]
-description = "Format all files with hk"
-run = "hk fix --all"
-
-[tasks."lint"]
-description = "Lint all files with hk"
-run = "hk check --all"
-
-# Format specific languages
-[tasks."fmt:cpp"]
-description = "Format C++ files with clang-format"
-run = "hk fix --step clang-format --all"
-
-[tasks."fmt:cmake"]
-description = "Format CMake files with cmake-format"
-run = "hk fix --step cmake-format --all"
-
-[tasks."fmt:toml"]
-description = "Format TOML files with taplo"
-run = "hk fix --step taplo-format --all"
-
-[tasks."fmt:json"]
-description = "Format JSON files with prettier"
-run = "hk fix --step prettier --all"
-
-[tasks."fmt:yaml"]
-description = "Format YAML files with yamlfmt"
-run = "hk fix --step yamlfmt --all"
-
-[tasks."fmt:md"]
-description = "Format Markdown files with rumdl"
-run = "hk fix --step rumdl-format --all"
-
-[tasks."fmt:sh"]
-description = "Format shell scripts with shfmt"
-run = "hk fix --step shfmt --all"
-
-[tasks."fmt:py"]
-description = "Format Python files with ruff"
-run = "hk fix --step ruff-format --all"
-
-[tasks."lint:cpp"]
-description = "Lint C++ files with cpplint"
-run = "hk check --step cpp-lint --all"
-
-[tasks."lint:toml"]
-description = "Lint TOML files with taplo"
-run = "hk check --step taplo --all"
-
-[tasks."lint:yaml"]
-description = "Lint YAML files with yamllint"
-run = "hk check --step yamllint --all"
-
-[tasks."lint:md"]
-description = "Lint Markdown files with rumdl"
-run = "hk check --step rumdl --all"
-
-[tasks."lint:sh"]
-description = "Lint shell scripts with shellcheck"
-run = "hk check --step shellcheck --all"
-
-[tasks."lint:py"]
-description = "Lint Python files with ruff + ty"
-run = "hk check --step ruff --all && hk check --step ty --all"
-
-[tasks."audit:python"]
-description = "Check Python AST and debug statements"
-run = "hk check --step python-check-ast --all && hk check --step python-debug-statements --all"
-
-# hk util shortcuts
-[tasks."hk:check-merge-conflicts"]
-description = "Check for merge conflict markers"
-run = "hk util check-merge-conflict --all"
-
-[tasks."hk:check-case-conflicts"]
-description = "Check for case-insensitive filename conflicts"
-run = "hk util check-case-conflict --all"
-
-[tasks."hk:check-large-files"]
-description = "Check for large files"
-run = "hk util check-added-large-files --all"
-
-[tasks."hk:check-trailing-whitespace"]
-description = "Check for trailing whitespace"
-run = "hk util trailing-whitespace --all"
-
-[tasks."hk:check-newlines"]
-description = "Check for missing newlines at EOF"
-run = "hk util newlines --all"
-
-[tasks."hk:check-mixed-line-endings"]
-description = "Check for mixed line endings"
-run = "hk util mixed-line-ending --all"
-
-[tasks."hk:fix-smart-quotes"]
-description = "Fix smart quotes"
-run = "hk util fix-smart-quotes --all"
-
-[tasks."hk:check-byte-order-marker"]
-description = "Check for UTF-8 BOM"
-run = "hk util check-byte-order-marker --all"
-
-[tasks."hk:fix-byte-order-marker"]
-description = "Fix UTF-8 BOM"
-run = "hk util fix-byte-order-marker --all"
-
-[tasks."hk:format-diff"]
-description = "Show format diff for files"
-run = "hk util format-diff --all --"
-
-# Combined check: hk + audit (run in parallel where possible)
-[tasks."check:all"]
-description = "Run all hk checks + audit verification in parallel"
-run = "mise run hk:check ::: audit:verify"
-
-[tasks."check:ci"]
-description = "Run CI checks (hk + audit + doctor) in parallel"
-run = "mise run hk:check ::: audit:verify ::: doctor"
-
-# Pre-commit and commit-msg via mise
-[tasks."pre-commit"]
-description = "Run pre-commit checks"
-run = "hk run pre-commit"
-
-[tasks."commit-msg"]
-description = "Validate commit message"
-run = "hk run commit-msg"
-
-# Install git hooks
-[tasks."hooks:install"]
-description = "Install hk git hooks"
-run = "hk install"
-
-[tasks."hooks:uninstall"]
-description = "Uninstall hk git hooks"
-run = "hk uninstall"
-
-# Setup task: install all tools via mise
-[tasks."setup:tools"]
-description = "Install all hk/mise tools via mise"
-run = """
-mise use yamlfmt yamllint
-mise use rumdl
-mise use shfmt shellcheck
-mise use ruff ty
-mise use taplo
-mise use prettier
-mise use yamlfmt yamllint
-mise use rumdl
-mise use shfmt shellcheck
-mise use ruff ty
-mise use taplo
-mise use prettier
-mise use yamlfmt yamllint
-mise use rumdl
-mise use shfmt shellcheck
-mise use ruff ty
-mise use taplo
-mise use prettier
-mise use clang-format
-mise use pipx:cpplint
-mise use pipx:cmakelang
-"""
-
-[tasks."setup:all"]
-description = "Full setup: install tools + install hooks + validate"
-run = """
-mise run setup:tools
-mise run hk:install
-mise run hk:validate
-mise run doctor
-"""
-
-# CI integration - runs in parallel
-[tasks."ci"]
-description = "Run all CI checks in parallel"
-run = "mise run hk:check ::: audit:verify ::: doctor"
-
-# Project diagnostics via mise doctor
-[tasks."diag:project"]
-description = "Run mise doctor project diagnostics"
-run = "mise doctor project"
-
-[tasks."diag:env"]
-description = "Run mise doctor environment diagnostics"
-run = "mise doctor"
-
-[tasks."diag:all"]
-description = "Run all mise doctor diagnostics"
-run = "mise doctor && mise doctor project"
+min_version = "2026.10.9"
 
 [tools]
 clang-format = "23.1.4"
@@ -336,3 +30,28 @@ taplo = "0.10.0"
 ty = { version = "0.0.102", minimum_release_age = "0s" }
 yamlfmt = "0.21.0"
 yamllint = "1.38.0"
+
+[settings]
+lockfile = true
+lockfile_mode = "generate"
+
+[task_config]
+includes = [
+  "mise/audit/tasks.toml",
+  "mise/hk/tasks.toml",
+  "mise/ci/tasks.toml",
+  "mise/lint/tasks.toml",
+  "mise/format/tasks.toml",
+  "mise/doctor/tasks.toml",
+  "mise/setup/tasks.toml",
+  "mise/render/tasks.toml",
+]
+
+# Pre-commit and commit-msg via mise
+[pre_commit]
+description = "Run pre-commit checks"
+run = "hk run pre-commit"
+
+[commit_msg]
+description = "Validate commit message"
+run = "hk run commit-msg"

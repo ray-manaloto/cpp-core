@@ -1,0 +1,104 @@
+# Audit tasks - C++26 features audit verification
+# Independent checks that can run in parallel
+
+[verify]
+description = "Run every check that does not need a compiler"
+sources = [
+  "scripts/verify_audit.py",
+  "docs/cxx26-features-audit/",
+  "PARKED.md",
+  "decisions.md",
+]
+run = "python3 scripts/verify_audit.py"
+
+[audit_index]
+description = "Regenerate the audit's item registry from the Markdown"
+sources = ["scripts/audit_index.py", "docs/cxx26-features-audit/open-items.md"]
+outputs = ["docs/cxx26-features-audit/audit-index.json"]
+run = "python3 scripts/audit_index.py --write"
+
+[audit_anchor]
+description = "Re-anchor the audit's citations: hash every source line they name"
+sources = [
+  "scripts/anchor_citations.py",
+  "docs/cxx26-features-audit/citations.json",
+]
+outputs = ["docs/cxx26-features-audit/citations.json"]
+run = "python3 scripts/anchor_citations.py --write"
+
+[audit_summary]
+description = "The audit's items, sliced: --prefix MOD, --owner, --category, --state, --id, --counts"
+sources = [
+  "scripts/audit_summary.py",
+  "docs/cxx26-features-audit/audit-index.json",
+]
+run = "python3 scripts/audit_summary.py"
+
+[audit_upstream]
+description = "Check the vendored upstream copies against the manifest"
+sources = [
+  "scripts/verify_upstream.py",
+  "docs/cxx26-features-audit/upstream/manifest.json",
+]
+run = "python3 scripts/verify_upstream.py"
+
+[audit_test]
+description = "Break the tree 14 ways and assert that the checker catches each one"
+sources = ["scripts/test_verify_audit.py", "scripts/verify_audit.py"]
+run = "python3 scripts/test_verify_audit.py"
+
+[audit_metrics]
+description = "What the automation is worth, measured rather than asserted"
+sources = [
+  "scripts/audit_metrics.py",
+  "docs/cxx26-features-audit/audit-index.json",
+]
+run = "python3 scripts/audit_metrics.py"
+
+[audit_measure]
+description = "Measure the project: its shape, its discipline, its API, its audit coverage, its dependencies"
+sources = ["scripts/measure.py"]
+raw_args = true
+run = "python3 scripts/measure.py"
+
+[audit_acceptance]
+description = "Check the project against the acceptance bar: what it must not lose, and where it is headed"
+sources = [
+  "scripts/measure.py",
+  "docs/cxx26-features-audit/acceptance.json",
+  "docs/cxx26-features-audit/measurements.json",
+]
+run = "python3 scripts/measure.py --acceptance"
+
+[audit_drift]
+description = "Compare the overlay ports' pins with their upstreams' current tips"
+sources = ["scripts/check_overlay_drift.py", "ports/"]
+run = "python3 scripts/check_overlay_drift.py --network"
+
+# Parallel audit checks - run independent verification in parallel
+[audit_checks]
+description = "Run all audit verification checks in parallel"
+run = "mise run verify test metrics acceptance"
+
+# Full audit pipeline - index first, then parallel checks
+[audit]
+description = "Regenerate the registry, test the checker, then run every check"
+run = """
+mise run index
+mise run checks
+"""
+
+# Python audit via hk
+[audit_python]
+description = "Check Python AST and debug statements"
+run = "hk check --step python-check-ast --all && hk check --step python-debug-statements --all"
+
+[index]
+description = "Regenerate the audit's item registry from the Markdown"
+sources = ["scripts/audit_index.py", "docs/cxx26-features-audit/open-items.md"]
+outputs = ["docs/cxx26-features-audit/audit-index.json"]
+run = "python3 scripts/audit_index.py --write"
+
+[checks]
+description = "Run all audit verification checks in parallel"
+run = "mise run verify test metrics acceptance"

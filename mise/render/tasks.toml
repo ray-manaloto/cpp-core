@@ -1,0 +1,7 @@
+# Render tasks - placeholder for future documentation generation
+# Not currently used in cpp-core (no docs site to build)
+
+# [tasks."render:usage"]
+# description = 'Generate usage documentation'
+# depends = ["build"]
+# run = "mise usage > mise.usage.kdl"

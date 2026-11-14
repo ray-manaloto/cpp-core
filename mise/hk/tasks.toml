@@ -1,0 +1,67 @@
+# hk-based checks (already parallelized by hk)
+
+[hk_check]
+description = "Run all hk checks (format + lint)"
+run = "hk check --all"
+
+[hk_fix]
+description = "Auto-fix all hk-checkable files"
+run = "hk fix --all"
+
+[hk_check_pre_commit]
+description = "Run hk pre-commit checks"
+run = "hk run pre-commit"
+
+[hk_check_commit_msg]
+description = "Validate commit message format"
+run = "hk run commit-msg"
+
+[hk_validate]
+description = "Validate hk configuration"
+sources = ["hk.pkl", ".cpplint", ".rumdl.toml"]
+run = "hk validate"
+
+[hk_install]
+description = "Install hk git hooks"
+run = "hk install"
+
+# hk util shortcuts
+[hk_check_merge_conflicts]
+description = "Check for merge conflict markers"
+run = "hk util check-merge-conflict --all"
+
+[hk_check_case_conflicts]
+description = "Check for case-insensitive filename conflicts"
+run = "hk util check-case-conflict --all"
+
+[hk_check_large_files]
+description = "Check for large files"
+run = "hk util check-added-large-files --all"
+
+[hk_check_trailing_whitespace]
+description = "Check for trailing whitespace"
+run = "hk util trailing-whitespace --all"
+
+[hk_check_newlines]
+description = "Check for missing newlines at EOF"
+run = "hk util newlines --all"
+
+[hk_check_mixed_line_endings]
+description = "Check for mixed line endings"
+run = "hk util mixed-line-ending --all"
+
+[hk_fix_smart_quotes]
+description = "Fix smart quotes"
+run = "hk util fix-smart-quotes --all"
+
+[hk_check_byte_order_marker]
+description = "Check for UTF-8 BOM"
+run = "hk util check-byte-order-marker --all"
+
+[hk_fix_byte_order_marker]
+description = "Fix UTF-8 BOM"
+run = "hk util fix-byte-order-marker --all"
+
+[hk_format_diff]
+description = "Show format diff for files"
+run = "hk util format-diff --all --"

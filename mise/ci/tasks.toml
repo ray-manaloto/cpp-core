@@ -1,0 +1,19 @@
+# CI tasks - parallelized where possible
+
+[check_all]
+description = "Run all hk checks + audit verification in parallel"
+run = "mise run hk_check ::: verify"
+
+[check_ci]
+description = "Run CI checks (hk + audit + doctor) in parallel"
+run = "mise run hk_check ::: verify ::: doctor"
+
+# CI integration - runs in parallel
+[ci]
+description = "Run all CI checks in parallel"
+run = "mise run hk_check ::: verify ::: doctor"
+
+# Lint via hk
+[lint]
+description = "Lint all files with hk"
+run = "hk check --all"
