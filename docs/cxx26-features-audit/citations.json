@@ -3,9 +3,9 @@
   "what_this_is": "The audit's claims about the code: every citation it makes, and what every source line those citations name says. A citation that has drifted off the code it names is a citation that is wrong, and this is what catches it.",
   "generated_by": "python3 scripts/anchor_citations.py --write",
   "derived_from": "the audit's Markdown documents and the files they cite",
-  "citation_count": 490,
-  "file_count": 22,
-  "line_count": 1538,
+  "citation_count": 505,
+  "file_count": 25,
+  "line_count": 1571,
   "citations": {
     "README.md": [
       "include/cpp-core/logging/cib_quill.hpp:142-148",
@@ -51,6 +51,22 @@
       "src/app.cpp:27-30",
       "src/app.cpp:28",
       "src/logging/quill_logger.cpp:33-35"
+    ],
+    "cmake-feature-checks.md": [
+      "CMakePresets.json:2",
+      "CMakePresets.json:4-8",
+      "cmake/cpp-core-check.cmake:12-37",
+      "cmake/cpp-core-check.cmake:40-42",
+      "cmake/cpp-core-check.cmake:40-42",
+      "cmake/cpp-core-check.cmake:40-42",
+      "cmake/dev-mode.cmake:7",
+      "cmake/presets/cpp-core.json:2",
+      "cmake/toolchains/cpp-core.cmake:157-161",
+      "cmake/toolchains/cpp-core.cmake:30",
+      "cmake/toolchains/cpp-core.cmake:70-74",
+      "cmake/toolchains/cpp-core.cmake:76-80",
+      "cmake/toolchains/cpp-core.cmake:76-80",
+      "cmake/toolchains/cpp-core.cmake:76-80"
     ],
     "constexpr-and-fmt.md": [
       "include/cpp-core/logging/cib_quill.hpp:147-148",
@@ -135,6 +151,7 @@
       "modules/logging/logging.cppm:89"
     ],
     "decisions.md": [
+      "cmake/cpp-core-check.cmake:40-42",
       "modules/logging/logging.cppm:89",
       "src/main.cpp:15"
     ],
@@ -542,6 +559,14 @@
     "CMakeLists.txt": {
       "1": "sha256:d6e1df66f9f4c563467b374513ad0be2db47cfafd8526a2f42fc11233f6c4280"
     },
+    "CMakePresets.json": {
+      "2": "sha256:1a701e59df0ea45d46fc690fabde6a5ab82b3fd59e92fe0bc86b2a46c2366574",
+      "4": "sha256:ab498169c28d242be2c1eff65fa37705777fd7db8f1fcffd9d3c1b6ac7cf324c",
+      "5": "sha256:21e20903723bb8f81ff1cf89550b7945e1112b25b01295d81e3b0798172a3a42",
+      "6": "sha256:2fed8f11edcb1fa6317d3d0bfb75f9a6f4da96b89873ae56d4f934c48d93082e",
+      "7": "sha256:92cf3a22413a77618e853376e5f0b97398985b0a16a967e0ca69bfdf4036a5fd",
+      "8": "sha256:d10b36aa74a59bcf4a88185837f658afaf3646eff2bb16c3928d0e9335e945d2"
+    },
     "cmake/catalog.cmake": {
       "17": "sha256:6212bce326612e549b509b140c5888e98d95a3c1c198901d5206952ccf3d2183",
       "18": "sha256:2dcef6e988cccf2ce9f04f80097ed33746735f63c8126760832282d206181109",
@@ -567,23 +592,39 @@
       "39": "sha256:ba5ec51d07a4ac0e951608704431d59a02b21a4e951acc10505a8dc407c501ee"
     },
     "cmake/cpp-core-check.cmake": {
+      "12": "sha256:278ca98bacd94f201ac1c10406644bba4721be73323348c987e5f598bd31b986",
+      "13": "sha256:e32b3eef661fbb0b83633bc22675557dab63d39b65f45cfac812cddf824d4d3c",
       "14": "sha256:e685849184889a3cf0b8ffc216ae3a41a4f4925abbdea4d07d36b8928b4c6705",
+      "15": "sha256:415ce416df929163b4f17e97d66bfcfc385f71f93a058a9e95ae1dbf1f4111ef",
+      "16": "sha256:b9824a672baf3940e1918cb9cafc200f6dd6196e75d5aae4399aabf2457077be",
       "17": "sha256:283434fc5b537019836b5bad0f619e2aad9f556e1cce680ed7798f8f2e0dccb5",
       "18": "sha256:715b481e992f6c0f9d4b22e102c8d928afc1682fd806f2b2cc89a7fe36d59194",
       "19": "sha256:158749ddae9162a5a232f252bb5b9233a940eb99bbb2d076017869285c522d37",
+      "20": "sha256:3abd23666eae276ecdc97e20dfdcafe8d8b24d656cd2caaa993ba2699b0a87b7",
+      "21": "sha256:fe37d07e637ef55fedaa18648e962e9f43c1318eaaac620dbb6cb99ca26dd0d3",
       "22": "sha256:4ca9675fd91354bfaf631cf194f930f24e3819333866f93e69da4be5a88b9a5a",
       "23": "sha256:715b481e992f6c0f9d4b22e102c8d928afc1682fd806f2b2cc89a7fe36d59194",
       "24": "sha256:158749ddae9162a5a232f252bb5b9233a940eb99bbb2d076017869285c522d37",
       "25": "sha256:005a41890ef184e7dadb05eefa0e2b9bd55f206a4a5b32d4e25a892921f4e162",
+      "26": "sha256:24be536f50545119a0c1e597573b929462fee57bec40d05dbf40ea5cf447aeac",
       "27": "sha256:c84fdbb54a599c146ad48a3c31384ed22aa3f2f7af9118cdecfafecf9073ac82",
       "28": "sha256:715b481e992f6c0f9d4b22e102c8d928afc1682fd806f2b2cc89a7fe36d59194",
       "29": "sha256:158749ddae9162a5a232f252bb5b9233a940eb99bbb2d076017869285c522d37",
       "30": "sha256:32fda9bb457add4831bed65d81e323a62700096db3a8d56f6d295eabee045076",
+      "31": "sha256:158749ddae9162a5a232f252bb5b9233a940eb99bbb2d076017869285c522d37",
+      "32": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "33": "sha256:f46c7b20f4c904ea64ca90c53d6f9c64428e41b6d79b8106e150f98b8606036d",
+      "34": "sha256:132dc69273ec661924b74df584449b456480bc09821030e67305eea7b415630b",
+      "35": "sha256:03af27a37c2c61cd9fafe513ae833ff36941944e8d7db3fd41045ae7edf1ca95",
       "36": "sha256:4bf3065b7e648925c0529d6d6952d328876369360977d9b709607500e0204041",
+      "37": "sha256:158749ddae9162a5a232f252bb5b9233a940eb99bbb2d076017869285c522d37",
       "40": "sha256:f8ffe985b0a108f0cec55fe43cac5e25a5e6a5e740270fdef7c99749ed701be8",
       "41": "sha256:5951d9d28ba5f88c2c5ef818c5c57b0144f125ab94b98e1c5f6e4e017b958a35",
       "42": "sha256:062b79a2daec44ed93b16ba3ac1a916e3d83e24e27dcfc04a8faa5b97ad7a38c",
       "44": "sha256:aa3b9c4dc4e9d965c9e876e64f999433ec5b1476b6fd562c701c250a9b1f871b"
+    },
+    "cmake/dev-mode.cmake": {
+      "7": "sha256:ab47fac5e57ad981576b307278f1d18040e96ceb2c2d1ca40bbbb2d18e135cec"
     },
     "cmake/iwyu.cmake": {
       "39": "sha256:bd2737702faf6e3a053bdee352dcadbc5e80971199d3b041a926cca63fa73454",
@@ -619,6 +660,9 @@
       "75": "sha256:88ec3b017257267f0e8283c329df69f440b686f60313c780465328cc97993b2c",
       "94": "sha256:c2c82cba54cbdc0882ca8ced4466ae688809e6d47375d369a0c6178caa730a63"
     },
+    "cmake/presets/cpp-core.json": {
+      "2": "sha256:1a701e59df0ea45d46fc690fabde6a5ab82b3fd59e92fe0bc86b2a46c2366574"
+    },
     "cmake/toolchains/cpp-core.cmake": {
       "1": "sha256:52b6596fc83afd091399b371596c9259667008d77d8be7a9eea54043063baeb8",
       "11": "sha256:ff52d240cd59a702b3b5d90e4faf5f12e15df2ee8e41d421649a1e3214fff686",
@@ -632,6 +676,13 @@
       "70": "sha256:3daf05c59154e26e264a934c28de38e4858666243825d04800b1b308a87f39e8",
       "71": "sha256:fe40e20db3735a28cd07eb0f40696c1bb5ef45b1f59336fd88bec064149d8506",
       "72": "sha256:8ae469d3bcd63b3c418f802e0a3ef0110588d2ab5e6133187fcda3599b9e9f70",
+      "73": "sha256:b029861fad44a37f351c66a913ca5805586bdd7d8854fdc3badea42085ef5b61",
+      "74": "sha256:158749ddae9162a5a232f252bb5b9233a940eb99bbb2d076017869285c522d37",
+      "76": "sha256:0418304f1eed4f84808c8a9a176022c1a88e0ca8f4939787edc63d8cd04ccf85",
+      "77": "sha256:6d64d4e41eb5a6f3053ac74da6072b53361c0b70404dd44c907ba02ae135eb19",
+      "78": "sha256:3b6c8fa72ab53b62738efe99d39ac0d2743768724598547017106ce2cdec6468",
+      "79": "sha256:4822b13634cb096b637774f6f256f56f5ec62fc81690f00f910264b81af28c0d",
+      "80": "sha256:799b3d31ff0bc0d37d164de9d69902221695af4a5cb050d00104ae1cba608bd7",
       "87": "sha256:c7921064fef8160624ed2d920e9252f28c290f70468c81d87e6667bfbf4d30fb",
       "89": "sha256:2cb076e0c774916fe0760963bf2fe63d5909f80db60cfda0d3b055eacd7edb3b",
       "104": "sha256:2c955d0b1d62d21afb1ae80cc77e56dc56f63a41825ff3407795d392625f1bda",
@@ -651,6 +702,11 @@
       "133": "sha256:2805fcf83087678e9213b4a29d9dbd57cb4ef2bdc247d6cf196a84c1722a1d09",
       "140": "sha256:c419f7fdbfbc233a92089b400dc3b5a87bc5ae926f4850be6a53c4ce9546c9a1",
       "149": "sha256:5167deee03bbcbea7537c6bd003d568b0a1e196e43f316cf880f7c0dff9cf05a",
+      "157": "sha256:760df8f610a3494cee30374be87649b22cc2df27848dcca1f3c6d68d1561b304",
+      "158": "sha256:d34fd8b693d649da42d08843293d9a01d222a3b39f8cff5897323c30bc62d2e9",
+      "159": "sha256:e54e8bbee0e9bb332a7c26c764de3adac23e861a0175dce972fb126dc2cb78bd",
+      "160": "sha256:8ec0d850f56c727da8fd215a93140c8d685c57cfd6ba27af14d8ee7e3f2ca6dd",
+      "161": "sha256:2fe9f717fb1e51bc379f088b99c1d780e597ba271fcf87fda5e269d5d43ec607",
       "162": "sha256:ba3dd58b25e26565d4a580070413b3190e71c78b1386225c7d3377e0f0e0b608"
     },
     "cmake/variables.cmake": {

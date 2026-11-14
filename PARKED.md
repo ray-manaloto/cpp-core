@@ -65,6 +65,7 @@ possible**. What remains is the implementation, which is parked.
 | 18 | [followup-research.md](docs/cxx26-features-audit/followup-research.md) | **the eight things the audit never asked** - and the answers |
 | 19 | [measurements.md](docs/cxx26-features-audit/measurements.md) | **what the project actually is, in numbers** - the shape, the discipline, the API, the dependency closure, and what cannot be measured |
 | 20 | [read-gap.md](docs/cxx26-features-audit/read-gap.md) | **the 520 lines the audit had not read** - read line by line, and the six things the reading found |
+| 21 | [cmake-feature-checks.md](docs/cxx26-features-audit/cmake-feature-checks.md) | **can CMake ask the compiler?** - the feature-check facilities, what CMake 4.5.0 added on 2026-11-12, the presets the project has not used, and two worked checks |
 | - | [decision-brief.md](docs/cxx26-features-audit/decision-brief.md) | the owner's thirteen decisions on one page - pre-filled, marked by strength, and answerable in a sitting |
 
 The upstream sources those parts quote are vendored under
@@ -200,13 +201,13 @@ When the build lane reopens:
 
 **[docs/cxx26-features-audit/open-items.md](docs/cxx26-features-audit/open-items.md)** has all of
 them: 8 defects, 14 fmt/`constexpr` questions, 8 quill questions, 15 tooling questions, 11
-`import std;` questions, 4 reflection questions, 3 macro questions, 10 coverage to-dos, 7 build
-questions and 3 environment questions - **83 in all** - each with what
+`import std;` questions, 4 reflection questions, 3 macro questions, 10 coverage to-dos, 8 build
+questions and 3 environment questions - **84 in all** - each with what
 settles it, plus a table of the questions that are **not** open because they have already been
 answered, and a table of the items that **carry an ID** and are answered or contingent
 (section 13).
 
-**83 open items**: 13 owner decisions, 0 registry reads, 70 settled by a compile, a run or a
+**84 open items**: 14 owner decisions, 0 registry reads, 70 settled by a compile, a run or a
 preprocessor pass.
 
 The count is derived, not typed: `scripts/audit_index.py` parses that file into
@@ -426,10 +427,11 @@ no-compile research: what remains is the implementation (parked) and the owner d
 
 **Part 17 - the decisions, collected.** The audit had **83 open items** when part 17 was written;
 part 18 then answered three of them and added three of its own, two more have since been
-answered, and part 20 added two more - so there are **83 open items** now. Seventy of them are
+answered, part 20 added two defects, and part 21 added one decision - so there are **84 open
+items** now. Seventy of them are
 settled by a compile, a run or
 a preprocessor pass - they are *questions*, and they unblock the moment the build lane reopens.
-**Thirteen are decisions**, because the answer is a judgement about what the project should be
+**Fourteen are decisions**, because the answer is a judgement about what the project should be
 rather than a fact about the world. They were scattered across `open-items.md`; part 17 gathers
 them into one sheet, with a recommendation for each.
 
@@ -691,6 +693,61 @@ throw" is not an assertion about the library.
 **What part 20 did not do.** It did not build anything, change a line of the library, or settle
 anything that needs a compile. The source is byte-identical to the baseline. The pass moved the
 audit, not the code.
+
+## What part 21 changed
+
+**Part 21 - can CMake ask the compiler?** The audit has **70 questions settled by a compile, a run
+or a preprocessor pass**, and 30 of them by a compile alone. CMake has a facility for exactly that
+- a check that compiles a snippet and keeps the answer - and the question was whether it can carry
+those 30.
+
+**The answer is yes for about 20 of them, and the part says exactly where it stops.** Four limits:
+
+- **a check compiles a snippet, not the project.** It cannot `import com.rsm.logging;` - the module
+  does not exist at configure time - so `MOD-10`, `FMT-4` and `REFL-4` are outside its reach.
+  `FMT-15` had already reached the same conclusion from the other side.
+- **the project's reflection flags do not reach a check.** The toolchain keeps them out of
+  `CMAKE_CXX_FLAGS` on purpose (`cmake/toolchains/cpp-core.cmake:76-80`), and they are a
+  directory-scope `add_compile_options()` in `cmake/cpp-core-check.cmake:40-42` - in a file reached
+  through `CMAKE_PROJECT_INCLUDE`, which CMake does **not** propagate into a try_compile project.
+  So the project's own compiler gate does not run inside a check either, and a `REFL-` check has to
+  pass `-freflection` itself.
+- **a check runs once**, and its answer lives in the build tree as an INTERNAL cache variable. A
+  compiler upgrade under the same preset name keeps the old answer.
+- **a check is not a test.** Its answer is a cache variable, so the coverage gate does not see it
+  and the 100% rule does not apply.
+
+**And one thing it can do that the audit had not credited.** `try_compile` with
+`SOURCES_TYPE CXX_MODULE` (CMake 3.28) builds a real module unit and its importer, in one generated
+project, under the project's own CMake dialect - which is enough to answer `MOD-11`'s question
+about the *shape* even though it cannot answer it about the *module*.
+
+**CMake 4.5.0 was released on 2026-11-12**, and the part walks its whole release note. Five items
+touch this project: `import std;` is now available for all C++20+ code with `CXX_SCAN_FOR_MODULES`
+(the thing `MOD-1`-`MOD-6` price); `CMAKE_CXX_STDLIB_MODULES_JSON` names the `import std` metadata
+file for `MOD-6`; the new `CMD_NON_TARGET_DIRECTIVE` diagnostic names exactly the project's one
+directory-scope directive; `install(TARGETS)` no longer needs a `LIBRARY DESTINATION` for a module
+library; and the new `install_prep/*` targets build the module BMIs an install needs - three loose
+ends of `BUILD-2` closed by the tool. The presets' section lists what the project has **not** used:
+`$schema`, `condition`, `warnings`/`errors`, `installDir`, `packagePresets`,
+`testPresets.output.outputJUnitFile`, `execution.jobs`, `testPassthroughArguments` and 4.5's
+`${configurePresetName}`.
+
+**Two worked examples**, because a design that is only described is not checked: `FMT-13` (a probe
+that fails on purpose, its message carrying the macro value, captured through
+`try_compile(... OUTPUT_VARIABLE ...)`, then one pinned check per value) and `MOD-11` (a throwaway
+module + importer through `SOURCES_TYPE CXX_MODULE`, which reproduces the matrix's shape under the
+project's own `-fmodules-ts`).
+
+**The count moves once.** Part 21 adds the fourteenth owner decision, **`BUILD-9`** - should the
+build gain a feature-check gate - with the recommendation **(c)**: a check only where the answer
+gates a code path, and a test for the rest. Open items go from 83 to **84**; owner decisions from
+13 to **14**; the questions settled by a measurement stay at **70**.
+
+**What part 21 did not do.** No build, no compiler, no CMake, no preset. The facilities are read
+from CMake 4.5.0's own release notes and documentation, and `try_compile`'s propagation behaviour
+from CMake's own `cmCoreTryCompile.cxx` rather than inferred. The library is byte-identical to the
+baseline.
 
 ## The automation and the rules
 

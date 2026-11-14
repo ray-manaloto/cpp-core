@@ -80,18 +80,18 @@
       "compile": 30,
       "decided": 1,
       "fix-and-test": 8,
-      "owner-decision": 13,
+      "owner-decision": 14,
       "reading": 1,
       "run": 19,
       "test": 10
     },
     "by_kind": {
       "defect": 8,
-      "question": 65,
+      "question": 66,
       "work-item": 10
     },
     "by_prefix": {
-      "BUILD": 7,
+      "BUILD": 8,
       "COV": 10,
       "DEF": 8,
       "ENV": 3,
@@ -103,7 +103,7 @@
       "TOOL": 15
     },
     "contingent": 1,
-    "open": 83
+    "open": 84
   },
   "generated_by": "scripts/audit_index.py",
   "items": [
@@ -183,6 +183,17 @@
       "settled_by": "an owner decision, then a script",
       "state": "open",
       "title": "**Should the build check the catalog's message set against the call sites?** The catalog tooling's input regex (`gen_str_catalog.py:342`)..."
+    },
+    {
+      "category": "owner-decision",
+      "doc": "docs/cxx26-features-audit/open-items.md#9-the-build-system-build",
+      "id": "BUILD-9",
+      "kind": "question",
+      "section": 9,
+      "section_title": "The build system (BUILD)",
+      "settled_by": "an owner decision",
+      "state": "open",
+      "title": "**Should the build gain a feature-check gate?** Part 21 shows CMake can answer about 20 of the 30 `compile` open items with..."
     },
     {
       "category": "test",
@@ -1105,7 +1116,7 @@
     {
       "file": "decisions.md",
       "part": 17,
-      "subject": "the thirteen decisions the owner has to make, with a recommendation for each"
+      "subject": "the decisions the owner has to make - thirteen from part 17, and `BUILD-9` from part 21 - with a recommendation for each"
     },
     {
       "file": "followup-research.md",
@@ -1120,7 +1131,12 @@
     {
       "file": "read-gap.md",
       "part": 20,
-      "subject": "**the 520 lines the audit had not read** - read line by line, and the five things the reading found"
+      "subject": "**the 520 lines the audit had not read** - read line by line, and the six things the reading found"
+    },
+    {
+      "file": "cmake-feature-checks.md",
+      "part": 21,
+      "subject": "**can CMake ask the compiler?** - the feature-check facilities, what CMake 4.5.0 added, the presets the project has not..."
     }
   ],
   "schema": 1,

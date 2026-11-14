@@ -29,12 +29,13 @@ recommendations for the three questions the owner asked:
 | 14 | [remaining-research.md](remaining-research.md) | the four questions that needed no compile: Intel's `stdx`, the logger's lifetime, `ut`'s module, the upstream watch |
 | 15 | [catalog-ids.md](catalog-ids.md) | are the catalog IDs the same under both compilers? - and why they are not the same between releases |
 | 16 | [readme-check.md](readme-check.md) | the root `README.md`, checked line by line - and the proof that the committed tree is the tree that built |
-| 17 | [decisions.md](decisions.md) | the thirteen decisions the owner has to make, with a recommendation for each |
+| 17 | [decisions.md](decisions.md) | the decisions the owner has to make - thirteen from part 17, and `BUILD-9` from part 21 - with a recommendation for each |
 | 18 | [followup-research.md](followup-research.md) | **the eight things the audit never asked** - and the answers |
 | 19 | [measurements.md](measurements.md) | **what the project actually is, in numbers** - the shape, the discipline, the API, the dependency closure, and what cannot be measured |
 | 20 | [read-gap.md](read-gap.md) | **the 520 lines the audit had not read** - read line by line, and the six things the reading found |
+| 21 | [cmake-feature-checks.md](cmake-feature-checks.md) | **can CMake ask the compiler?** - the feature-check facilities, what CMake 4.5.0 added, the presets the project has not used, and two worked checks |
 | - | [upstream/](upstream/) | the upstream sources these parts quote, vendored so the review can be done offline |
-| - | [decision-brief.md](decision-brief.md) | the owner's thirteen decisions on one page - pre-filled, marked by strength, and answerable in a sitting |
+| - | [decision-brief.md](decision-brief.md) | the owner's decisions on one page - pre-filled, marked by strength, and answerable in a sitting |
 
 **The audit has a machine-readable side.** `open-items.md` is the source of truth for the items;
 `scripts/audit_index.py` parses it into `audit-index.json`, and `scripts/audit_summary.py` prints
@@ -282,7 +283,7 @@ discarded every message it was given. Part 7's coverage plan now says what each 
 **They are all in one place now: [open-items.md](open-items.md)** - part 10. It has every open
 question, every known defect and every to-do, grouped and numbered (`DEF-`, `FMT-`, `QUIL-`,
 `TOOL-`, `MOD-`, `REFL-`, `MAC-`, `COV-`, `BUILD-`, `VCPKG-`, `ENV-`), each with what settles it.
-**83 in all** - 13 need an owner decision and 70 need a compile, a run or a preprocessor pass.
+**84 in all** - 14 need an owner decision and 70 need a compile, a run or a preprocessor pass.
 
 In summary, and all of it needs a compile, a run, or an owner decision:
 
@@ -296,7 +297,7 @@ In summary, and all of it needs a compile, a run, or an owner decision:
 | **Static reflection** | 4 | `REFL-1`: do the two compilers' `members_of` forms compile the same source? |
 | **The macros** | 3 | `MAC-1`: does `std::source_location::current()` in a default argument return the *caller's* location through the `logging::log<Env>` template? It may be why the CIB macro cannot be dropped |
 | **Coverage to-dos** | 10 | the uncovered set, branch by branch - and the `constexpr` change removes half of it from the runtime problem |
-| **The build system** | 7 | `BUILD-1`: there are no compiler warning flags at all - not `-Wall`, not `-Wextra`. That is an owner decision, because adding them is a behavioural change. (`BUILD-6`, the catalog IDs, is answered - part 15) |
+| **The build system** | 8 | `BUILD-1`: there are no compiler warning flags at all - not `-Wall`, not `-Wextra`. That is an owner decision, because adding them is a behavioural change. (`BUILD-6`, the catalog IDs, is answered - part 15; `BUILD-9`, whether the build should gain a feature-check gate, was added by part 21) |
 | **The dependency tree** | 0 | `VCPKG-1` and `VCPKG-2` were answered by part 18, section 2 - the registry at the pinned baseline is readable over HTTP, without a checkout. Neither the upstream `quill` port nor quill itself offers an external-fmt feature, and none of the five overlay ports shadows a builtin vcpkg port |
 | **The environment** | 3 | `ENV-1`: the two copies of fmt, and the rule that custom formatters are written for `fmt` only |
 

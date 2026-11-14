@@ -3,19 +3,19 @@
 **Date:** 2026-11-12
 **Status:** research. Nothing here is applied to the build.
 
-The audit has **82 open items**. Sixty-nine of them are settled by a compile, a run or a
+The audit has **84 open items**. Seventy of them are settled by a compile, a run or a
 preprocessor pass - they are questions, not decisions, and they unblock the moment the build lane
 reopens.
 
-**Thirteen are decisions**, because the answer is a judgement about what the project should be, not
+**Fourteen are decisions**, because the answer is a judgement about what the project should be, not
 a fact about the world. They are scattered across `open-items.md`; this file gathers them into one
 sheet, with a recommendation for each.
 
 (Three further items - `VCPKG-1`, `VCPKG-2` and `QUIL-8` - were answered by part 18, sections 2
 and 4, and are now in `open-items.md` section 12 rather than in the open list. The count was 83
 until then; part 18 then added `FMT-15`, `MOD-10` and `MOD-11` of its own. It was 81 after
-`FMT-9` and `TOOL-16` were answered and moved to section 13 as well, and part 20 added `DEF-7`.
-It is **82** today.)
+`FMT-9` and `TOOL-16` were answered and moved to section 13 as well; part 20 added `DEF-7` and
+`DEF-8`, which is 83; and part 21 added `BUILD-9`, which is **84** today.)
 
 ## The short version
 
@@ -183,7 +183,7 @@ identifier that changes when a message is added is not an identifier.
 
 **What it gates.** **DEF-6**, and the catalog's use as deployment collateral.
 
-## The nine that shape but do not gate
+## The ten that shape but do not gate
 
 ### BUILD-1 - what warning flags should the project use?
 
@@ -273,6 +273,33 @@ only a build that links. A dedicated check (the number of catalog entries agains
 "the build failed to link" into "this message is missing from the catalog". The link-time check is
 sufficient for correctness today; this is about *diagnosis*.
 
+### BUILD-9 - should the build gain a feature-check gate?
+
+Part 21 answers *how* the audit's 30 `compile` questions could be settled: CMake's
+`check_cxx_source_compiles` and `try_compile` compile a snippet at configure time and keep the
+answer as a cache variable. About 20 of the 30 are that shape. But:
+
+- a check **cannot import `com.rsm.logging;`** - the module does not exist at configure time, so
+  `MOD-10`, `FMT-4` and `REFL-4` are outside its reach (`FMT-15` reached the same conclusion);
+- the project's **reflection flags do not reach a check**, because they are a directory-scope
+  `add_compile_options()` in `cmake/cpp-core-check.cmake:40-42` and `CMAKE_PROJECT_INCLUDE` is not
+  propagated into a try_compile project - so a `REFL-` check must pass `-freflection` itself;
+- a check's answer is **cached for the life of the build tree**, so it can outlive the compiler it
+  was measured on.
+
+Options: **(a)** one check per compile-bearing item, on every preset. **(b)** a scratch translation
+unit per item, on demand. **(c)** a check only where the answer **gates a code path** -
+`HAVE_REFLECTION`, the module dialect, an `import std` capability - and a test for the rest.
+
+**The recommendation: (c).** A cache variable is worth having when something branches on it, and
+for the rest the answer is a fact about the world that the coverage gate is already the place to
+assert, at 100%. **(c)** also confines the stale-answer problem to the checks where it is harmless:
+a gating check that goes stale shows up as a build that does not take a code path it should. It
+also gives the two decisive measurements a home: `FMT-13`'s preprocessor pass and `MOD-11`'s
+throwaway module.
+
+**Full argument:** [cmake-feature-checks.md](cmake-feature-checks.md).
+
 ### QUIL-9 - what should the public `flush()` say?
 
 `flush_log()` "blocks the calling thread until all log messages up to the current timestamp are
@@ -308,7 +335,7 @@ registers only `glm-4.7` for that provider; `glm-5.3` and `glm-5.3-flash` are in
 would have to be added.
 
 **This is not a cpp-core decision** - it is the agent environment, and it is listed here only
-because it is one of the thirteen. **The recommendation: `opencode service set env`** - it is one
+because it is one of the fourteen. **The recommendation: `opencode service set env`** - it is one
 command, and the restart is a background service, not a session.
 
 ## One that is *not* a decision - and is no longer open
@@ -348,7 +375,8 @@ than blocked**, and steps 1-6 and 8-10 proceed without it.
 ## What was checked
 
 - **Every open item** in [open-items.md](open-items.md) was read; the thirteen marked "an owner
-  decision" are the thirteen here. **No item is missing and none is extra.**
+  decision" were the thirteen here when part 17 wrote the sheet. Part 21 has since added the
+  fourteenth, **BUILD-9**, and it is in both places. **No item is missing and none is extra.**
 - The **recommendations** are the audit's, where it made one (FMT-14, BUILD-7, TOOL-13), and
   otherwise follow the evidence already in the audit's own parts - each recommendation above names
   the part it rests on.

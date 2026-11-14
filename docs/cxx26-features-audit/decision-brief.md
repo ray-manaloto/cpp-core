@@ -1,11 +1,12 @@
 # The owner's decisions, on one page
 
-**Date:** 2026-11-12
+**Date:** 2026-11-12 (**one added 2026-11-13**: `BUILD-9`, from part 21)
 **Status:** a brief, not a change. Nothing here is applied to the build.
 
-**Thirteen decisions are waiting.** Four gate the implementation; nine shape it. This is part 17's
+**Fourteen decisions are waiting.** Four gate the implementation; ten shape it. This is part 17's
 sheet - [decisions.md](decisions.md) - compressed to what can be read in one sitting, with what
-the measurements have added since it was written ([measurements.md](measurements.md)).
+the measurements have added since it was written ([measurements.md](measurements.md)),
+and the one part 21 added ([cmake-feature-checks.md](cmake-feature-checks.md)).
 
 **How to answer.** Every row below has an answer slot. Reply in this shape, and the answers get
 recorded in `decisions.md`, in `open-items.md` and, where they move a number, in the acceptance bar:
@@ -16,7 +17,7 @@ TOOL-13: JSON
 TOOL-14: accept the sweep
 ```
 
-"Accept all thirteen" is a valid answer. So is "all except FMT-14, where I choose (c)".
+"Accept all fourteen" is a valid answer. So is "all except FMT-14, where I choose (c)".
 
 **STRONG** means the evidence decides it - there is a fact, and the answer follows from it.
 **A JUDGEMENT CALL** means the evidence informs it - the answer is a preference, and the audit's
@@ -38,6 +39,7 @@ recommendation is one defensible reading of the same facts.
 | **BUILD-4** | is `clang23` kept? | - | keep the acceptance branch, add no preset | **STRONG** | |
 | **BUILD-5** | should there be CI? | - | **no CI yet**; keep the gates local | **STRONG** | |
 | **BUILD-8** | check the catalog against the call sites? | - | **yes**, as part of the coverage work | judgement, and cheap | |
+| **BUILD-9** | should the build gain a feature-check gate? | - | **(c)** - a check only where the answer gates a code path, a test for the rest | judgement, and it rests on what a check cannot see | |
 | **QUIL-9** | what should the public `flush()` say? | - | **document the caveat** | **STRONG** | |
 | **ENV-2** | the abandoned `build/coverage-clang/` | - | **delete it** | **STRONG** - and now measured | |
 | **ENV-3** | `ZAI_API_KEY` for the `zai-coding-plan` provider | - | `opencode service set env` | **STRONG** - and not a cpp-core decision | |
@@ -128,7 +130,7 @@ identifier that changes when a message is added is not an identifier.
 
 ---
 
-## The nine that shape but do not gate
+## The ten that shape but do not gate
 
 The plan's first six steps - the level-filter fix, the fmt manifest entry, the `constexpr` sweep,
 the `static_assert` tests, `format_double` and the cib tag string - **need none of these**.
@@ -211,6 +213,35 @@ catches it - but only a build that links.
 turns "the build failed to link" into "this message is missing from the catalog". Correctness
 today does not depend on it; **diagnosis** does.
 
+### BUILD-9 - should the build gain a feature-check gate?
+
+**The question in one line.** Twenty of the audit's 30 `compile` questions are a CMake feature
+check's shape (`check_cxx_source_compiles`, `try_compile`), so should the build ask them at
+configure time?
+
+| | What it means | Cost |
+|---|---|---|
+| **(a) a gate** | one check per compile-bearing item, on every preset | a configure that can fail on a compiler the project does not support; one-shot answers that go stale |
+| **(b) no - on demand** | a scratch translation unit per item, when the lane reopens | nothing is re-measured; the answer stays a note |
+| **(c) only what gates** | a check where the answer **branches the build**; a test for the rest | two mechanisms, and the split has to be argued once |
+
+**Recommendation: (c).** **A judgement call**, and it rests on what a check cannot see. A check
+**cannot import the project's module**, so `MOD-10`, `FMT-4` and `REFL-4` are outside its reach;
+the project's **reflection flags do not reach a check** (they are a directory-scope directive in a
+file `CMAKE_PROJECT_INCLUDE` never delivers to a try_compile project), so every `REFL-` check
+carries `-freflection` by hand; and a check's answer is **cached for the life of the build tree**.
+A cache variable is worth having when something branches on it - `HAVE_REFLECTION`, the module
+dialect, an `import std` capability - and for the rest the answer is a fact about the world that
+the coverage gate is already the place to assert, at 100%.
+
+**What part 21 added.** The two decisive measurements this gives a home: `FMT-13`'s preprocessor
+pass (a probe that fails on purpose, with the value in a `static_assert` message, captured through
+`try_compile(... OUTPUT_VARIABLE ...)`) and `MOD-11`'s throwaway module (`try_compile` with
+`SOURCES_TYPE CXX_MODULE`, which compiles a module unit and its importer under the project's own
+`-fmodules-ts` dialect).
+
+**Full argument:** [cmake-feature-checks.md](cmake-feature-checks.md).
+
 ### QUIL-9 - what should the public `flush()` say?
 
 `flush_log()` "blocks the calling thread until all log messages up to the current timestamp are
@@ -246,7 +277,7 @@ do not satisfy it.
 
 **Recommendation: `opencode service set env`** - one command, and the restart is a background
 service, not a session. **STRONG**, and **not a cpp-core decision** - it is the agent environment,
-and it is listed here only because it is one of the thirteen.
+and it is listed here only because it is one of the fourteen.
 
 ---
 
@@ -283,7 +314,7 @@ The full step table is in [decisions.md](decisions.md#the-cheapest-path); the sh
 **And if FMT-14 is answered (a)**, step 7 is **deferred rather than blocked**, and steps 1-6 and
 8-10 proceed without it.
 
-**One thing the answers will not do.** None of these thirteen changes the library's code today -
+**One thing the answers will not do.** None of these fourteen changes the library's code today -
 the build lane is parked, and the answers are recorded as decisions, not applied. What they do is
 settle what the implementation *should* be, so that the day the lane reopens, the first build is
 an implementation and not a re-litigation.

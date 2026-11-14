@@ -2015,8 +2015,10 @@ are the two things that moved:
 ## What was checked
 
 - The **state table** (83 items, 13 / 0 / 70): parsed from the "settled by" column of every row of
-  [open-items.md](open-items.md) plus its six defect headings. The 13 owner decisions match the
-  thirteen headings in [decisions.md](decisions.md) exactly - none missing, none extra. The two
+  [open-items.md](open-items.md) plus its six defect headings. The 13 owner decisions matched the
+  thirteen headings in [decisions.md](decisions.md) exactly - none missing, none extra - when this
+  part was written. (Part 20 has since added `DEF-7` and `DEF-8`, and part 21 the fourteenth
+  decision, `BUILD-9`; both places carry all of them.) The two
   registry items were removed from the open list when section 2 answered them, `QUIL-8` when
   section 4 did, and sections 5 and 6 added `FMT-15`, `MOD-10` and `MOD-11`.
 - The **evidence quoted in each section** was read from the files it names.
