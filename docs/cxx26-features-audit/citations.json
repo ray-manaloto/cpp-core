@@ -3,7 +3,7 @@
   "what_this_is": "The audit's claims about the code: every citation it makes, and what every source line those citations name says. A citation that has drifted off the code it names is a citation that is wrong, and this is what catches it.",
   "generated_by": "python3 scripts/anchor_citations.py --write",
   "derived_from": "the audit's Markdown documents and the files they cite",
-  "citation_count": 505,
+  "citation_count": 504,
   "file_count": 25,
   "line_count": 1571,
   "citations": {
@@ -152,6 +152,7 @@
     ],
     "decisions.md": [
       "cmake/cpp-core-check.cmake:40-42",
+      "modules/logging/logging.cppm:89",
       "modules/logging/logging.cppm:89",
       "src/main.cpp:15"
     ],
@@ -353,18 +354,15 @@
       "modules/logging/logging.cppm:101-105",
       "modules/logging/logging.cppm:110-112",
       "modules/logging/logging.cppm:66-76",
-      "modules/logging/logging.cppm:66-76",
       "modules/logging/logging.cppm:67",
       "modules/logging/logging.cppm:85-151",
-      "modules/logging/logging.cppm:89",
       "modules/logging/logging.cppm:9-19",
       "src/app.cpp:27-30",
       "src/logging/quill_logger.cpp:105-119",
       "src/logging/quill_logger.cpp:117",
       "src/logging/quill_logger.cpp:118",
       "src/logging/quill_logger.cpp:118",
-      "src/logging/quill_logger.cpp:121-167",
-      "src/main.cpp:15"
+      "src/logging/quill_logger.cpp:121-167"
     ],
     "quill-runtime-formatting.md": [
       "include/cpp-core/logging/cib_quill.hpp:157-159",
@@ -386,6 +384,9 @@
       "src/logging/quill_logger.cpp:118",
       "src/logging/quill_logger.cpp:33-35",
       "tests/logging_test.cpp:74-81"
+    ],
+    "quill-wire-format-comparison.md": [
+      "include/cpp-core/logging/cib_quill.hpp:157-159"
     ],
     "read-gap.md": [
       "include/cpp-core/logging/cib_quill.hpp:1-23",

@@ -200,14 +200,14 @@ When the build lane reopens:
 ## The open items, in one place
 
 **[docs/cxx26-features-audit/open-items.md](docs/cxx26-features-audit/open-items.md)** has all of
-them: 8 defects, 14 fmt/`constexpr` questions, 8 quill questions, 15 tooling questions, 11
-`import std;` questions, 4 reflection questions, 3 macro questions, 10 coverage to-dos, 8 build
-questions and 3 environment questions - **84 in all** - each with what
+them: 8 defects, 13 fmt/`constexpr` questions, 7 quill questions, 13 tooling questions, 11
+`import std;` questions, 4 reflection questions, 3 macro questions, 10 coverage to-dos, 0 build
+questions and 1 environment questions - **70 in all** - each with what
 settles it, plus a table of the questions that are **not** open because they have already been
 answered, and a table of the items that **carry an ID** and are answered or contingent
 (section 13).
 
-**84 open items**: 14 owner decisions, 0 registry reads, 70 settled by a compile, a run or a
+**70 open items**: 0 owner decisions, 0 registry reads, 70 settled by a compile, a run or a
 preprocessor pass.
 
 The count is derived, not typed: `scripts/audit_index.py` parses that file into
@@ -435,29 +435,21 @@ a preprocessor pass - they are *questions*, and they unblock the moment the buil
 rather than a fact about the world. They were scattered across `open-items.md`; part 17 gathers
 them into one sheet, with a recommendation for each.
 
-**Four of them gate the implementation:**
+**All 14 are now answered** (2026-11-13). The decision brief (`decision-brief.md`) has the
+answers. The four gating decisions plus the ten shaping decisions are resolved.
 
-| # | Decision | Recommendation |
+**All 14 are answered. The four that gated the implementation and their answers:**
+
+| # | Decision | Answer |
 |---|---|---|
-| **FMT-14** | the module path's format dialect | (a) document it now, (b) validate it if the API is public, (c) move it only if the Codec experiment works |
-| **TOOL-13** | `.cmake-format.yaml` or `.cmake-format.json` | **JSON** - YAML needs a new dependency *and* a pinning decision, and the project has neither |
-| **TOOL-14** | a one-shot `cmake-format -i` sweep? | **accept the canonical layout** - the project's configuration should describe the project, not reconstruct a past hand-layout |
-| **BUILD-7** | where the stable catalog lives | **a committed file** - the IDs are wire identifiers, and a wire identifier that changes when a message is added is not an identifier |
+| **FMT-14** | the module path's format dialect | **(c) use fmtlib** — single formatter for both paths; depends on QUIL-1 |
+| **TOOL-13** | `.cmake-format.yaml` or `.cmake-format.json` | **YAML** — add PyYAML via mise; keep .cmake-format.yaml |
+| **TOOL-14** | a one-shot `cmake-format -i` sweep? | **accept the sweep** — 9 of 12 files change; review diff |
+| **BUILD-7** | where the stable catalog lives | **(a) use CIB's stable ID mechanism** per logging.adoc / binary_stable_ids |
 
-**The other nine shape the project but do not gate it:** `BUILD-1` (warning flags - the
-recommendation is `-Wall -Wextra` now and the rest measured later, so the compiler's warnings and
-clang-tidy's checks do not arrive in the same diff), `BUILD-2` (consumability - defer until the API
-stops moving), `BUILD-3` (the public header surface - make `quill_logger.hpp` private, which is
-what its own comment already says), `BUILD-4` (`clang23` - keep the acceptance branch, add no
-preset, because Homebrew's libc++ has no `<meta>` and it cannot build the project), `BUILD-5` (CI
-- none yet; there is no remote, so CI cannot run), `BUILD-8` (a catalog message-set check - yes,
-as part of the coverage work), `QUIL-9` (`flush()` - document quill's static-destructor caveat),
-`ENV-2` (delete the abandoned `build/coverage-clang/`) and `ENV-3` (`ZAI_API_KEY` - not a cpp-core
-decision at all).
+**The other ten and their answers:** `BUILD-1` (warning flags — **all at once**: `-Wall -Wextra -Wpedantic -Wconversion -Wshadow`), `BUILD-2` (consumability — **add install/export now** for current shape), `BUILD-3` (public header surface — **all three PRIVATE**, only module is public), `BUILD-4` (`clang23` — **conditional**: add preset + triplet when Homebrew libc++ has `<meta>`), `BUILD-5` (CI — **no CI yet**, local presets), `BUILD-8` (catalog message-set check — **yes**, part of coverage work), `BUILD-9` (feature-check gate — **(c) check only where answer gates code path**), `QUIL-9` (`flush()` — **document in both** module header + README), `ENV-2` (abandoned tree — **keep + document** with README), `ENV-3` (`ZAI_API_KEY` — **deferred**, not a cpp-core decision).
 
-**The cheapest path:** if the owner answers only those four, **every one of the plan's ten steps
-is unblocked** - and if **FMT-14** is answered **(a)**, then step 7 is *deferred* rather than
-blocked, and steps 1-6 and 8-10 proceed without it.
+**All 14 answered — every one of the plan's ten steps is unblocked.** FMT-14 is **(c)** so step 7 is unblocked but depends on QUIL-1.
 
 **One correction to a list that was circulating:** **VCPKG-2** (do the overlay ports shadow builtin
 vcpkg ports?) is **not** an owner decision - it is a research step, answered by reading the vcpkg

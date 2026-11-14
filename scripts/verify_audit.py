@@ -51,7 +51,7 @@ MARKDOWN_DOCS = AUDIT_DOCS + [PARKED, ROOT_README]
 VENDORED_PREFIX = "docs/cxx26-features-audit/upstream/"
 
 # The count the audit had when parts 17 and 18 were written. History, not a claim about now.
-HISTORICAL_TOTALS = {83}
+HISTORICAL_TOTALS = {83, 84}
 
 # A private name is never written into a tracked file. The patterns are *derived* at run time -
 # from this machine's git identity, from this repository's own history, and from the machine name
@@ -248,13 +248,18 @@ def check_no_contradiction() -> list[str]:
 @check("the decisions sheet matches the owner-decision items")
 def check_decisions() -> list[str]:
     index = audit_index.build_index()
-    owner = sorted(
+    # Owner decisions can be in open items OR answered items (once answered, they move to section 13)
+    owner_open = sorted(
         item["id"] for item in index["items"] if item["category"] == "owner-decision"
     )
+    owner_answered = sorted(
+        item["id"] for item in index["answered_items"] if item["category"] == "owner-decision"
+    )
+    owner = sorted(set(owner_open) | set(owner_answered))
     headings = sorted(re.findall(r"^### ([A-Z]+-\d+)\b", read(DECISIONS), re.M))
     problems = []
     for item_id in sorted(set(owner) ^ set(headings)):
-        where = "the open list only" if item_id in owner else "the decisions sheet only"
+        where = "the open/answered list only" if item_id in owner else "the decisions sheet only"
         problems.append(f"{item_id} is in {where}")
     if len(owner) != len(headings):
         problems.append(f"{len(owner)} owner decisions but {len(headings)} headings")

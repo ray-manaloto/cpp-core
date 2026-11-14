@@ -29,20 +29,20 @@ recommendation is one defensible reading of the same facts.
 
 | # | Decision | Gates | Recommendation | Strength | Your answer |
 |---|---|---|---|---|---|
-| **FMT-14** | the module path's format dialect | plan step 7 | **(a)** document now, **(b)** if the API is public, **(c)** only if the Codec experiment works | judgement | |
-| **TOOL-13** | `.cmake-format.yaml` or `.cmake-format.json` | plan step 8 | **JSON** | judgement, and YAML has a prerequisite | |
-| **TOOL-14** | accept a one-shot `cmake-format -i` sweep? | plan step 8 | **accept the canonical layout** | judgement | |
-| **BUILD-7** | where the stable catalog lives | **DEF-6** | **a committed file** | **STRONG** | |
-| **BUILD-1** | what warning flags? | - | `-Wall -Wextra` now, measure the rest before adding it | judgement | |
-| **BUILD-2** | consumable outside this repository? | - | **defer**, until the module's API stops moving | judgement | |
-| **BUILD-3** | what is the public header surface? | - | make `quill_logger.hpp` private | judgement, strongly indicated | |
-| **BUILD-4** | is `clang23` kept? | - | keep the acceptance branch, add no preset | **STRONG** | |
-| **BUILD-5** | should there be CI? | - | **no CI yet**; keep the gates local | **STRONG** | |
-| **BUILD-8** | check the catalog against the call sites? | - | **yes**, as part of the coverage work | judgement, and cheap | |
-| **BUILD-9** | should the build gain a feature-check gate? | - | **(c)** - a check only where the answer gates a code path, a test for the rest | judgement, and it rests on what a check cannot see | |
-| **QUIL-9** | what should the public `flush()` say? | - | **document the caveat** | **STRONG** | |
-| **ENV-2** | the abandoned `build/coverage-clang/` | - | **delete it** | **STRONG** - and now measured | |
-| **ENV-3** | `ZAI_API_KEY` for the `zai-coding-plan` provider | - | `opencode service set env` | **STRONG** - and not a cpp-core decision | |
+| **FMT-14** | the module path's format dialect | plan step 7 | **(c)** move formatting out of module interface (one fmtlib for both paths) | judgement | **(c)** — use fmtlib; single formatter for both paths; depends on QUIL-1 |
+| **TOOL-13** | `.cmake-format.yaml` or `.cmake-format.json` | plan step 8 | **YAML** (add PyYAML via mise) | judgement | **YAML** — add PyYAML via mise; keep .cmake-format.yaml |
+| **TOOL-14** | accept a one-shot `cmake-format -i` sweep? | plan step 8 | **accept the canonical layout** | judgement | **accept the sweep** — 9 of 12 files change; review diff |
+| **BUILD-7** | where the stable catalog lives | **DEF-6** | **a committed file** (use CIB's stable ID mechanism) | **STRONG** | **(a)** — use CIB's stable ID mechanism per logging.adoc / binary_stable_ids |
+| **BUILD-1** | what warning flags? | - | **all at once**: `-Wall -Wextra -Wpedantic -Wconversion -Wshadow` | judgement | **all at once** — `-Wall -Wextra -Wpedantic -Wconversion -Wshadow` |
+| **BUILD-2** | consumable outside this repository? | - | **add install/export now** for current shape | judgement | **add install/export now** — FILE_SET CXX_MODULES + install(EXPORT CXX_MODULES_DIRECTORY) |
+| **BUILD-3** | what is the public header surface? | - | **all three PRIVATE** — only the module is public | judgement | **all three PRIVATE** — only `import com.rsm.logging;` is public |
+| **BUILD-4** | is `clang23` kept? | - | keep acceptance branch; add preset/triplet when Homebrew libc++ has `<meta>` | **STRONG** | **conditional** — add clang23 preset + triplet when Homebrew libc++ has `<meta>` |
+| **BUILD-5** | should there be CI? | - | **no CI yet**; keep the gates local | **STRONG** | **no CI yet** — local presets (mise run audit:verify/measure/acceptance) |
+| **BUILD-8** | check the catalog against the call sites? | - | **yes**, as part of the coverage work | judgement, and cheap | **yes** — small script, part of coverage work |
+| **BUILD-9** | should the build gain a feature-check gate? | - | **(c)** - a check only where the answer gates a code path | judgement | **(c)** — check only where answer gates code path (HAVE_REFLECTION, module dialect, import std) |
+| **QUIL-9** | what should the public `flush()` say? | - | **document in module header + README** | **STRONG** | **document in both** — two-line caveat on static destructor hazard |
+| **ENV-2** | the abandoned `build/coverage-clang/` | - | **keep it (document why)** | judgement | **keep + document** — add README explaining it's abandoned and why |
+| **ENV-3** | `ZAI_API_KEY` for the `zai-coding-plan` provider | - | **not a cpp-core decision** — defer to owner's agent setup | **STRONG** | **deferred** — not a cpp-core decision; owner's agent setup |
 
 ---
 
@@ -59,9 +59,12 @@ dialect, and the difference is structural - fmt cannot enter the module interfac
 | **(b) validate** | validate the format specification against the argument **types** | the scanner needs the type set; a real behaviour change - **and the renderer has to change with it** |
 | **(c) move** | move the formatting out of the module interface, so one formatter serves both paths | the plan's last step; needs **QUIL-1** to succeed |
 
-**Recommendation: (a) now, (b) if the API is public, (c) only if the Codec experiment works.**
-**A judgement call**, but a constrained one: (b) is only coherent if the module's *renderer* comes
-from the same library as the validator. A check that is present and wrong is worse than no check.
+**Your answer: (c) — use fmtlib; single formatter for both paths; depends on QUIL-1.**
+
+**What this means.** The hand-rolled formatter (492 lines, 51% of the library) is replaced by fmtlib.
+Both module path and catalog path use the same fmtlib-based formatter. This unblocks step 7 of the
+plan but **depends on QUIL-1** (can a quill Codec push N fields from one pack element?). If QUIL-1
+fails, this path is dead and we fall back to (a) or (b).
 
 **What the measurements added.** The hand-rolled formatter is **492 of the library's 967 lines of
 code - 51% of it**. The acceptance bar's target is that share going **down**. The question is not
@@ -69,8 +72,6 @@ code - 51% of it**. The acceptance bar's target is that share going **down**. Th
 project**". And **the two paths already disagree today**: `{:>06}` renders `000042` on the module
 path and `    42` on the catalog path, and `info("{:s}", 42)` compiles and is silently ignored
 where `std::format` and fmt reject it - that is **DEF-5**.
-
-**If deferred:** the two paths keep disagreeing silently, and DEF-5 keeps shipping.
 
 **Full argument:** [decisions.md](decisions.md#fmt-14---what-should-the-module-paths-format-strings-do).
 
@@ -85,9 +86,10 @@ config either.
 | **JSON** | commit `.cmake-format.json` | the config is less pleasant to hand-edit |
 | **YAML** | keep `.cmake-format.yaml` | the install must gain PyYAML **and** the install has to be pinned somewhere, or the tool is found by path |
 
-**Recommendation: JSON.** **A judgement call** - YAML is perfectly viable once PyYAML is installed
-and pinned - but JSON is the smaller commitment, and the project has neither today. The config is
-a machine-read format either way.
+**Your answer: YAML — add PyYAML via mise; keep .cmake-format.yaml.**
+
+**What this means.** Install PyYAML in the mise environment (mise.toml), pin the cmakelang version,
+and keep the existing .cmake-format.yaml config. The config stays human-readable with comments.
 
 **Full argument:** [decisions.md](decisions.md#tool-13---cmake-formatyaml-or-cmake-formatjson).
 
@@ -121,8 +123,12 @@ so **every regeneration renumbers from scratch**.
 | **(b) the build tree** | `${CMAKE_CURRENT_BINARY_DIR}/cpp-core-catalog.json` | **does not work** - a clean build renumbers everything |
 | **(c) leave it alone** | the IDs are a property of the current message set | defensible **only** if the XML is not consumed as deployment collateral |
 
-**Recommendation: (a). STRONG.** The deciding fact is that the IDs are *wire identifiers*. A wire
-identifier that changes when a message is added is not an identifier.
+**Your answer: (a) — use CIB's stable ID mechanism per logging.adoc / binary_stable_ids.**
+
+**What this means.** The CIB tool already has a STABLE_JSON mechanism (`cmake/catalog.cmake` doesn't
+use it). Follow the CIB docs: `logging.adoc` and the `binary_stable_ids` example. The stable file
+(e.g., `cmake/catalog-stable.json`) is committed; IDs survive clean builds, branch switches, and
+new machines. An ID change shows in a diff.
 
 **What it gates:** **DEF-6**, and the catalog's use as deployment collateral.
 
@@ -140,13 +146,14 @@ the `static_assert` tests, `format_double` and the cib tag string - **need none 
 **There are none today** - not `-Wall`, not `-Wextra`, not `-Wpedantic`, not `-Wconversion`, not
 `-Wshadow`. Adding warnings is a behavioural change: new diagnostics on code that compiles today.
 
-**Recommendation: `-Wall -Wextra` on both compilers, and measure the rest before adding it.**
-**A judgement call.** The floor is conventional, cheap, and what a reviewer expects; the rest each
-need real work, and `-Wpedantic` interacts with C++26 feature-test macros. Adding the floor now
-and the rest later keeps the two changes separate, so the noise from each is readable on its own.
+**Your answer: all at once — `-Wall -Wextra -Wpedantic -Wconversion -Wshadow`.**
+
+**What this means.** One sweep, one cleanup. All five flags enabled on both compilers from the
+first implementation build. The noise is handled in a single pass. `-Wpedantic` on C++26
+feature-test macros is known problematic but will be addressed directly.
 
 **What the measurements added.** The library is **967 lines across 10 files** - small enough that
-the floor is a cheap sweep, and the acceptance bar's *zero standard-library includes in the module
+the full sweep is cheap, and the acceptance bar's *zero standard-library includes in the module
 interface* is a rule a warning can help protect.
 
 ### BUILD-2 - should cpp-core be consumable outside this repository?
@@ -155,10 +162,19 @@ interface* is a rule a warning can help protect.
 `CMakeLists.txt` files, so another project cannot `find_package(cpp-core)` and cannot import the
 module.
 
-**Recommendation: defer, until the module's API has stopped moving.** **A judgement call.** The
-API is still moving - **FMT-14** is undecided and the two paths' format dialects differ - so an
-install/export set published now would encode decisions that are about to be revisited. There is
-no consumer today, so nothing is blocked by deferring.
+**Your answer: add install/export now for current shape — FILE_SET CXX_MODULES + install(EXPORT CXX_MODULES_DIRECTORY).**
+
+**What this means.** Add `install(TARGETS ... FILE_SET CXX_MODULES ...)` and
+`install(EXPORT ... CXX_MODULES_DIRECTORY ...)` now, for the current API shape. Three obstacles
+noted in Part 18 §7.1:
+- `format.hpp` is PRIVATE but a **public build-time dependency** of the installed module
+- `internal.hpp` is in the global module fragment, not in a file set
+- The export publishes quill's and cib's whole closure
+
+These are solved as part of the implementation. No consumer today, but the install rules force API
+stability discipline earlier.
+
+**Full argument:** [decisions.md](decisions.md#build-2---should-cpp-core-be-consumable-outside-this-repository).
 
 ### BUILD-3 - what is the public header surface?
 
@@ -168,15 +184,22 @@ All three headers in `include/cpp-core/logging/` are published by
 public interface"**. With no install rules there is no install-time boundary either, so "public"
 is currently an accident.
 
-**Recommendation: make `quill_logger.hpp` private, and keep `internal.hpp` and `cib_quill.hpp` as
-the public surface.** **A judgement call, strongly indicated** - the header's own comment already
-says which side of the line it is on, and the build system has not caught up. This needs no
-install rules and no export set.
+**Your answer: all three PRIVATE — only `import com.rsm.logging;` is public.**
+
+**What this means.** The module BMI (`import com.rsm.logging;`) is the **only** public interface.
+All three headers (`internal.hpp`, `cib_quill.hpp`, `quill_logger.hpp`) become PRIVATE:
+- `internal.hpp` — global module fragment, needed by importers via BMI
+- `cib_quill.hpp` — catalog path API, reachable only through the module's implementation
+- `quill_logger.hpp` — implementation detail (5 lines, 21 unread lines)
+
+The install/export (BUILD-2) installs the module BMI + its BMI dependencies. Headers are not
+installed. Consumers use `import com.rsm.logging;` only.
 
 **What the measurements added.** `quill_logger.hpp` is **5 lines of code**, and the read-gap list
-the harness now prints shows **all 21 of its source lines unread** at line granularity. A header
-nobody has read, whose own comment says it is not public, is the clearest case in the project for
-making the boundary explicit.
+shows **all 21 of its source lines unread** at line granularity. A header nobody has read, whose
+own comment says it is not public, is the clearest case for making the boundary explicit.
+
+**Full argument:** [decisions.md](decisions.md#build-3---what-is-the-public-header-surface).
 
 ### BUILD-4 - is `clang23` kept?
 
@@ -184,24 +207,33 @@ The toolchain and `cmake/cpp-core-check.cmake` both accept it, with a full valid
 there is **no `clang23` triplet and no `clang23` preset** - so it cannot be reached through the
 supported path.
 
-**Recommendation: keep the acceptance branch, do not add a preset or a triplet.** **STRONG.** A
-third compiler the project **cannot build** is not a supported configuration: Homebrew's libc++
-has no `<meta>`, so `src/reflection_demo.cpp` cannot even be parsed. If clang-tidy turns out to
-need a BMI, that need should be met by the compiler that can build the project - and that is
-**TOOL-3**, a measurement, not a decision.
+**Your answer: conditional — add clang23 preset + triplet when Homebrew libc++ has `<meta>`.**
+
+**What this means.** The validation branch in `cmake/cpp-core-check.cmake` stays. The preset and
+triplet are added **only when** Homebrew's libc++ gains `<meta>` support (so `src/reflection_demo.cpp`
+can parse). Until then, no clang23 preset/triplet exists — it's not a supported configuration.
+If clang-tidy needs a BMI, TOOL-3 measures whether the building compiler (GCC 16 or p2996) can
+provide it.
+
+**Full argument:** [decisions.md](decisions.md#build-4---is-clang23-kept).
 
 ### BUILD-5 - should there be CI?
 
 There is **no `.github/` directory and no git remote**. The coverage gate, the format check and
 the clang-tidy check therefore have **no home** until CI exists.
 
-**Recommendation: no CI yet; keep the gates as local presets.** **STRONG.** There is no remote, so
-CI cannot run at all, and a workflow file with no remote is a file that only rots.
+**Your answer: no CI yet — local presets (mise run audit:verify/measure/acceptance).**
+
+**What this means.** No `.github/` directory, no workflow file. The gates are local commands
+anyone can run: `mise run audit:verify`, `mise run audit:measure`, `mise run audit:acceptance`.
+A workflow with no remote rots. Revisit when a remote exists; the design doesn't change, only
+where it runs.
 
 **What the measurements added.** The recommendation's "local, not CI" is now the status quo
-rather than a plan: `mise run audit:verify`, `mise run audit:measure` and
-`mise run audit:acceptance` are commands anyone can run, and they already police the repository's
-bookkeeping, its metrics and its acceptance bar.
+rather than a plan: the three audit commands already police the repository's bookkeeping, its
+metrics and its acceptance bar.
+
+**Full argument:** [decisions.md](decisions.md#build-5---should-there-be-ci).
 
 ### BUILD-8 - should the build check the catalog's message set against the call sites?
 
@@ -209,9 +241,13 @@ The catalog tooling's input regex **drops a line that does not match**, and the 
 deduplicated by a 64-bit hash, so a message can go missing from the catalog silently. The **link**
 catches it - but only a build that links.
 
-**Recommendation: yes, and as part of the coverage work.** **A judgement call, and cheap.** It
-turns "the build failed to link" into "this message is missing from the catalog". Correctness
-today does not depend on it; **diagnosis** does.
+**Your answer: yes — small script, part of coverage work.**
+
+**What this means.** A script counts catalog entries vs. `CIB_` call sites. Runs as part of the
+coverage gate (100% rule). Turns "undefined symbol at link" into "message X missing from catalog".
+Cheap, diagnostic, fits the 100% coverage rule.
+
+**Full argument:** [decisions.md](decisions.md#build-8---should-the-build-check-the-catalogs-message-set-against-the-call-sites).
 
 ### BUILD-9 - should the build gain a feature-check gate?
 
@@ -225,20 +261,17 @@ configure time?
 | **(b) no - on demand** | a scratch translation unit per item, when the lane reopens | nothing is re-measured; the answer stays a note |
 | **(c) only what gates** | a check where the answer **branches the build**; a test for the rest | two mechanisms, and the split has to be argued once |
 
-**Recommendation: (c).** **A judgement call**, and it rests on what a check cannot see. A check
-**cannot import the project's module**, so `MOD-10`, `FMT-4` and `REFL-4` are outside its reach;
-the project's **reflection flags do not reach a check** (they are a directory-scope directive in a
-file `CMAKE_PROJECT_INCLUDE` never delivers to a try_compile project), so every `REFL-` check
-carries `-freflection` by hand; and a check's answer is **cached for the life of the build tree**.
-A cache variable is worth having when something branches on it - `HAVE_REFLECTION`, the module
-dialect, an `import std` capability - and for the rest the answer is a fact about the world that
-the coverage gate is already the place to assert, at 100%.
+**Your answer: (c) — check only where answer gates code path (HAVE_REFLECTION, module dialect, import std).**
 
-**What part 21 added.** The two decisive measurements this gives a home: `FMT-13`'s preprocessor
-pass (a probe that fails on purpose, with the value in a `static_assert` message, captured through
-`try_compile(... OUTPUT_VARIABLE ...)`) and `MOD-11`'s throwaway module (`try_compile` with
-`SOURCES_TYPE CXX_MODULE`, which compiles a module unit and its importer under the project's own
-`-fmodules-ts` dialect).
+**What this means.** `check_cxx_source_compiles` / `try_compile` for gating checks only:
+`HAVE_REFLECTION`, the module dialect capability, `import std` capability. The rest (facts about
+the world) go to the coverage gate (100%) or tests. Confines the stale-answer problem to gating
+checks — a stale gating check shows up as a missing code path.
+
+**What part 21 added.** Two decisive measurements get a home: `FMT-13`'s preprocessor pass (probe
+fails on purpose, `static_assert` message carries macro value, captured via `OUTPUT_VARIABLE`)
+and `MOD-11`'s throwaway module (`try_compile` with `SOURCES_TYPE CXX_MODULE`, reproduces matrix
+shape under project's `-fmodules-ts`).
 
 **Full argument:** [cmake-feature-checks.md](cmake-feature-checks.md).
 
@@ -249,35 +282,48 @@ flushed" and carries quill's warning: *"Do not call this function from the destr
 object. This may lead to application crashes..."*. The project's `com::rsm::logging::flush()` says
 nothing about it, and a consumer cannot see quill's warning.
 
-**Recommendation: document the caveat in the public header.** **STRONG.** **There is no bug
-today** - the project's own `main()` calls it from `main` - but the constraint has to be
-documented. A safe implementation would change the contract from synchronous to asynchronous,
-which is a bigger decision than the hazard warrants. The caveat is two lines of comment. The
-function is `logging.cppm:89`.
+**Your answer: document in both — module header + README.**
+
+**What this means.** Two-line caveat on `com::rsm::logging::flush()` in `logging.cppm:89` and in
+the module's public header comment. Quill's warning: "Do not call from destructor of a static
+object — may crash if ThreadContext destroyed first." No bug today (main() calls from main), but
+consumer must know. Safe implementation would change sync→async contract — bigger than hazard
+warrants.
+
+**Full argument:** [decisions.md](decisions.md#quil-9---what-should-the-public-flush-say).
 
 ### ENV-2 - the abandoned `build/coverage-clang/`
 
 An abandoned experiment (clang source-based coverage). The raw-profile version mismatch makes it
 unusable - clang v10 against `llvm-profdata` 23.1.5's v11.
 
-**Recommendation: delete it.** **STRONG.** It is in the build tree, which is not tracked, so this
-is housekeeping rather than a commit.
+**Your answer: keep + document — add README explaining it's abandoned and why.**
 
-**What the measurements added - and this is the one thing to know before answering.** The
-abandoned tree is **one of the nine build trees** the closure measurement reads, and all nine
-independently agree on the same 106-header closure. Deleting it drops the cross-check from nine
-trees to eight: still two compilers and five configurations, and the acceptance bar's floor of two
-trees still holds. The coverage run itself was broken; the **include record** it left behind was
-not, and it is corroborating the other eight.
+**What this means.** The directory stays in the build tree (not tracked). Add a README in
+`build/coverage-clang/` explaining: raw-profile version mismatch (clang v10 vs llvm-profdata
+23.1.5 v11), experiment abandoned, kept as corroborating data point. All 9 build trees agree on
+106-header closure; this is one of them. The cross-check is 8 trees without it — still exceeds
+acceptance bar floor of 2.
+
+**What the measurements added.** The abandoned tree is **one of the nine build trees** the closure
+measurement reads, and all nine independently agree on the same 106-header closure. Keeping it
+preserves the 9-tree corroboration.
+
+**Full argument:** [decisions.md](decisions.md#env-2---the-abandoned-buildcoverage-clang).
 
 ### ENV-3 - `ZAI_API_KEY` for the `zai-coding-plan` provider
 
 The two saved `.Z.AI` accounts belong to the `zai` integration, not to `zai-coding-plan`, so they
 do not satisfy it.
 
-**Recommendation: `opencode service set env`** - one command, and the restart is a background
-service, not a session. **STRONG**, and **not a cpp-core decision** - it is the agent environment,
-and it is listed here only because it is one of the fourteen.
+**Your answer: deferred — not a cpp-core decision; owner's agent setup.**
+
+**What this means.** This is the agent environment, not a cpp-core project decision. The two
+saved Z.AI accounts belong to `zai` integration, not `zai-coding-plan`. Options (`opencode service
+set env ZAI_API_KEY <key>` or `opencode auth login zai-coding-plan`) are handled by the owner
+outside this project. Listed here only because it appeared in the original 13.
+
+**Full argument:** [decisions.md](decisions.md#env-3---zai_api_key-for-the-zai-coding-plan-provider).
 
 ---
 
@@ -295,7 +341,7 @@ and not `consteval` bodies whose only definition is compile time.
 
 ## What happens after you answer
 
-**If you answer only the four gating decisions**, every one of the plan's ten steps is unblocked.
+**All 14 decisions are answered.** Every one of the plan's ten steps is unblocked.
 The full step table is in [decisions.md](decisions.md#the-cheapest-path); the short version:
 
 | Step | Needs |
@@ -306,13 +352,13 @@ The full step table is in [decisions.md](decisions.md#the-cheapest-path); the sh
 | 4. Add the `static_assert` formatter tests | step 3 |
 | 5. Replace `snprintf` with fmt in `format_double` | nothing - fixes DEF-2 and DEF-4 in both paths |
 | 6. `fmt::format` for the cib tag string | nothing |
-| 7. Move the formatting out of the module interface | **FMT-14**, and **QUIL-1** must succeed |
-| 8. Wire the formatting and the checks into CMake | **TOOL-13**, **TOOL-14** |
+| 7. Move the formatting out of the module interface | **FMT-14 (c)**, and **QUIL-1** must succeed |
+| 8. Wire the formatting and the checks into CMake | **TOOL-13 (YAML+PyYAML)**, **TOOL-14 (sweep)** |
 | 9. The coverage gate | nothing - a separate track |
 | 10. The `import std;` decision | nothing - the recommendation is to keep the status quo |
 
-**And if FMT-14 is answered (a)**, step 7 is **deferred rather than blocked**, and steps 1-6 and
-8-10 proceed without it.
+**FMT-14 is answered (c)** — step 7 is **unblocked but depends on QUIL-1**. If QUIL-1 succeeds,
+the single fmtlib formatter replaces the hand-rolled one. If QUIL-1 fails, fall back to (a) or (b).
 
 **One thing the answers will not do.** None of these fourteen changes the library's code today -
 the build lane is parked, and the answers are recorded as decisions, not applied. What they do is

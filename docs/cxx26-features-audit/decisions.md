@@ -96,20 +96,17 @@ is the kind the project's two-compiler rule exists to avoid. **fmt remains the r
 this project; the *reason* changes** from "the standard is not there" to "the standard is not
 there **on both compilers**".
 
-**The recommendation: (a) now, (b) if the API is public, (c) only if the Codec experiment
-works.** The reasoning is in part 13: (c) is the only option that makes the two paths *agree*, and
-it is also the only one that needs a compile to know whether it is possible at all. Doing (c)
-first, or without the Codec result, risks a rewrite on a guess. (a) costs nothing and is
-prerequisite for reading (b) and (c) anyway.
+**Your answer: (c) — use fmtlib; single formatter for both paths; depends on QUIL-1.**
 
-**One refinement from part 18, section 6:** (b) is no longer a cheap improvement over (a) - it is
-a *package* with a renderer change, and the renderer change is the expensive half. If (b) is
-wanted, (c) is the way to get it, and (c) is gated on QUIL-1.
+**What this means.** The hand-rolled formatter (492 lines, 51% of the library) is replaced by fmtlib.
+Both module path and catalog path use the same fmtlib-based formatter. This unblocks step 7 of the
+plan but **depends on QUIL-1** (can a quill Codec push N fields from one pack element?). If QUIL-1
+fails, this path is dead and we fall back to (a) or (b).
 
 **What it gates.** Plan step 7 - the only step that changes the module's design. Steps 3-6 make
 the current design better whether or not (c) happens, so **steps 1-6 do not wait for this**.
 
-**If deferred:** the two paths keep disagreeing silently, and DEF-5 keeps shipping.
+**If QUIL-1 fails:** fall back to (a) document or (b) validate with fmt.
 
 ---
 
@@ -127,9 +124,10 @@ added and trusted.
 | **JSON** | commit `.cmake-format.json` | the config is less pleasant to hand-edit |
 | **YAML** | keep `.cmake-format.yaml` | the install must gain PyYAML (`mise use pipx:cmakelang[yaml]`) **and** the install has to be pinned somewhere, or the tool is found by path |
 
-**The recommendation: JSON.** It is the smaller commitment: YAML needs a new dependency *and* a
-pinning decision, and the project has neither today. The config is a machine-read format either
-way - nobody hand-edits a line-width setting often enough to need YAML's readability.
+**Your answer: YAML — add PyYAML via mise; keep .cmake-format.yaml.**
+
+**What this means.** Install PyYAML in the mise environment (mise.toml), pin the cmakelang version,
+and keep the existing .cmake-format.yaml config. The config stays human-readable with comments.
 
 **What it gates.** Plan step 8 (`cmake/format.cmake`).
 
@@ -178,8 +176,13 @@ regeneration renumbers from scratch**.
 | **(b) the build tree** | `${CMAKE_CURRENT_BINARY_DIR}/cpp-core-catalog.json` | **does not work** - a clean build renumbers everything, so it is the same defect with an extra step |
 | **(c) leave it alone** | the IDs are a property of the current message set | defensible **only** if the XML is not consumed as deployment collateral |
 
-**The recommendation: (a).** The deciding fact is that the IDs are *wire identifiers*. A wire
-identifier that changes when a message is added is not an identifier.
+**Your answer: (a) — use CIB's stable ID mechanism per logging.adoc / binary_stable_ids.**
+
+**What this means.** The CIB tool already has a STABLE_JSON mechanism (`gen_str_catalog.py` has
+`STABLE_JSON` / `--stable_json` / `read_stable` / `assign_ids`). `cmake/catalog.cmake` does not
+use it — the flag reaches argparse with an empty list. Follow the CIB docs: `logging.adoc` and
+the `binary_stable_ids` example. The stable file (e.g., `cmake/catalog-stable.json`) is committed;
+IDs survive clean builds, branch switches, and new machines. An ID change shows in a diff.
 
 **What it gates.** **DEF-6**, and the catalog's use as deployment collateral.
 
@@ -193,12 +196,11 @@ identifier that changes when a message is added is not an identifier.
 This is the owner's call because **adding warnings is a behavioural change**: new diagnostics on
 code that compiles today.
 
-**The recommendation: `-Wall -Wextra` on both compilers, and measure the rest before adding it.**
-`-Wall -Wextra` are the conventional floor, they are cheap, and they are what a reviewer expects.
-`-Wconversion`, `-Wshadow` and `-Wpedantic` are worth having but each is a source of diagnostics
-that will need real work - and `-Wpedantic` interacts with C++26 feature-test macros. Adding the
-floor now and the rest later keeps the two changes separate, so the noise from each is readable on
-its own.
+**Your answer: all at once — `-Wall -Wextra -Wpedantic -Wconversion -Wshadow`.**
+
+**What this means.** One sweep, one cleanup. All five flags enabled on both compilers from the
+first implementation build. The noise is handled in a single pass. `-Wpedantic` on C++26
+feature-test macros is known problematic but will be addressed directly.
 
 **Do it after the `constexpr` sweep (step 3) and before the clang-tidy work** - that way the
 compiler's warnings and clang-tidy's checks do not arrive in the same diff.
@@ -209,10 +211,17 @@ compiler's warnings and clang-tidy's checks do not arrive in the same diff.
 `CMakeLists.txt` files, so another project cannot `find_package(cpp-core)` and cannot import the
 module.
 
-**The recommendation: defer, until the module's API has stopped moving.** The API is still moving
-- **FMT-14** is undecided, and the two paths' format dialects differ. An install/export set
-published now would encode decisions that are about to be revisited. There is also no consumer
-today, so nothing is blocked by deferring.
+**Your answer: add install/export now for current shape — FILE_SET CXX_MODULES + install(EXPORT CXX_MODULES_DIRECTORY).**
+
+**What this means.** Add `install(TARGETS ... FILE_SET CXX_MODULES ...)` and
+`install(EXPORT ... CXX_MODULES_DIRECTORY ...)` now, for the current API shape. Three obstacles
+noted in Part 18 §7.1:
+- `format.hpp` is PRIVATE but a **public build-time dependency** of the installed module
+- `internal.hpp` is in the global module fragment, not in a file set
+- The export publishes quill's and cib's whole closure
+
+These are solved as part of the implementation. No consumer today, but the install rules force API
+stability discipline earlier.
 
 (For the record: the project's own four `CMakeLists.txt` files contain no `install()` call and no
 `export()` set - **verified**.)
@@ -225,11 +234,16 @@ All three headers in `include/cpp-core/logging/` are published by
 public interface"**. With no install rules there is no install-time boundary either, so "public"
 is currently an accident.
 
-**The recommendation: make `quill_logger.hpp` private, and keep `internal.hpp` and
-`cib_quill.hpp` as the public surface.** The header's own comment already says which side of the
-line it is on; the build system just has not caught up. This is the low-risk half of the decision -
-it needs no install rules and no export set, and it can be done together with **BUILD-2** or
-before it.
+**Your answer: all three PRIVATE — only `import com.rsm.logging;` is public.**
+
+**What this means.** The module BMI (`import com.rsm.logging;`) is the **only** public interface.
+All three headers (`internal.hpp`, `cib_quill.hpp`, `quill_logger.hpp`) become PRIVATE:
+- `internal.hpp` — global module fragment, needed by importers via BMI
+- `cib_quill.hpp` — catalog path API, reachable only through the module's implementation
+- `quill_logger.hpp` — implementation detail (5 lines, 21 unread lines)
+
+The install/export (BUILD-2) installs the module BMI + its BMI dependencies. Headers are not
+installed. Consumers use `import com.rsm.logging;` only.
 
 ### BUILD-4 - is `clang23` kept?
 
@@ -242,11 +256,13 @@ BMI with. But clang 23 **cannot build this project** - Homebrew's libc++ has no 
 `src/reflection_demo.cpp` cannot even be parsed without it - so the BMI it would build is of a
 project it cannot compile.
 
-**The recommendation: keep the acceptance branch, do not add a preset or a triplet.** A third
-compiler the project cannot build is not a supported configuration, and adding a preset for it
-would only make the failure louder and later. If clang-tidy turns out to need a BMI, that need
-should be met by the compiler that can build the project - and the answer is recorded as **TOOL-3**,
-which is a measurement, not a decision.
+**Your answer: conditional — add clang23 preset + triplet when Homebrew libc++ has `<meta>`.**
+
+**What this means.** The validation branch in `cmake/cpp-core-check.cmake` stays. The preset and
+triplet are added **only when** Homebrew's libc++ gains `<meta>` support (so `src/reflection_demo.cpp`
+can parse). Until then, no clang23 preset/triplet exists — it's not a supported configuration.
+If clang-tidy needs a BMI, TOOL-3 measures whether the building compiler (GCC 16 or p2996) can
+provide it.
 
 ### BUILD-5 - should there be CI?
 
@@ -254,10 +270,12 @@ There is **no `.github/` directory and no git remote**. The coverage gate, the f
 clang-tidy check therefore have **no home** until CI exists - they would be local presets. This
 also makes **TOOL-16** (what a CI runner provides) moot.
 
-**The recommendation: no CI yet; keep the gates as local presets.** There is no remote, so CI
-cannot run at all, and a workflow file with no remote is a file that only rots. The gates are
-useful locally either way - a preset that a developer runs is worth more than a workflow that
-nothing runs. Revisit when a remote exists; the design does not change, only where it runs.
+**Your answer: no CI yet — local presets (mise run audit:verify/measure/acceptance).**
+
+**What this means.** No `.github/` directory, no workflow file. The gates are local commands
+anyone can run: `mise run audit:verify`, `mise run audit:measure`, `mise run audit:acceptance`.
+A workflow with no remote rots. Revisit when a remote exists; the design doesn't change, only
+where it runs.
 
 ### BUILD-8 - should the build check the catalog's message set against the call sites?
 
@@ -269,9 +287,11 @@ The **link** catches it, because the application's `catalog<...>` symbol would s
 only a build that links. A dedicated check (the number of catalog entries against the number of
 `CIB_` call sites) would catch it earlier and **name the message**.
 
-**The recommendation: yes, and as part of the coverage work.** It is a small script, and it turns
-"the build failed to link" into "this message is missing from the catalog". The link-time check is
-sufficient for correctness today; this is about *diagnosis*.
+**Your answer: yes — small script, part of coverage work.**
+
+**What this means.** A script counts catalog entries vs. `CIB_` call sites. Runs as part of the
+coverage gate (100% rule). Turns "undefined symbol at link" into "message X missing from catalog".
+Cheap, diagnostic, fits the 100% coverage rule.
 
 ### BUILD-9 - should the build gain a feature-check gate?
 
@@ -287,16 +307,17 @@ answer as a cache variable. About 20 of the 30 are that shape. But:
 - a check's answer is **cached for the life of the build tree**, so it can outlive the compiler it
   was measured on.
 
-Options: **(a)** one check per compile-bearing item, on every preset. **(b)** a scratch translation
-unit per item, on demand. **(c)** a check only where the answer **gates a code path** -
-`HAVE_REFLECTION`, the module dialect, an `import std` capability - and a test for the rest.
+**Your answer: (c) — check only where answer gates code path (HAVE_REFLECTION, module dialect, import std).**
 
-**The recommendation: (c).** A cache variable is worth having when something branches on it, and
-for the rest the answer is a fact about the world that the coverage gate is already the place to
-assert, at 100%. **(c)** also confines the stale-answer problem to the checks where it is harmless:
-a gating check that goes stale shows up as a build that does not take a code path it should. It
-also gives the two decisive measurements a home: `FMT-13`'s preprocessor pass and `MOD-11`'s
-throwaway module.
+**What this means.** `check_cxx_source_compiles` / `try_compile` for gating checks only:
+`HAVE_REFLECTION`, the module dialect capability, `import std` capability. The rest (facts about
+the world) go to the coverage gate (100%) or tests. Confines the stale-answer problem to gating
+checks — a stale gating check shows up as a missing code path.
+
+**What part 21 added.** Two decisive measurements get a home: `FMT-13`'s preprocessor pass (probe
+fails on purpose, `static_assert` message carries macro value, captured via `OUTPUT_VARIABLE`)
+and `MOD-11`'s throwaway module (`try_compile` with `SOURCES_TYPE CXX_MODULE`, reproduces matrix
+shape under project's `-fmodules-ts`).
 
 **Full argument:** [cmake-feature-checks.md](cmake-feature-checks.md).
 
@@ -312,18 +333,30 @@ consumer cannot see quill's warning. **There is no bug today** - the project's o
 it from `main` (`src/main.cpp:15`) - but the constraint has to be documented, or `flush()` has to
 be made safe.
 
-**The recommendation: document the caveat in the public header.** A safe implementation would mean
-deferring the flush to the backend thread, which changes the function's contract from "synchronous"
-to "asynchronous" - that is a bigger decision than the hazard warrants. The caveat is two lines of
-comment, and it is the constraint quill itself documents.
+**Your answer: document in both — module header + README.**
+
+**What this means.** Two-line caveat on `com::rsm::logging::flush()` in `logging.cppm:89` and in
+the module's public header comment. Quill's warning: "Do not call from destructor of a static
+object — may crash if ThreadContext destroyed first." No bug today (main() calls from main), but
+consumer must know. Safe implementation would change sync→async contract — bigger than hazard
+warrants.
 
 ### ENV-2 - the abandoned `build/coverage-clang/`
 
 An abandoned experiment (clang source-based coverage). The raw-profile version mismatch makes it
 unusable - clang v10 against `llvm-profdata` 23.1.5's v11.
 
-**The recommendation: delete it.** It is in the build tree, which is not tracked, so this is a
-housekeeping act rather than a commit.
+**Your answer: keep + document — add README explaining it's abandoned and why.**
+
+**What this means.** The directory stays in the build tree (not tracked). Add a README in
+`build/coverage-clang/` explaining: raw-profile version mismatch (clang v10 vs llvm-profdata
+23.1.5 v11), experiment abandoned, kept as corroborating data point. All 9 build trees agree on
+106-header closure; this is one of them. The cross-check is 8 trees without it — still exceeds
+acceptance bar floor of 2.
+
+**What the measurements added.** The abandoned tree is **one of the nine build trees** the closure
+measurement reads, and all nine independently agree on the same 106-header closure. Keeping it
+preserves the 9-tree corroboration.
 
 ### ENV-3 - `ZAI_API_KEY` for the `zai-coding-plan` provider
 
@@ -334,9 +367,12 @@ standard API), not to `zai-coding-plan`, so they do not satisfy it. Either
 registers only `glm-4.7` for that provider; `glm-5.3` and `glm-5.3-flash` are in the catalog and
 would have to be added.
 
-**This is not a cpp-core decision** - it is the agent environment, and it is listed here only
-because it is one of the fourteen. **The recommendation: `opencode service set env`** - it is one
-command, and the restart is a background service, not a session.
+**Your answer: deferred — not a cpp-core decision; owner's agent setup.**
+
+**What this means.** This is the agent environment, not a cpp-core project decision. The two
+saved Z.AI accounts belong to `zai` integration, not `zai-coding-plan`. Options (`opencode service
+set env ZAI_API_KEY <key>` or `opencode auth login zai-coding-plan`) are handled by the owner
+outside this project. Listed here only because it appeared in the original 13.
 
 ## One that is *not* a decision - and is no longer open
 

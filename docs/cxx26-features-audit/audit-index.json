@@ -1,7 +1,67 @@
 {
   "answered_items": [
     {
-      "category": "answered",
+      "category": "owner-decision",
+      "doc": "docs/cxx26-features-audit/open-items.md#13-the-items-that-are-answered-or-contingent",
+      "evidence": "part 21, decisions.md",
+      "id": "BUILD-1",
+      "kind": "question",
+      "section": 13,
+      "section_title": "The items that are answered or contingent",
+      "settled_by": "**all at once** — `-Wall -Wextra -Wpedantic -Wconversion -Wshadow`",
+      "state": "answered",
+      "title": "What warning flags should the project use?"
+    },
+    {
+      "category": "owner-decision",
+      "doc": "docs/cxx26-features-audit/open-items.md#13-the-items-that-are-answered-or-contingent",
+      "evidence": "part 21, decisions.md",
+      "id": "BUILD-2",
+      "kind": "question",
+      "section": 13,
+      "section_title": "The items that are answered or contingent",
+      "settled_by": "**add install/export now** — FILE_SET CXX_MODULES + install(EXPORT CXX_MODULES_DIRECTORY)",
+      "state": "answered",
+      "title": "Should cpp-core be consumable outside this repository?"
+    },
+    {
+      "category": "owner-decision",
+      "doc": "docs/cxx26-features-audit/open-items.md#13-the-items-that-are-answered-or-contingent",
+      "evidence": "part 21, decisions.md",
+      "id": "BUILD-3",
+      "kind": "question",
+      "section": 13,
+      "section_title": "The items that are answered or contingent",
+      "settled_by": "**all three PRIVATE** — only `import com.rsm.logging;` is public",
+      "state": "answered",
+      "title": "What is the public header surface?"
+    },
+    {
+      "category": "owner-decision",
+      "doc": "docs/cxx26-features-audit/open-items.md#13-the-items-that-are-answered-or-contingent",
+      "evidence": "part 21, decisions.md",
+      "id": "BUILD-4",
+      "kind": "question",
+      "section": 13,
+      "section_title": "The items that are answered or contingent",
+      "settled_by": "**conditional** — add clang23 preset + triplet when Homebrew libc++ has `<meta>`",
+      "state": "answered",
+      "title": "Is `clang23` kept?"
+    },
+    {
+      "category": "owner-decision",
+      "doc": "docs/cxx26-features-audit/open-items.md#13-the-items-that-are-answered-or-contingent",
+      "evidence": "part 21, decisions.md",
+      "id": "BUILD-5",
+      "kind": "question",
+      "section": 13,
+      "section_title": "The items that are answered or contingent",
+      "settled_by": "**no CI yet** — local presets (mise run audit:verify/measure/acceptance)",
+      "state": "answered",
+      "title": "Should there be CI?"
+    },
+    {
+      "category": "reading",
       "doc": "docs/cxx26-features-audit/open-items.md#13-the-items-that-are-answered-or-contingent",
       "evidence": "part 15",
       "id": "BUILD-6",
@@ -13,7 +73,79 @@
       "title": "Are the catalog IDs the same under both compilers?"
     },
     {
-      "category": "answered",
+      "category": "owner-decision",
+      "doc": "docs/cxx26-features-audit/open-items.md#13-the-items-that-are-answered-or-contingent",
+      "evidence": "part 21, decisions.md",
+      "id": "BUILD-7",
+      "kind": "question",
+      "section": 13,
+      "section_title": "The items that are answered or contingent",
+      "settled_by": "**(a) use CIB's stable ID mechanism** per logging.adoc / binary_stable_ids",
+      "state": "answered",
+      "title": "Where does the stable catalog live?"
+    },
+    {
+      "category": "owner-decision",
+      "doc": "docs/cxx26-features-audit/open-items.md#13-the-items-that-are-answered-or-contingent",
+      "evidence": "part 21, decisions.md",
+      "id": "BUILD-8",
+      "kind": "question",
+      "section": 13,
+      "section_title": "The items that are answered or contingent",
+      "settled_by": "**yes** — small script, part of coverage work",
+      "state": "answered",
+      "title": "Should the build check the catalog's message set against the call sites?"
+    },
+    {
+      "category": "owner-decision",
+      "doc": "docs/cxx26-features-audit/open-items.md#13-the-items-that-are-answered-or-contingent",
+      "evidence": "part 21, decisions.md",
+      "id": "BUILD-9",
+      "kind": "question",
+      "section": 13,
+      "section_title": "The items that are answered or contingent",
+      "settled_by": "**(c) check only where answer gates code path** (HAVE_REFLECTION, module dialect, import std)",
+      "state": "answered",
+      "title": "Should the build gain a feature-check gate?"
+    },
+    {
+      "category": "owner-decision",
+      "doc": "docs/cxx26-features-audit/open-items.md#13-the-items-that-are-answered-or-contingent",
+      "evidence": "part 21, decisions.md",
+      "id": "ENV-2",
+      "kind": "question",
+      "section": 13,
+      "section_title": "The items that are answered or contingent",
+      "settled_by": "**keep + document** — add README explaining it's abandoned and why",
+      "state": "answered",
+      "title": "The abandoned `build/coverage-clang/`"
+    },
+    {
+      "category": "owner-decision",
+      "doc": "docs/cxx26-features-audit/open-items.md#13-the-items-that-are-answered-or-contingent",
+      "evidence": "part 21, decisions.md",
+      "id": "ENV-3",
+      "kind": "question",
+      "section": 13,
+      "section_title": "The items that are answered or contingent",
+      "settled_by": "**not a cpp-core decision** — defer to owner's agent setup",
+      "state": "answered",
+      "title": "`ZAI_API_KEY` for the `zai-coding-plan` provider"
+    },
+    {
+      "category": "owner-decision",
+      "doc": "docs/cxx26-features-audit/open-items.md#13-the-items-that-are-answered-or-contingent",
+      "evidence": "part 21, decisions.md",
+      "id": "FMT-14",
+      "kind": "question",
+      "section": 13,
+      "section_title": "The items that are answered or contingent",
+      "settled_by": "**(c) use fmtlib; single formatter for both paths; depends on QUIL-1**",
+      "state": "answered",
+      "title": "The module path's format-string dialect: document it, validate it, or move it?"
+    },
+    {
+      "category": "compile",
       "doc": "docs/cxx26-features-audit/open-items.md#13-the-items-that-are-answered-or-contingent",
       "evidence": "part 18, section 2",
       "id": "FMT-9",
@@ -25,7 +157,7 @@
       "title": "Does the vcpkg `quill` port have an external-fmt feature?"
     },
     {
-      "category": "answered",
+      "category": "compile",
       "doc": "docs/cxx26-features-audit/open-items.md#13-the-items-that-are-answered-or-contingent",
       "evidence": "part 18, section 4",
       "id": "QUIL-8",
@@ -37,19 +169,55 @@
       "title": "Does the module path flush on every message?"
     },
     {
-      "category": "answered",
+      "category": "owner-decision",
+      "doc": "docs/cxx26-features-audit/open-items.md#13-the-items-that-are-answered-or-contingent",
+      "evidence": "part 21, decisions.md",
+      "id": "QUIL-9",
+      "kind": "question",
+      "section": 13,
+      "section_title": "The items that are answered or contingent",
+      "settled_by": "**document in both** — module header + README (two-line caveat)",
+      "state": "answered",
+      "title": "What should the public `flush()` say?"
+    },
+    {
+      "category": "owner-decision",
+      "doc": "docs/cxx26-features-audit/open-items.md#13-the-items-that-are-answered-or-contingent",
+      "evidence": "part 21, decisions.md",
+      "id": "TOOL-13",
+      "kind": "question",
+      "section": 13,
+      "section_title": "The items that are answered or contingent",
+      "settled_by": "**YAML — add PyYAML via mise; keep .cmake-format.yaml**",
+      "state": "answered",
+      "title": "`.cmake-format.yaml` or `.cmake-format.json`?"
+    },
+    {
+      "category": "owner-decision",
+      "doc": "docs/cxx26-features-audit/open-items.md#13-the-items-that-are-answered-or-contingent",
+      "evidence": "part 21, decisions.md",
+      "id": "TOOL-14",
+      "kind": "question",
+      "section": 13,
+      "section_title": "The items that are answered or contingent",
+      "settled_by": "**accept the sweep** — 9 of 12 files change; review diff",
+      "state": "answered",
+      "title": "Is a one-shot `cmake-format -i` sweep acceptable?"
+    },
+    {
+      "category": "compile",
       "doc": "docs/cxx26-features-audit/open-items.md#13-the-items-that-are-answered-or-contingent",
       "evidence": "part 12",
       "id": "TOOL-16",
       "kind": "question",
       "section": 13,
       "section_title": "The items that are answered or contingent",
-      "settled_by": "**Not a measurement.** The project has no `.github/` directory and no git remote, so the coverage gate, the format check and the clang-tidy check have no home until CI exists. `BUILD-5` (\"should there be CI?\") is an owner decision and is still open; this question is answered by it, not by a run",
+      "settled_by": "**Not a measurement.** The project has no `.github/` directory and no git remote, so the coverage gate, the format check and the clang-tidy check have no home until CI exists. `BUILD-5` (\"should there be CI?\") is an owner decision and is now **answered: no CI yet**; this question is answered by it, not by a run",
       "state": "contingent",
       "title": "What CI image would provide `gcov-16`?"
     },
     {
-      "category": "answered",
+      "category": "reading",
       "doc": "docs/cxx26-features-audit/open-items.md#13-the-items-that-are-answered-or-contingent",
       "evidence": "part 18, section 2",
       "id": "VCPKG-1",
@@ -61,7 +229,7 @@
       "title": "Does the upstream vcpkg `quill` port have an opt-in feature for an external fmt?"
     },
     {
-      "category": "answered",
+      "category": "reading",
       "doc": "docs/cxx26-features-audit/open-items.md#13-the-items-that-are-answered-or-contingent",
       "evidence": "part 18, section 2",
       "id": "VCPKG-2",
@@ -74,127 +242,37 @@
     }
   ],
   "counts": {
-    "answered": 5,
+    "answered": 19,
     "by_category": {
       "build-system-change": 1,
       "compile": 30,
       "decided": 1,
       "fix-and-test": 8,
-      "owner-decision": 14,
       "reading": 1,
       "run": 19,
       "test": 10
     },
     "by_kind": {
       "defect": 8,
-      "question": 66,
+      "question": 52,
       "work-item": 10
     },
     "by_prefix": {
-      "BUILD": 8,
       "COV": 10,
       "DEF": 8,
-      "ENV": 3,
-      "FMT": 14,
+      "ENV": 1,
+      "FMT": 13,
       "MAC": 3,
       "MOD": 11,
-      "QUIL": 8,
+      "QUIL": 7,
       "REFL": 4,
-      "TOOL": 15
+      "TOOL": 13
     },
     "contingent": 1,
-    "open": 84
+    "open": 70
   },
   "generated_by": "scripts/audit_index.py",
   "items": [
-    {
-      "category": "owner-decision",
-      "doc": "docs/cxx26-features-audit/open-items.md#9-the-build-system-build",
-      "id": "BUILD-1",
-      "kind": "question",
-      "section": 9,
-      "section_title": "The build system (BUILD)",
-      "settled_by": "an owner decision",
-      "state": "open",
-      "title": "**What warning flags should the project use?** There are none today - not `-Wall`, not `-Wextra`, not `-Wpedantic`, not `-Wconversion`, not..."
-    },
-    {
-      "category": "owner-decision",
-      "doc": "docs/cxx26-features-audit/open-items.md#9-the-build-system-build",
-      "id": "BUILD-2",
-      "kind": "question",
-      "section": 9,
-      "section_title": "The build system (BUILD)",
-      "settled_by": "an owner decision",
-      "state": "open",
-      "title": "**Should cpp-core be consumable outside this repository?** There is not one `install()` call and no `export()` set in any of the **four**..."
-    },
-    {
-      "category": "owner-decision",
-      "doc": "docs/cxx26-features-audit/open-items.md#9-the-build-system-build",
-      "id": "BUILD-3",
-      "kind": "question",
-      "section": 9,
-      "section_title": "The build system (BUILD)",
-      "settled_by": "an owner decision, then an implementation",
-      "state": "open",
-      "title": "**What is the public header surface?** All three headers in `include/cpp-core/logging/` are published by `target_include_directories(......"
-    },
-    {
-      "category": "owner-decision",
-      "doc": "docs/cxx26-features-audit/open-items.md#9-the-build-system-build",
-      "id": "BUILD-4",
-      "kind": "question",
-      "section": 9,
-      "section_title": "The build system (BUILD)",
-      "settled_by": "an owner decision",
-      "state": "open",
-      "title": "**Is `clang23` kept?** The toolchain and `cmake/cpp-core-check.cmake` both accept it, with a full validation branch, but there is **no..."
-    },
-    {
-      "category": "owner-decision",
-      "doc": "docs/cxx26-features-audit/open-items.md#9-the-build-system-build",
-      "id": "BUILD-5",
-      "kind": "question",
-      "section": 9,
-      "section_title": "The build system (BUILD)",
-      "settled_by": "an owner decision",
-      "state": "open",
-      "title": "**Should there be CI?** There is no `.github/` directory and no git remote. The coverage gate, the format check and the clang-tidy check..."
-    },
-    {
-      "category": "owner-decision",
-      "doc": "docs/cxx26-features-audit/open-items.md#9-the-build-system-build",
-      "id": "BUILD-7",
-      "kind": "question",
-      "section": 9,
-      "section_title": "The build system (BUILD)",
-      "settled_by": "an owner decision",
-      "state": "open",
-      "title": "**Where does the stable catalog live?** This is the decision **DEF-6** needs. Option (a): a committed file (for example..."
-    },
-    {
-      "category": "owner-decision",
-      "doc": "docs/cxx26-features-audit/open-items.md#9-the-build-system-build",
-      "id": "BUILD-8",
-      "kind": "question",
-      "section": 9,
-      "section_title": "The build system (BUILD)",
-      "settled_by": "an owner decision, then a script",
-      "state": "open",
-      "title": "**Should the build check the catalog's message set against the call sites?** The catalog tooling's input regex (`gen_str_catalog.py:342`)..."
-    },
-    {
-      "category": "owner-decision",
-      "doc": "docs/cxx26-features-audit/open-items.md#9-the-build-system-build",
-      "id": "BUILD-9",
-      "kind": "question",
-      "section": 9,
-      "section_title": "The build system (BUILD)",
-      "settled_by": "an owner decision",
-      "state": "open",
-      "title": "**Should the build gain a feature-check gate?** Part 21 shows CMake can answer about 20 of the 30 `compile` open items with..."
-    },
     {
       "category": "test",
       "doc": "docs/cxx26-features-audit/open-items.md#8-the-coverage-to-dos-cov",
@@ -405,28 +483,6 @@
       "title": "The two copies of fmt: the standalone `fmt` 12.2.1 (namespace `fmt`) and quill's bundled `fmtquill` 12.2.0. **The project rule is that..."
     },
     {
-      "category": "owner-decision",
-      "doc": "docs/cxx26-features-audit/open-items.md#11-the-environment-env",
-      "id": "ENV-2",
-      "kind": "question",
-      "section": 11,
-      "section_title": "The environment (ENV)",
-      "settled_by": "an owner decision",
-      "state": "open",
-      "title": "`build/coverage-clang/` - an abandoned experiment. The raw-profile version mismatch (clang v10 against `llvm-profdata` 23.1.5's v11) makes..."
-    },
-    {
-      "category": "owner-decision",
-      "doc": "docs/cxx26-features-audit/open-items.md#11-the-environment-env",
-      "id": "ENV-3",
-      "kind": "question",
-      "section": 11,
-      "section_title": "The environment (ENV)",
-      "settled_by": "an owner decision",
-      "state": "open",
-      "title": "`ZAI_API_KEY` for the `zai-coding-plan` provider: the two saved `Z.AI` accounts in `opencode auth list` belong to the `zai` integration,..."
-    },
-    {
       "category": "compile",
       "doc": "docs/cxx26-features-audit/open-items.md#2-fmt-and-constexpr-fmt",
       "id": "FMT-1",
@@ -480,17 +536,6 @@
       "settled_by": "a compile",
       "state": "open",
       "title": "What are the **authoritative** feature-test macro values on each toolchain? Part 11 reports *declaration* and the set of values each macro..."
-    },
-    {
-      "category": "owner-decision",
-      "doc": "docs/cxx26-features-audit/open-items.md#2-fmt-and-constexpr-fmt",
-      "id": "FMT-14",
-      "kind": "question",
-      "section": 2,
-      "section_title": "fmt and `constexpr` (FMT)",
-      "settled_by": "an owner decision",
-      "state": "open",
-      "title": "**The module path's format-string dialect: document it, validate it, or move it?** Part 13 shows the module path and the catalog path do..."
     },
     {
       "category": "build-system-change",
@@ -812,17 +857,6 @@
       "title": "Does a message over 2047 bytes behave acceptably on the default `UnboundedBlocking` queue, and would a bounded queue throw `QuillError`..."
     },
     {
-      "category": "owner-decision",
-      "doc": "docs/cxx26-features-audit/open-items.md#3-quills-runtime-formatting-quil",
-      "id": "QUIL-9",
-      "kind": "question",
-      "section": 3,
-      "section_title": "quill's runtime formatting (QUIL)",
-      "settled_by": "an owner decision, then an edit",
-      "state": "open",
-      "title": "**The public `flush()` needs quill's static-destructor caveat, or a safe implementation.** `flush_log()` \"blocks the calling thread until..."
-    },
-    {
       "category": "compile",
       "doc": "docs/cxx26-features-audit/open-items.md#6-static-reflection-refl",
       "id": "REFL-1",
@@ -909,28 +943,6 @@
       "settled_by": "a run",
       "state": "open",
       "title": "Does branch coverage work: does `-b` produce usable `branches[]` in gcov-16's JSON for these TUs, and is the `-fcondition-coverage` bitset..."
-    },
-    {
-      "category": "owner-decision",
-      "doc": "docs/cxx26-features-audit/open-items.md#4-the-tooling-tool",
-      "id": "TOOL-13",
-      "kind": "question",
-      "section": 4,
-      "section_title": "The tooling (TOOL)",
-      "settled_by": "an owner decision",
-      "state": "open",
-      "title": "`.cmake-format.yaml` versus `.cmake-format.json`: if the YAML route is kept, the pipx install must gain pyyaml (`mise use..."
-    },
-    {
-      "category": "owner-decision",
-      "doc": "docs/cxx26-features-audit/open-items.md#4-the-tooling-tool",
-      "id": "TOOL-14",
-      "kind": "question",
-      "section": 4,
-      "section_title": "The tooling (TOOL)",
-      "settled_by": "an owner decision",
-      "state": "open",
-      "title": "Is a one-shot `cmake-format -i` sweep acceptable? 9 of the 12 CMake files change. Do we keep hand-wrapping via `.cmake-format.yaml` and..."
     },
     {
       "category": "run",

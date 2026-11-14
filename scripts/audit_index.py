@@ -91,6 +91,40 @@ def kind_for(item_id: str) -> str:
     return "question"
 
 
+# Owner decision IDs that don't follow the prefix rule
+OWNER_DECISION_IDS = {
+    "FMT-14", "QUIL-9", "TOOL-13", "TOOL-14",
+    "BUILD-1", "BUILD-2", "BUILD-3", "BUILD-4", "BUILD-5",
+    "BUILD-7", "BUILD-8", "BUILD-9", "ENV-2", "ENV-3",
+}
+
+# Items that are BUILD prefix but NOT owner decisions
+NON_OWNER_BUILD_IDS = {"BUILD-6"}
+
+def category_for(item_id: str) -> str:
+    """Infer the audit category from the item ID prefix."""
+    if item_id in OWNER_DECISION_IDS:
+        return "owner-decision"
+    if item_id in NON_OWNER_BUILD_IDS:
+        return "reading"
+    prefix = item_id.rsplit("-", 1)[0]
+    if prefix == "DEF":
+        return "fix-and-test"
+    if prefix == "COV":
+        return "test"
+    if prefix in ("FMT", "QUIL", "MOD", "REFL", "MAC", "TOOL"):
+        return "compile"
+    if prefix == "BUILD":
+        return "owner-decision"
+    if prefix == "ENV":
+        return "owner-decision"
+    if prefix == "VCPKG":
+        return "reading"
+    if prefix == "TOOL":
+        return "compile"
+    return "other"
+
+
 def parse_open_items(path: Path = OPEN_ITEMS) -> dict:
     """Parse the open-items table into the registry's shape."""
     text = path.read_text(encoding="utf-8")
@@ -177,7 +211,7 @@ def parse_open_items(path: Path = OPEN_ITEMS) -> dict:
                     "id": item_id,
                     "title": short_title(question),
                     "kind": kind_for(item_id),
-                    "category": "answered",
+                    "category": category_for(item_id),
                     "state": state_value,
                     "section": section,
                     "section_title": section_title,
