@@ -80,7 +80,8 @@ hooks {
             "**/docs/module-source-location/repro/**",
           )
       }
-      ["gitleaks"] = (Builtins.gitleaks) {}
+      ["betterleaks"] = (Builtins.betterleaks) {}
+      ["kingfisher"] = (Builtins.kingfisher) {}
       ["jactionlint"] = (Builtins.jactionlint) {
         glob =
           List(
@@ -294,7 +295,8 @@ hooks {
             "**/docs/module-source-location/repro/**",
           )
       }
-      ["gitleaks"] = (Builtins.gitleaks) {}
+      ["betterleaks"] = (Builtins.betterleaks) {}
+      ["kingfisher"] = (Builtins.kingfisher) {}
       ["jactionlint"] = (Builtins.jactionlint) {
         glob =
           List(
@@ -497,7 +499,8 @@ hooks {
             "**/docs/module-source-location/repro/**",
           )
       }
-      ["gitleaks"] = (Builtins.gitleaks) {}
+      ["betterleaks"] = (Builtins.betterleaks) {}
+      ["kingfisher"] = (Builtins.kingfisher) {}
       ["jactionlint"] = (Builtins.jactionlint) {
         glob =
           List(
