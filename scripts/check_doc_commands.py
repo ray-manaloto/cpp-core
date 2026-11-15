@@ -14,6 +14,7 @@ Exit status is 0 when every name resolves and 1 otherwise.
 from __future__ import annotations
 
 import argparse
+import functools
 import json
 import re
 import subprocess
@@ -72,21 +73,53 @@ def expand(token: str) -> list[str]:
     return [first] + [f"{namespace}:{part}" if namespace else part for part in rest]
 
 
+HELP_OPTION = re.compile(r"^\s+(?:(-\w), )?(--[\w-]+) <")
+
+
+@functools.cache
+def value_options() -> frozenset[str]:
+    """The `mise run` options that take a value (`--jobs <JOBS>`, `-C <DIR>`), from its help."""
+    help_text = subprocess.run(
+        ["mise", "run", "--help"],
+        cwd=REPO_ROOT,
+        capture_output=True,
+        text=True,
+        check=True,
+    ).stdout
+    found: set[str] = set()
+    for line in help_text.splitlines():
+        match = HELP_OPTION.match(line)
+        if match:
+            found.update(option for option in match.groups() if option)
+    if "--jobs" not in found:
+        raise SystemExit(
+            "could not read the value-taking options from `mise run --help`"
+        )
+    return frozenset(found)
+
+
 def task_tokens(arguments: str) -> list[str]:
     """The task names in one `mise run` argument string.
 
-    A `:::` starts another task. Options (`-x`, `--force`) before a task are skipped; after the
-    task, everything up to the next `:::` is the task's own arguments.
+    A `:::` starts another task. Options before a task are skipped, with their value when they
+    take one (`--jobs 2`; `--jobs=2` is one token); after the task, everything up to the next
+    `:::` is the task's own arguments.
     """
     tasks: list[str] = []
     expecting = True
+    skip_value = False
     for token in arguments.split():
         if token == ":::":
             expecting = True
+            skip_value = False
             continue
         if not expecting:
             continue
+        if skip_value:
+            skip_value = False
+            continue
         if token.startswith("-"):
+            skip_value = "=" not in token and token in value_options()
             continue
         tasks.extend(expand(token.rstrip(TRAILING)))
         expecting = False
@@ -112,6 +145,8 @@ SELF_TEST_BAD = [
     "mise run --force no-such-task-xyz",
     "mise run audit:verify/nonexistent",
     "mise run hk:check/nonexistent",
+    "mise run --jobs 2 no-such-task-xyz",
+    "mise run -j 2 {ok} ::: --jobs=4 no-such-task-xyz",
 ]
 SELF_TEST_GOOD = [
     "`mise run {ok}`",
@@ -120,6 +155,8 @@ SELF_TEST_GOOD = [
     "Then mise run {ok}.",
     "(mise run audit:verify/measure/acceptance).**",
     "`mise run <task>`",
+    "mise run --jobs 2 {ok}",
+    "mise run -C . --force {ok} ::: -j 3 {ok}",
 ]
 
 
