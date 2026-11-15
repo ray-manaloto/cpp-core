@@ -19,6 +19,7 @@ min_version = "2026.10.9"
 
 [tools]
 clang-format = "23.1.4"
+lychee = "0.24.2"
 "pipx:cmakelang" = "0.6.13"
 "pipx:cpplint" = "2.0.2"
 prettier = "3.10.1"
