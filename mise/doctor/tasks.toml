@@ -25,3 +25,15 @@ run = "mise doctor"
 [diag_all]
 description = "Run all mise doctor diagnostics"
 run = "mise doctor && mise doctor project"
+
+# Check for dirty git workspace (uncommitted changes)
+[check_clean_workspace]
+description = "Check for uncommitted changes in git workspace"
+run = """
+if [ -n "$(git status --porcelain)" ]; then
+  echo "ERROR: Dirty git workspace detected:"
+  git status --short
+  exit 1
+fi
+echo "Git workspace is clean"
+"""

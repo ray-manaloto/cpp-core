@@ -126,6 +126,17 @@ hooks {
       ["hk-validate"] = (Config.Step) {
         check = "hk validate"
       }
+      ["check-clean-workspace"] = (Config.Step) {
+        check =
+          """
+          if [ -n "$(git status --porcelain)" ]; then
+            echo "ERROR: Dirty git workspace detected:"
+            git status --short
+            exit 1
+          fi
+          echo "Git workspace is clean"
+          """
+      }
     }
   }
 
