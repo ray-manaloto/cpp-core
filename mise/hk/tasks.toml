@@ -76,10 +76,11 @@ alias = "hk:fix-smoke"
 description = "Run hk fix --all on a scratch worktree of HEAD and show what it would change"
 run = """
 set -eu
-dir=$(mktemp -d)
+dir=$(cd "$(mktemp -d)" && pwd -P)
 trap 'git worktree remove --force "$dir" >/dev/null 2>&1 || true; rm -rf "$dir"' EXIT
 git worktree add --quiet --detach "$dir" HEAD
-mise trust --quiet "$dir"
+# paranoid mode trusts file by file; trust the whole scratch tree (its resolved path) instead.
+export MISE_TRUSTED_CONFIG_PATHS="$dir"
 (cd "$dir" && hk fix --all --skip-step check-clean-workspace)
 git -C "$dir" status --short
 """
