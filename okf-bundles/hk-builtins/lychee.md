@@ -130,6 +130,48 @@ hk check --step lychee -- README.md docs/**/*.md
 }
 ```
 
+### cpp-core Configuration
+
+**hk.pkl** (in check, pre-commit, pre-push hooks):
+
+```pkl
+["lychee"] = (Builtins.lychee) {
+  glob = List("**/*.md", "**/*.markdown")
+  exclude = List(
+    "**/docs/asan-leak-check/upstream/**",
+    "**/docs/cxx26-features-audit/upstream/**",
+    "**/docs/module-source-location/upstream/**",
+    "**/docs/asan-leak-check/repro/**",
+    "**/docs/module-source-location/repro/**",
+  )
+}
+```
+
+**lychee.toml** (project root):
+
+```toml
+# Exclude URLs from checking (regex patterns)
+exclude = [
+  ".*localhost.*",
+  ".*127\\.0\\.0\\.1.*",
+  ".*example\\.com.*",
+  ".*githubusercontent\\.com.*",
+  ".*avatars\\.githubusercontent\\.com.*",
+  "https://github.com/ray-manaloto/cpp-core",
+  ".*open-std\\.org.*",
+  ".*github.com/intel/stdx.*",
+  ".*github.com/intel/baremetal.*",
+  ".*cmake.org/cmake/help/latest/prop_tgt/CXX_MODULE_STD.html.*",
+  ".*cmake.org/cmake/help/latest/variable/CMAKE_CXX_MODULE_STD.html.*",
+]
+
+# Accept timeouts for unreliable hosts
+accept_timeouts = true
+
+# Check file:// links (local file existence)
+scheme = ["http", "https", "mailto", "file"]
+```
+
 ### CI Integration
 
 ```yaml

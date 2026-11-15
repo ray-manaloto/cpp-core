@@ -57,6 +57,7 @@ Reference for cpp-core project metadata, tool versions, and configuration files.
 | ty | 0.0.102 | Python type checker |
 | yamlfmt | 0.21.0 | YAML formatter |
 | yamllint | 1.38.0 | YAML linter |
+| lychee | 0.24.2 | Link checker |
 
 ### Configuration Files
 
@@ -78,15 +79,16 @@ Reference for cpp-core project metadata, tool versions, and configuration files.
 | `vcpkg.json` | vcpkg manifest (dependencies, overlays) |
 | `cmake/presets/cpp-core.json` | CMake presets (GCC 16, clang-p2996) |
 | `.editorconfig` | Editor config (matches clang-format) |
+| `lychee.toml` | lychee link checker config (exclusions, timeouts) |
 
 ### HK Configuration Summary
 
 **Hooks**: check, pre-commit, pre-push, commit-msg
 
-**Steps (27 total)**:
+**Steps (28 total)**:
 
 - Formatters: clang-format, shfmt, ruff-format, taplo-format, rumdl-format, prettier, mise-fmt, pkl-format, yamlfmt
-- Linters: clang-format (check), cpplint, ruff, rumdl, taplo, yamllint, shellcheck, ty, python-check-ast, python-debug-statements
+- Linters: clang-format (check), cpplint, ruff, rumdl, taplo, yamllint, shellcheck, ty, python-check-ast, python-debug-statements, **lychee**
 - Utilities: check-merge-conflict, check-added-large-files, check-symlinks, trailing-whitespace, newlines, mixed-line-ending, fix-smart-quotes, byte-order-marker, check-case-conflict, check-executables-have-shebangs, check-shebang-scripts-are-executable, hk-validate
 - Commit: check-conventional-commit (commit-msg hook)
 

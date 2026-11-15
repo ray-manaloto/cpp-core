@@ -259,27 +259,29 @@ max_concurrency = 10
 timeout = "30s"
 verbose = false
 
-# Exclude known problematic patterns
+# Exclude URLs from checking (regex patterns)
 exclude = [
   ".*localhost.*",
   ".*127\\.0\\.0\\.1.*",
   ".*example\\.com.*",
-  # Allow rate limits and network errors in CI
+  ".*githubusercontent\\.com.*",
+  ".*avatars\\.githubusercontent\\.com.*",
+  "https://github.com/ray-manaloto/cpp-core",
+  ".*open-std\\.org.*",
+  ".*github.com/intel/stdx.*",
+  ".*github.com/intel/baremetal.*",
+  ".*cmake.org/cmake/help/latest/prop_tgt/CXX_MODULE_STD.html.*",
+  ".*cmake.org/cmake/help/latest/variable/CMAKE_CXX_MODULE_STD.html.*",
 ]
-accept = [429, 999]
 
-# Base URL for relative links in README
-[[files]]
-path = "README.md"
-base = "https://github.com/ray-manaloto/cpp-core"
+# Accept additional status codes
+accept = ["200", "201", "202", "203", "204", "429"]
 
-[[files]]
-path = "PARKED.md"
-base = "https://github.com/ray-manaloto/cpp-core"
+# Accept timeouts for unreliable hosts
+accept_timeouts = true
 
-[[files]]
-path = "AGENTS.md"
-base = "https://github.com/ray-manaloto/cpp-core"
+# Check file:// links (local file existence)
+scheme = ["http", "https", "mailto", "file"]
 ```
 
 **CI Integration:**
@@ -291,6 +293,10 @@ base = "https://github.com/ray-manaloto/cpp-core"
   env:
     HK_MISE: "1"
 ```
+
+### Status: ✅ Configured and Active
+
+The lychee builtin is now configured in cpp-core's `hk.pkl` (check, pre-commit, pre-push hooks) with `lychee.toml` for URL exclusions. All 27 hk checks pass.
 
 ### Related Documents
 

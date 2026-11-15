@@ -47,12 +47,12 @@ Master registry of all OKF bundles maintained for the cpp-core project. Each bun
 |--------|------|-----------|--------|--------------|
 | **Architecture** | `./architecture/` | 7 | Original research + Mermaid diagrams | 2026-11-14 |
 | **Audit** | `./audit/` | 6 | C++26 features audit (21 parts) | 2026-11-14 |
-| **hk-builtins** | `./hk-builtins/` | 4 | hk.jdx.dev/builtins.html (v2.12.0) | 2026-11-14 |
-| **ASAN Leak Check** | `./asan-leak-check/` | 1 | Original research | 2026-11-14 |
-| **Module Source Location** | `./module-source-location/` | 1 | Original research | 2026-11-14 |
-| **Project Meta** | `./project-meta/` | 1 | Project configuration | 2026-11-14 |
+| **hk-builtins** | `./hk-builtins/` | 5 | hk.jdx.dev/builtins.html (v2.12.0) | 2026-11-14 |
+| **ASAN Leak Check** | `./asan-leak-check/` | 2 | Original research | 2026-11-14 |
+| **Module Source Location** | `./module-source-location/` | 2 | Original research | 2026-11-14 |
+| **Project Meta** | `./project-meta/` | 2 | Project configuration | 2026-11-14 |
 
-## Total: 6 bundles, 24 documents
+## Total: 6 bundles, 26 documents
 
 ### Bundle Details
 
@@ -94,6 +94,7 @@ Master registry of all OKF bundles maintained for the cpp-core project. Each bun
 
 - `lychee.md` - Fast, async, stream-based link checker
 - `lychee-extended.md` - Flint's repository-aware link check
+- `lychee-vs-lychee-extended.md` - Comparison & recommendation
 - `index.md` - Bundle overview and quick reference
 - `log.md` - Update log
 
