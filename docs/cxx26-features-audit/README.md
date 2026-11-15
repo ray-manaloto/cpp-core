@@ -250,7 +250,7 @@ Verified on both toolchains (GCC 16.2.0 / libstdc++ and clang-p2996 21.0.0git / 
 
 | Tool | Verdict | The one thing that decides it |
 |---|---|---|
-| clang-format | **done** - `61ba2da` | the configuration was glaze's and had never been run; it is now derived from the code and the tree is conformed |
+| clang-format | **done** - `42d35bb` | the configuration was glaze's and had never been run; it is now derived from the code and the tree is conformed |
 | clang-tidy | **check the non-module translation units only** | clang-tidy cannot consume a module interface unit: the co_compile invocations are unconsumable (llvm#62258), and the module's binary is locked to the clang that built it (llvm#63939) |
 | cmake-format | **run it, but the diff is large** | it would rewrite 9 of the 12 CMake files; the same "accept the reformat" decision as clang-format applies |
 | cmake-lint | **run it** | 19 line-length findings, 9 naming findings, one false positive (`RANGE <stop>`) and one missing `COMMENT` |

@@ -8,7 +8,8 @@ compiled, included or used by the project - these are reading copies, not depend
 
 | file | origin | version / ref | licence |
 | --- | --- | --- | --- |
-| `ut/CMakeLists.txt` | [`stephenberry/ut`](https://github.com/stephenberry/ut), `CMakeLists.txt` | REF `dc65567be78febd265ca36c324e1c504512d4d74` (the REF the project's overlay port pins) | Boost Software License 1.0 - see the header of the file |
+| `ut/CMakeLists.txt` | [`stephenberry/ut`](https://github.com/stephenberry/ut), `CMakeLists.txt` | REF `dc65567be78febd265ca36c324e1c504512d4d74` (the REF the project's overlay port pins) | MIT - see `ut/LICENSE`; the file has no header of its own |
+| `ut/LICENSE` | [`stephenberry/ut`](https://github.com/stephenberry/ut), `LICENSE` | REF `dc65567be78febd265ca36c324e1c504512d4d74` - **byte-identical to upstream** (blob `725591ccadfaf45483accf81b5092b097abd752a`) | the MIT licence text itself |
 | `ut/modules/ut.ixx` | [`stephenberry/ut`](https://github.com/stephenberry/ut), `modules/ut.ixx` | REF `dc65567be78febd265ca36c324e1c504512d4d74` | Boost Software License 1.0 - see the header of the file |
 | `stdx/ct_format.hpp` | Intel's [`intel-cpp-std-extensions`](https://github.com/intel/cpp-std-extensions), `include/stdx/ct_format.hpp` | the version installed by the project's overlay port (`version-date` 2026-11-09) | Boost Software License 1.0 - see `stdx/COPYRIGHT` |
 | `stdx/detail/fmt.hpp` | as above, `include/stdx/detail/fmt.hpp` | as above | Boost Software License 1.0 - see `stdx/COPYRIGHT` |

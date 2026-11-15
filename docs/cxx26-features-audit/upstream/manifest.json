@@ -3,12 +3,22 @@
     {
       "byte_identical_to_upstream": true,
       "bytes": 6556,
-      "licence": "Boost Software License 1.0",
+      "licence": "MIT",
       "origin": "https://github.com/stephenberry/ut",
       "path": "docs/cxx26-features-audit/upstream/ut/CMakeLists.txt",
       "ref": "dc65567be78febd265ca36c324e1c504512d4d74",
       "sha256": "bd631a84e2660f147a9f3466a864ef2b1db34a6ee9e4af61cf68df94845cb811",
       "upstream_path": "CMakeLists.txt"
+    },
+    {
+      "byte_identical_to_upstream": true,
+      "bytes": 1065,
+      "licence": "MIT",
+      "origin": "https://github.com/stephenberry/ut",
+      "path": "docs/cxx26-features-audit/upstream/ut/LICENSE",
+      "ref": "dc65567be78febd265ca36c324e1c504512d4d74",
+      "sha256": "939d6314376d301ae1e3936c8035c355ac6cab84442a0187c2045bcd407d43c8",
+      "upstream_path": "LICENSE"
     },
     {
       "byte_identical_to_upstream": true,

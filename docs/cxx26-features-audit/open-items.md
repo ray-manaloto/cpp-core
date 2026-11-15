@@ -294,7 +294,7 @@ a measurement. It asks what CI image would provide `gcov-16`, and the project ha
 (`BUILD-5`), so the question is **contingent on `BUILD-5`'s answer**, not a run.
 
 **Resolved since the design note was written:** the `.editorconfig` question (`indent_size = 3` should
-become 2) - done in `2ef42de`.
+become 2) - done in `3040506`.
 
 ## 5. `import std;` and the module boundary (MOD)
 

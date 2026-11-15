@@ -104,7 +104,7 @@ files; the alternative is to encode the current hand-wrapping in the config.
 | **keep the hand layout** | encode the current wrapping in `.cmake-format.*` | the config grows and fights the tool on every future file |
 
 **Recommendation: accept the sweep.** **A judgement call.** The reason is the one that settled the
-clang-format question in `61ba2da`: the project's configuration should describe the project, not
+clang-format question in `42d35bb`: the project's configuration should describe the project, not
 reconstruct a past hand-layout. **Measure the diff in review** - nine files, no behaviour change.
 
 **Full argument:** [decisions.md](decisions.md#tool-14---is-a-one-shot-cmake-format--i-sweep-acceptable).

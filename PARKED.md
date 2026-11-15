@@ -81,12 +81,12 @@ See [Audit Bundle → Decisions](./okf-bundles/audit/decisions.md) for full rati
 
 ## What's Done and Committed
 
-- ASan leak check on `p2996-asan`: `fd79fc0`, `87d2fcf`
-- Macro-free source location in the module: `8800b0a`
-- clang-format configuration: `61ba2da`
-- `.editorconfig` made to agree with formatter: `2ef42de`
+- ASan leak check on `p2996-asan`: `819849f`, `3c4c912`
+- Macro-free source location in the module: `079bedf`
+- clang-format configuration: `42d35bb`
+- `.editorconfig` made to agree with formatter: `3040506`
 - Features audit in 21 parts: [Audit Bundle](./okf-bundles/audit/index.md)
-- SDLC subagent role definitions: `22b6a65`
+- SDLC subagent role definitions: `bf0d655`
 
 ## Research Complete — All in OKF Bundles
 

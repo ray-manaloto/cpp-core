@@ -88,7 +88,7 @@
 
 **Answer**: **Accept the sweep** — 9 of 12 files change; review diff
 
-**Reasoning**: Same reasoning that settled clang-format in `61ba2da`: project configuration should describe the project, not reconstruct a past hand-layout. Measure the diff in review — nine files, no behaviour change.
+**Reasoning**: Same reasoning that settled clang-format in `42d35bb`: project configuration should describe the project, not reconstruct a past hand-layout. Measure the diff in review — nine files, no behaviour change.
 
 **Gates**: Plan Step 8
 

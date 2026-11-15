@@ -36,7 +36,15 @@ def build_manifest() -> dict:
             "origin": "https://github.com/stephenberry/ut",
             "ref": "dc65567be78febd265ca36c324e1c504512d4d74",
             "upstream_path": "CMakeLists.txt",
-            "licence": "Boost Software License 1.0",
+            "licence": "MIT",
+            "byte_identical_to_upstream": True,
+        },
+        {
+            "path": "docs/cxx26-features-audit/upstream/ut/LICENSE",
+            "origin": "https://github.com/stephenberry/ut",
+            "ref": "dc65567be78febd265ca36c324e1c504512d4d74",
+            "upstream_path": "LICENSE",
+            "licence": "MIT",
             "byte_identical_to_upstream": True,
         },
         {

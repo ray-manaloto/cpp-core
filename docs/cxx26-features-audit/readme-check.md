@@ -151,10 +151,10 @@ is worth knowing exactly what it rests on.
 
 | when | what |
 |---|---|
-| 2026-11-11 15:03 | `8800b0a` - the source-location study changes the source |
+| 2026-11-11 15:03 | `079bedf` - the source-location study changes the source |
 | 2026-11-11 15:35:52 | the last `p2996-debug` build (the test log's timestamp) |
 | 2026-11-11 16:36:03 | the last `gcc16-debug` build (the test executable's timestamp) |
-| **2026-11-11 16:37:30** | **`61ba2da` - the clang-format conformance changes eight source files** |
+| **2026-11-11 16:37:30** | **`42d35bb` - the clang-format conformance changes eight source files** |
 | 2026-11-11 17:37 onwards | every later commit is documentation |
 
 So the formatter conformance landed **90 seconds after** the last build, and nothing has been built

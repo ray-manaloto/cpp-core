@@ -22,7 +22,7 @@ from pathlib import Path
 REPO_ROOT = Path(__file__).resolve().parent.parent
 
 # The commit before the automation landed. Every "before" number is read from this tree.
-BASELINE = "5d52231"
+BASELINE = "2953214"
 
 # The files a session had to open to learn the lane state and the open items.
 ORIENTATION_BEFORE = [

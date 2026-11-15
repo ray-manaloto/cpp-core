@@ -149,7 +149,7 @@ is never collapsed).
 | **keep the hand layout** | encode the current wrapping in `.cmake-format.*` | the config grows and fights the tool on every future file |
 
 **The recommendation: accept the sweep.** The reason is the same one that settled the clang-format
-question in `61ba2da`: the project's configuration should describe the project, not reconstruct a
+question in `42d35bb`: the project's configuration should describe the project, not reconstruct a
 past hand-layout. The alternative is to spend the configuration budget encoding one file's
 wrapping, and to keep doing it for every new file. **Measure the diff in review** - that is what
 the audit says, and it is cheap: nine files, no behaviour change.
