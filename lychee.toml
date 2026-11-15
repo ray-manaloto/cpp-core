@@ -2,7 +2,7 @@
 # https://github.com/lycheeverse/lychee
 # Generated from lychee.example.toml (lychee-v0.24.2)
 
-#############################  Display  #############################
+############################# Display  #############################
 
 verbose = "info"
 format = "detailed"
@@ -10,13 +10,13 @@ mode = "emoji"
 no_progress = true
 host_stats = false
 
-#############################  Cache  ###############################
+############################# Cache  ###############################
 
 cache = true
 max_cache_age = "2d"
 cache_exclude_status = "500.."
 
-#############################  Runtime  #############################
+############################# Runtime  #############################
 
 threads = 2
 max_redirects = 10
@@ -27,7 +27,7 @@ default_extension = "md"
 # User agent
 user_agent = "lychee/0.24.2 (cpp-core)"
 
-#############################  Requests  ############################
+############################# Requests  ############################
 
 timeout = 30
 retry_wait_time = 2
@@ -45,7 +45,7 @@ scheme = ["http", "https", "mailto", "file"]
 # When links are available using HTTPS, treat HTTP links as errors
 require_https = false
 
-#############################  Exclusions  ##########################
+############################# Exclusions  ##########################
 
 # Exclude URLs from checking (regex patterns)
 exclude = [
@@ -71,11 +71,11 @@ exclude = [
 # Exclude paths from getting checked (regex patterns)
 # Only exclude binary/source files, not documentation
 exclude_path = [
-  ".*\\.cppm$", # Module interface files
+  ".*\\.cppm$",  # Module interface files
   ".*\\.hpp$",  # Header files
   ".*\\.cpp$",  # Source files
-  ".*\\.c$",    # C source files
-  ".*\\.h$",    # C header files
+  ".*\\.c$",  # C source files
+  ".*\\.h$",  # C header files
 ]
 
 # Check the specified file extensions
