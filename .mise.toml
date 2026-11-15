@@ -69,4 +69,5 @@ includes = [
   "mise/doctor/tasks.toml",
   "mise/setup/tasks.toml",
   "mise/render/tasks.toml",
+  "mise/ship/tasks.toml",
 ]

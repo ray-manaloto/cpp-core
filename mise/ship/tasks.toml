@@ -1,0 +1,6 @@
+# Shipping: merge a pull request once every gate in AGENTS.md's Shipping fact holds.
+
+[ship_merge]
+alias = "ship:merge"
+description = "Merge PR N after checking its gates (clean head worktree, noreply email, reviewer approval, hk check --all); --dry-run checks only"
+run = "python3 scripts/ship_merge.py"
