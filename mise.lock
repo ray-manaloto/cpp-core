@@ -110,6 +110,10 @@ checksum = "sha256:eb8a0db0aa570124f7d2a93d7c7f596e3390df5e047818d873baad32985fc
 url = "https://conda.anaconda.org/conda-forge/linux-64/zstd-1.5.7-hb78ec9c_7.conda"
 checksum = "sha256:47d682b9f6d6ec9eb1a6e6c3e75ea6273e899e78fb7fc59f81d39745009fbc60"
 
+[conda-packages.macos-arm64."clang-format-23-23.1.5-default_h8bbc02d_0"]
+url = "https://conda.anaconda.org/conda-forge/osx-arm64/clang-format-23-23.1.5-default_h8bbc02d_0.conda"
+checksum = "sha256:89914035e5919a5066a85de3c57e239684a293ed0e4a65efde60f14f17a6f3bd"
+
 [conda-packages.macos-arm64."icu-78.3-py310h579977c_2"]
 url = "https://conda.anaconda.org/conda-forge/osx-arm64/icu-78.3-py310h579977c_2.conda"
 checksum = "sha256:6cdb5dee54c72e56ab189fb3ad33cb28533553d42590e7e831160248f4416a43"

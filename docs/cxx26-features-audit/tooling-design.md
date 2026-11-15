@@ -213,9 +213,11 @@ lint:
 
 Tool: the cmakelang 0.6.13 install, `--line-width 100` (recommended config) and default 80 for contrast. Read-only runs; exit code 1 on findings. The repo CMake files scanned: CMakeLists.txt, prelude, variables, dev-mode, iwyu, catalog, cpp-core-check, toolchains/cpp-core.cmake, project-is-top-level, modules/CMakeLists.txt, modules/logging/CMakeLists.txt, tests/CMakeLists.txt.
 
-At **100 cols**:
+These counts are **historical**: they were measured at 598116c, before ccb372b reformatted the CMake files with gersemi (indent 2, line length 100), and cmakelang can no longer be re-run here (it fails on Python 3.15). The line numbers below were re-anchored to where the same statements sit now, so they still name the code each finding was about; the C0301 lengths describe those statements as they were, before gersemi wrapped them.
 
-- **C0301 line too long (19)**: `cmake/cpp-core-check.cmake:14,22-27,42-43,50-54` (108/115/110/125 chars), `cmake/toolchains/cpp-core.cmake:1,11,14,24-29,38-45,66-69,85,105,107,122-125,145-148,153-156,160-165,172,181-184` (101-150 chars). [source: basic_checker.py counts physical lines; comment lines count too]
+At **100 cols** (as measured at 598116c):
+
+- **C0301 line too long (19 at 598116c)**: `cmake/cpp-core-check.cmake:14,22-27,42-43,50-54` (108/115/110/125 chars then), `cmake/toolchains/cpp-core.cmake:1,11,14,24-29,38-45,66-69,85,105,107,122-125,145-148,153-156,160-165,172,181-184` (101-150 chars then). After the gersemi reformat, 10 lines over 100 columns remain in these files: comments and long string literals, which gersemi does not break. [source: basic_checker.py counts physical lines; comment lines count too]
 - **C0103 invalid name (9)**:
   - *directory-scope* vars must match `[A-Z][0-9A-Z_]+` (public) or `_[0-9a-z_]+` (private); the repo has lower-case directory-scope names → `variables.cmake:23,32` `warning_guard`; `iwyu.cmake:69,70,77,78` `skipped_count`, `reason_count`, `skipped_source`, `skipped_reason`; `catalog.cmake:17` `cpp_core_catalog_inputs`. [source: get_scope_of_assignment → DIRECTORY → public|private pattern]
   - *loop* vars must match `[a-z][a-z0-9_]+`; `cpp-core-check.cmake:47` `_flag`; `toolchains/cpp-core.cmake:197` `_kind`. [source: check_foreach → argument_var_pattern]
