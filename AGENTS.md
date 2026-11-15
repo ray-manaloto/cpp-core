@@ -49,33 +49,36 @@ and it is deliberately conservative about what enters the module interface.
 - **Check:** `mise run audit:verify` runs every check that does not need a compiler: the audit's
   item counts, duplicate and dangling IDs, the decisions sheet against the open list, the counts
   the prose claims, Markdown table shape, fence balance, relative links, the parts tables, the
-  privacy scan, the vendored upstream copies, and the citation anchor. It is fast, needs only Python, and must pass before each commit. The hk `audit-verify` step runs it in check, fix, pre-commit and pre-push, so `git commit` enforces it.
+  privacy scan, the vendored upstream copies, and the citation anchor. It is fast, needs only Python, and must pass before each commit. The hk `audit-verify` step runs it in check, fix, pre-commit and pre-push, so `git commit` enforces it. No CI check gates a merge: the owner ruled on 2026-11-15 that cpp-core uses no paid services. `.github/workflows/ci.yml` runs on GitHub Actions, which is free on this public repository, as an advisory check; `ci` is not a required check, so a red run reports a problem but blocks nothing. The gate is local: `hk check --all` in the worktree and the Codex reviewer's approval.
 
 - **Tools:** cpp-core pins every tool its hk steps run in `.mise.toml` and commits `mise.lock`,
   which records what the checks ran with (the owner's ruling of 2026-11-15). Renovate, with the
   `risu729/renovate-config` preset in `renovate.json`, opens the update PRs and updates `mise.lock`
-  with them. No update merges itself: `renovate.json` turns automerge off, because no CI runs on this repository, and the owner merges each update PR. To update by hand:
+  with them. No update merges itself: `renovate.json` turns automerge off, because CI on this repository is advisory, not a merge gate, and the owner merges each update PR. To update by hand:
   `mise run tools:outdated`, edit the version, `mise lock`,
   `mise run tools:lock-check`, then `mise run tools:lock-verify` (slow; installs from the lock into
   an empty directory). Never run `mise upgrade`. Keep `lockfile_mode = "merge"`: the trial
   `"generate"` mode writes an incomplete conda entry for clang-format. Known gap: while the
   user's global `npm.package_manager` is `bun`, `tools:lock-verify` fails on prettier, because bun
-  is not a cpp-core tool. The other 16 pins install from the lock.
+  is not a cpp-core tool. The other 19 pins install from the lock. The lock check runs on pre-push
+  and in `hk check --all`, not on pre-commit.
 
 - **Changing hk.pkl:** `hk validate` and `hk check` never run a step's `fix` command. Run
   `mise run hk:fix-smoke`, which runs `hk fix --all` on a scratch worktree of HEAD.
 
-- **Shipping:** A change is a local commit. **There is no git remote** — every commit in this
-  repository is local and nothing has been pushed. Do not push, do not open a pull request, and do
-  not create a branch for a change unless the owner asks for one.
+- **Shipping:** The remote is `github.com/ray-manaloto/cpp-core`, a public repository. Every change
+  is a pull request: a branch in its own worktree, one commit or more, opened with `repotools
+  pr-create --title <title> --body-file <body file>`. Run `hk check --all` in the worktree before you ask for the merge, and report its result in the pull request. The owner merges it; never push to `main`.
 
 - **Research:** The notes live in [Audit Bundle](./okf-bundles/audit/index.md). The open items are in
   [open-items.md](./okf-bundles/audit/open-items.md); the owner's decisions are in
   [decisions.md](./okf-bundles/audit/decisions.md); `PARKED.md` is the map of the whole effort.
 
-- **Review approval:** There is no approval pane in this repository. The owner's decision on each
-  open item is the approval, and it is recorded in [decisions.md](./okf-bundles/audit/decisions.md) and
-  [open-items.md](./okf-bundles/audit/open-items.md).
+- **Review approval:** A Codex reviewer pane, opened in the worktree and pinned with `repotools
+  pane-pin`, approves each commit (`repotools pane-fingerprint --message <message file>`) and each
+  pull request's text (`repotools pr-fingerprint`), as the global agent rules describe. The owner's
+  decision on each open item is still recorded in [decisions.md](./okf-bundles/audit/decisions.md)
+  and [open-items.md](./okf-bundles/audit/open-items.md).
 
 - **Content guard:** The privacy scan inside `mise run audit:verify` is the content guard. It
   checks the tracked files and the working tree for a machine name, a host name, a LAN or tailnet
@@ -133,6 +136,12 @@ it" with a compiler.
 
 - **Forward-only.** Old branches, worktrees, commits, closed pull requests and old job logs are
   **not** scrubbed or backfilled. Nothing in the history is rewritten.
+
+- **One rewrite, before the repository went public (2026-11-15).** The owner overrode the
+  forward-only rule once: `git filter-repo` gave the early commits the noreply author identity and
+  removed machine paths from old `.opencode/agents` files. Every commit hash changed, and the
+  hashes the documents cite were remapped. The old history is kept only as a private bundle
+  outside the repository. Forward-only holds again from here.
 
 - **No key value is ever printed.** Report key-file paths only.
 

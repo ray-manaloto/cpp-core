@@ -55,7 +55,7 @@ exclude = [
   # GitHub raw/avatar URLs that may fail
   ".*githubusercontent\\.com.*",
   ".*avatars\\.githubusercontent\\.com.*",
-  # This repo has no remote - exclude the main URL
+  # The repository's own URL: checking it tests GitHub's state, not this tree
   "https://github.com/ray-manaloto/cpp-core",
   # WG21 paper URLs - often timeout or return 502
   ".*open-std\\.org.*",
