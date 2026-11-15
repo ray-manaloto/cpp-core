@@ -1,0 +1,106 @@
+name: ci
+
+# The checks run here are the same ones the hk hooks run locally. The checking jobs run in an
+# ubuntu:26.10 container pinned by digest, because GitHub's hosted runners stop at 26.04.
+# A pull request that changes only Markdown skips the `hk` job; the `audit` job, which checks
+# the Markdown itself, always runs. Make only `ci` a required check: a job skipped by its `if`
+# reports success, so `ci` is the job that fails when another job fails or is cancelled.
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions: {}
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  # The audit job also decides whether the change is Markdown only: a separate job would cost
+  # another billed minute on every run of this private repository.
+  audit:
+    name: audit (verify_audit.py, lock check)
+    runs-on: ubuntu-26.04
+    container: ubuntu:26.10@sha256:b5194b8e58989da0865ebc80078bf9f5f8742ec6a867c53f6ae699f6036756f7
+    timeout-minutes: 10
+    permissions:
+      contents: read
+    outputs:
+      full: ${{ steps.filter.outputs.full }}
+    steps:
+      - name: Install git and Python
+        run: apt-get update -qq && apt-get install -y -qq --no-install-recommends ca-certificates git python3
+      # The full history: the privacy scan derives the names it looks for from the commit authors.
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+      - run: git config --global --add safe.directory "$GITHUB_WORKSPACE"
+      - name: Decide whether the change is Markdown only
+        id: filter
+        shell: bash
+        env:
+          EVENT: ${{ github.event_name }}
+          BASE: ${{ github.event.pull_request.base.sha }}
+        run: |
+          full=true
+          if [ "$EVENT" = pull_request ]; then
+            paths=$(git diff --no-renames --name-only "$BASE"...HEAD)
+            full=false
+            while IFS= read -r path; do
+              case "$path" in
+                *.md) ;;
+                *) full=true ;;
+              esac
+            done <<< "$paths"
+          fi
+          echo "full=$full" >> "$GITHUB_OUTPUT"
+      - run: python3 scripts/verify_audit.py
+      - run: python3 scripts/check_mise_lock.py --self-test
+
+  hk:
+    name: hk check --all
+    needs: audit
+    if: needs.audit.outputs.full == 'true'
+    runs-on: ubuntu-26.04
+    container: ubuntu:26.10@sha256:b5194b8e58989da0865ebc80078bf9f5f8742ec6a867c53f6ae699f6036756f7
+    timeout-minutes: 30
+    permissions:
+      contents: read
+    steps:
+      - name: Install git and Python
+        run: apt-get update -qq && apt-get install -y -qq --no-install-recommends ca-certificates curl git python3
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+      - name: Trust the checkout
+        run: |
+          git config --global --add safe.directory "$GITHUB_WORKSPACE"
+          echo "MISE_TRUSTED_CONFIG_PATHS=$GITHUB_WORKSPACE" >> "$GITHUB_ENV"
+      # The action adds --locked because mise.lock exists; it is spelled out so that a
+      # missing lock fails instead of resolving fresh versions.
+      - uses: jdx/mise-action@d5574b52816a478f9d4e6529a3f6ff17a8a36785 # v5.2.8
+        with:
+          version: 2026.11.8
+          install_args: --locked
+          cache_save: ${{ github.ref == 'refs/heads/main' }}
+      - run: hk validate
+      - run: hk check --all
+
+  ci:
+    name: ci
+    needs: [audit, hk]
+    if: always()
+    # No container: this job only reads the other jobs' results, and pulling the image would
+    # cost more than the job.
+    runs-on: ubuntu-26.04
+    timeout-minutes: 5
+    permissions: {}
+    steps:
+      - name: Fail when a job failed or was cancelled
+        if: contains(needs.*.result, 'failure') || contains(needs.*.result, 'cancelled')
+        run: exit 1
+      - run: echo "audit passed; hk passed or was skipped by the Markdown-only filter"
