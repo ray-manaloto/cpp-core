@@ -20,15 +20,19 @@ alias = "commit-msg"
 description = "Validate commit message"
 run = "hk run commit-msg"
 
-# cpp-core pins no tools: every tool hk runs comes from the user's global mise config, which the
-# dotfiles repository manages. This installs what that config lists.
-# Never `mise use` here: that writes a pin into this repository's .mise.toml.
+# The tools are pinned in .mise.toml and locked in mise.lock; this installs exactly those.
 [setup_tools]
-description = "Install the tools the global mise config lists, then validate hk.pkl"
+description = "Install the pinned tools from mise.lock, then validate hk.pkl"
 run = """
-mise install
+mise install --locked
 hk validate
 """
+
+# No remote means no Renovate; this is how staleness shows. It reads only and changes nothing.
+[tools_outdated]
+alias = "tools:outdated"
+description = "List the project's pinned tools that have a newer release"
+run = "mise outdated --bump --no-global"
 
 [setup_all]
 description = "Full setup: install tools + install hooks + validate"

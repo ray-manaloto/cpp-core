@@ -1,7 +1,6 @@
 // hk configuration for cpp-core: https://hk.jdx.dev/configuration
 //
-// Every tool a step runs comes from the user's global mise config (~/.config/mise/config.toml);
-// this repository pins none. AGENTS.md records the versions hk was last tested with.
+// Every tool a step runs is pinned in .mise.toml and locked in mise.lock.
 //
 // The top-level `steps` make hk's implicit `check`, `fix` and `pre-commit` hooks: `check` only
 // checks, `fix` fixes without staging, and `pre-commit` fixes, stages the result and stashes
@@ -169,7 +168,8 @@ local linters = new Mapping<String, Step> {
   ["mise-fmt"] {
     glob = List("mise.toml", ".mise.toml", "mise.local.toml", ".mise.local.toml")
     check = "mise fmt --check"
-    fix = "mise fmt --write"
+    // `mise fmt` rewrites in place; it has no --write flag.
+    fix = "mise fmt"
   }
   ["hk-validate"] {
     glob = List("hk.pkl")

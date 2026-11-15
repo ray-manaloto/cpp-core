@@ -33,3 +33,6 @@ __pycache__/
 *~
 .lycheecache
 .lycheecache/
+
+# Agent skills that mise syncs from installed tools (settings.skills.auto_sync)
+.agents/
