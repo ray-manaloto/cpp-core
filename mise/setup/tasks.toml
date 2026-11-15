@@ -34,6 +34,18 @@ alias = "tools:outdated"
 description = "List the project's pinned tools that have a newer release"
 run = "mise outdated --bump --no-global"
 
+# Fast and read-only; hk runs it on pre-push and `hk check`.
+[tools_lock_check]
+alias = "tools:lock-check"
+description = "Check that mise.lock has a record for every pin and every conda dependency"
+run = "python3 scripts/check_mise_lock.py --self-test"
+
+# Slow: downloads every tool into an empty temporary data directory. Run after a bump.
+[tools_lock_verify]
+alias = "tools:lock-verify"
+description = "Install every tool from mise.lock into an empty data directory"
+run = "python3 scripts/check_mise_lock.py --self-test --install"
+
 [setup_all]
 description = "Full setup: install tools + install hooks + validate"
 run = """

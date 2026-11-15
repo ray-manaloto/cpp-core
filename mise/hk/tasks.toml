@@ -68,3 +68,23 @@ run = "hk util fix-byte-order-marker --all"
 [hk_format_diff]
 description = "Show format diff for files"
 run = "hk util format-diff --all --"
+
+# Runs every fix command on a throwaway copy of HEAD, so a broken `fix` (which `hk validate` and
+# `hk check` never execute) fails here instead of in someone's pre-commit.
+[hk_fix_smoke]
+alias = "hk:fix-smoke"
+description = "Run hk fix --all on a scratch worktree of HEAD and show what it would change"
+run = """
+set -eu
+dir=$(mktemp -d)
+trap 'git worktree remove --force "$dir" >/dev/null 2>&1 || true; rm -rf "$dir"' EXIT
+git worktree add --quiet --detach "$dir" HEAD
+mise trust --quiet "$dir"
+(cd "$dir" && hk fix --all --skip-step check-clean-workspace)
+git -C "$dir" status --short
+"""
+
+[docs_commands]
+alias = "docs:commands"
+description = "Check that every `mise run <task>` in the docs and scripts names a real task"
+run = "python3 scripts/check_doc_commands.py --self-test"

@@ -20,7 +20,7 @@ min_version = "2026.10.9"
 # Every tool an hk step runs on this repository, pinned at its latest version and locked in
 # mise.lock, which is the record of what the checks were run with. There is no remote, so no
 # Renovate: `mise run tools:outdated` shows what is stale. Bump a version here by hand, then run
-# `mise lock` and `mise install --locked` (never `mise upgrade`).
+# `mise lock`, `mise run tools:lock-check` and `mise install --locked` (never `mise upgrade`).
 # Secret scanning is betterleaks (patterns; gitleaks' successor) plus kingfisher (validated
 # findings); gitleaks and trufflehog would only duplicate them.
 [tools]
@@ -45,7 +45,10 @@ typos = "1.52.2"
 
 [settings]
 lockfile = true
-lockfile_mode = "generate"
+# The default "merge" mode. The trial "generate" mode makes `mise install` write a macos-arm64
+# clang-format entry that names a conda package it has no record for, and `mise install --locked`
+# then fails (mise 2026.11.8). `mise run tools:lock-check` catches a lock like that.
+lockfile_mode = "merge"
 
 [task_config]
 includes = [

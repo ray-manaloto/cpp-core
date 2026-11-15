@@ -44,7 +44,7 @@ local linters = new Mapping<String, Step> {
   }
   ["cpp-lint"] = (Builtins.cpp_lint) {
     glob = cxxGlob
-    check = "cpplint --config=.cpplint {{files}}"
+    check = new CommandSpec { command = "cpplint --config=.cpplint {{files}}"; effect = "read" }
   }
 
   // CMake. hk has no gersemi builtin; .gersemirc holds the style. The overlay ports keep vcpkg's
@@ -53,8 +53,8 @@ local linters = new Mapping<String, Step> {
     glob = List("**/CMakeLists.txt", "**/*.cmake")
     exclude = List("ports/**")
     batch = true
-    check = "gersemi --check {{files}}"
-    fix = "gersemi --in-place {{files}}"
+    check = new CommandSpec { command = "gersemi --check {{files}}"; effect = "read" }
+    fix = new CommandSpec { command = "gersemi --in-place {{files}}"; effect = "write" }
   }
 
   // TOML. tombi both lints and formats, so taplo is not used.
@@ -162,18 +162,46 @@ local linters = new Mapping<String, Step> {
   // The tool configs themselves
   ["pkl-format"] {
     glob = List("**/*.pkl")
-    check = "pkl format --diff-name-only {{files}}"
-    fix = "pkl format --write {{files}}"
+    check = new CommandSpec { command = "pkl format --diff-name-only {{files}}"; effect = "read" }
+    fix = new CommandSpec { command = "pkl format --write {{files}}"; effect = "write" }
   }
   ["mise-fmt"] {
     glob = List("mise.toml", ".mise.toml", "mise.local.toml", ".mise.local.toml")
-    check = "mise fmt --check"
+    check = new CommandSpec { command = "mise fmt --check"; effect = "read" }
     // `mise fmt` rewrites in place; it has no --write flag.
-    fix = "mise fmt"
+    fix = new CommandSpec { command = "mise fmt"; effect = "write" }
   }
   ["hk-validate"] {
     glob = List("hk.pkl")
-    check = "hk validate"
+    check = new CommandSpec { command = "hk validate"; effect = "read" }
+  }
+
+  // The audit's own checker. It reads the whole tree (citations, vendored copies, derived JSON),
+  // so it runs on every hook and alone, after no formatter is still writing.
+  ["audit-verify"] {
+    exclusive = true
+    check = new CommandSpec { command = "python3 scripts/verify_audit.py --quiet"; effect = "read" }
+  }
+  // Every `mise run <task>` a doc or script tells a reader to type must be a task or alias.
+  ["docs-commands"] {
+    glob = List("**/*.md", "scripts/*.py", "mise/**/*.toml", ".mise.toml")
+    check = new CommandSpec {
+      command = "python3 scripts/check_doc_commands.py --self-test"
+      effect = "read"
+    }
+  }
+}
+
+// mise.lock must be able to install every pin. Fast, but only needed when the pins move, so it
+// runs on `hk check` and pre-push, not pre-commit. `mise run tools:lock-verify` does the slow
+// install-from-lock proof.
+local lockCheck = new Mapping<String, Step> {
+  ["mise-lock"] {
+    glob = List(".mise.toml", "mise.lock")
+    check = new CommandSpec {
+      command = "python3 scripts/check_mise_lock.py --self-test"
+      effect = "read"
+    }
   }
 }
 
@@ -184,23 +212,28 @@ steps {
 hooks {
   ["check"] {
     steps {
+      ...lockCheck
       // `hk check` only: a release check wants nothing uncommitted.
       ["check-clean-workspace"] {
-        check =
-          """
-          if [ -n "$(git status --porcelain)" ]; then
-            echo "ERROR: Dirty git workspace detected:"
-            git status --short
-            exit 1
-          fi
-          echo "Git workspace is clean"
-          """
+        check = new CommandSpec {
+          effect = "read"
+          command =
+            """
+            if [ -n "$(git status --porcelain)" ]; then
+              echo "ERROR: Dirty git workspace detected:"
+              git status --short
+              exit 1
+            fi
+            echo "Git workspace is clean"
+            """
+        }
       }
     }
   }
   ["pre-push"] {
     steps {
       ...linters
+      ...lockCheck
     }
   }
   ["commit-msg"] {
