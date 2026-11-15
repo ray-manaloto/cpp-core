@@ -1,6 +1,7 @@
 # Setup tasks - install tools, hooks, validate
 
 [hooks_install]
+alias = "hooks:install"
 description = "Install hk git hooks"
 run = "hk install"
 
@@ -10,10 +11,12 @@ run = "hk uninstall"
 
 # Pre-commit and commit-msg via mise
 [pre_commit]
+alias = "pre-commit"
 description = "Run pre-commit checks"
 run = "hk run pre-commit"
 
 [commit_msg]
+alias = "commit-msg"
 description = "Validate commit message"
 run = "hk run commit-msg"
 

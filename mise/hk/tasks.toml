@@ -1,10 +1,12 @@
 # hk-based checks (already parallelized by hk)
 
 [hk_check]
+alias = "hk:check"
 description = "Run all hk checks (format + lint)"
 run = "hk check --all"
 
 [hk_fix]
+alias = "hk:fix"
 description = "Auto-fix all hk-checkable files"
 run = "hk fix --all"
 
@@ -17,6 +19,7 @@ description = "Validate commit message format"
 run = "hk run commit-msg"
 
 [hk_validate]
+alias = "hk:validate"
 description = "Validate hk configuration"
 sources = ["hk.pkl", ".cpplint", ".rumdl.toml"]
 run = "hk validate"
