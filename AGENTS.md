@@ -68,7 +68,7 @@ and it is deliberately conservative about what enters the module interface.
 
 - **Shipping:** The remote is `github.com/ray-manaloto/cpp-core`, a public repository. Every change
   is a pull request: a branch in its own worktree, one commit or more, opened with `repotools
-  pr-create --title <title> --body-file <body file>`. Run `hk check --all` in the worktree before you ask for the merge, and report its result in the pull request. The owner merges it; never push to `main`.
+  pr-create --title <title> --body-file <body file>`. Run `hk check --all` in the worktree before you ask for the merge, and report its result in the pull request. The owner approves each merge with "merge #N"; then merge with `gh pr merge N --merge --match-head-commit <head sha> --author-email "$(git config user.email)"`. This repository's local `user.email` is the merging account's `users.noreply.github.com` address; check it before the first commit or merge from a new clone. Without `--author-email`, GitHub credits the merge commit to the account's personal email, and this history is public: the merge commits of #1 to #4 carry it, and the owner chose to leave them as they are. Never push to `main`.
 
 - **Research:** The notes live in [Audit Bundle](./okf-bundles/audit/index.md). The open items are in
   [open-items.md](./okf-bundles/audit/open-items.md); the owner's decisions are in
