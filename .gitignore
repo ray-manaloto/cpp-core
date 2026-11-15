@@ -31,4 +31,5 @@ __pycache__/
 .claude/
 *.swp
 *~
+.lycheecache
 .lycheecache/

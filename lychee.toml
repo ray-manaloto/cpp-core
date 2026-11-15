@@ -12,9 +12,9 @@ host_stats = false
 
 #############################  Cache  ###############################
 
-cache = false
-# max_cache_age = "2d"
-# cache_exclude_status = "500.."
+cache = true
+max_cache_age = "2d"
+cache_exclude_status = "500.."
 
 #############################  Runtime  #############################
 
