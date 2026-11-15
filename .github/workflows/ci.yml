@@ -74,8 +74,9 @@ jobs:
     permissions:
       contents: read
     steps:
-      - name: Install git and Python
-        run: apt-get update -qq && apt-get install -y -qq --no-install-recommends ca-certificates curl git python3
+      # node, which runs prettier, needs libatomic.so.1.
+      - name: Install git, Python and libatomic
+        run: apt-get update -qq && apt-get install -y -qq --no-install-recommends ca-certificates curl git libatomic1 python3
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
