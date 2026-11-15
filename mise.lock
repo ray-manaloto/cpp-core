@@ -218,6 +218,52 @@ conda_deps = [
     "libiconv-1.18-he4c29f2_3",
 ]
 
+[[tools.editorconfig-checker]]
+version = "4.0.2"
+backend = "github:editorconfig-checker/editorconfig-checker"
+specifiers = ["4.0.2"]
+
+[tools.editorconfig-checker."platforms.linux-arm64"]
+checksum = "sha256:abad76da8c9950fdc2a314bcd66969172aa823e9c595fa7e3a389a91e34d025e"
+url = "https://github.com/editorconfig-checker/editorconfig-checker/releases/download/v4.0.2/editorconfig-checker-linux-arm64.tar.gz"
+url_api = "https://api.github.com/repos/editorconfig-checker/editorconfig-checker/releases/assets/574675779"
+provenance = "github-attestations"
+
+[tools.editorconfig-checker."platforms.linux-x64"]
+checksum = "sha256:44efaef3ed14c6ab52eb87481d78e5e5c204796dccf26e2f4598a61ba17f8003"
+url = "https://github.com/editorconfig-checker/editorconfig-checker/releases/download/v4.0.2/editorconfig-checker-linux-amd64.tar.gz"
+url_api = "https://api.github.com/repos/editorconfig-checker/editorconfig-checker/releases/assets/574675771"
+provenance = "github-attestations"
+
+[tools.editorconfig-checker."platforms.macos-arm64"]
+checksum = "sha256:ff59f57717d95fc62b8e372c8051dbbb766f7d660942409a85d027b0feb2422c"
+url = "https://github.com/editorconfig-checker/editorconfig-checker/releases/download/v4.0.2/editorconfig-checker-darwin-all.tar.gz"
+url_api = "https://api.github.com/repos/editorconfig-checker/editorconfig-checker/releases/assets/574675773"
+provenance = "github-attestations"
+
+[[tools.gitleaks]]
+version = "8.30.1"
+backend = "aqua:gitleaks/gitleaks"
+specifiers = ["8.30.1"]
+
+[tools.gitleaks."platforms.linux-arm64"]
+checksum = "sha256:e4a487ee7ccd7d3a7f7ec08657610aa3606637dab924210b3aee62570fb4b080"
+checksum_source = "mise-versions"
+url = "https://github.com/gitleaks/gitleaks/releases/download/v8.30.1/gitleaks_8.30.1_linux_arm64.tar.gz"
+url_api = "https://api.github.com/repos/gitleaks/gitleaks/releases/assets/378332057"
+
+[tools.gitleaks."platforms.linux-x64"]
+checksum = "sha256:551f6fc83ea457d62a0d98237cbad105af8d557003051f41f3e7ca7b3f2470eb"
+checksum_source = "mise-versions"
+url = "https://github.com/gitleaks/gitleaks/releases/download/v8.30.1/gitleaks_8.30.1_linux_x64.tar.gz"
+url_api = "https://api.github.com/repos/gitleaks/gitleaks/releases/assets/378332058"
+
+[tools.gitleaks."platforms.macos-arm64"]
+checksum = "sha256:b40ab0ae55c505963e365f271a8d3846efbc170aa17f2607f13df610a9aeb6a5"
+checksum_source = "mise-versions"
+url = "https://github.com/gitleaks/gitleaks/releases/download/v8.30.1/gitleaks_8.30.1_darwin_arm64.tar.gz"
+url_api = "https://api.github.com/repos/gitleaks/gitleaks/releases/assets/378332059"
+
 [[tools.lychee]]
 version = "0.24.2"
 backend = "aqua:lycheeverse/lychee"
@@ -327,6 +373,29 @@ checksum_source = "mise-versions"
 url = "https://github.com/koalaman/shellcheck/releases/download/v0.11.0/shellcheck-v0.11.0.darwin.aarch64.tar.xz"
 url_api = "https://api.github.com/repos/koalaman/shellcheck/releases/assets/279056932"
 
+[[tools.shellharden]]
+version = "4.3.2"
+backend = "aqua:anordal/shellharden"
+specifiers = ["4.3.2"]
+
+[tools.shellharden."platforms.linux-arm64"]
+checksum = "sha256:ba7e480234c0acd0493b21446e19db430afc522c7f22553f3c11d839d997ec04"
+checksum_source = "mise-versions"
+url = "https://github.com/anordal/shellharden/releases/download/v4.3.2/shellharden-aarch64-unknown-linux-gnu.tar.gz"
+url_api = "https://api.github.com/repos/anordal/shellharden/releases/assets/459691215"
+
+[tools.shellharden."platforms.linux-x64"]
+checksum = "sha256:e81e97bc6bccff59b826d3b39328ab19b26721a236440f740ba71754531c7286"
+checksum_source = "mise-versions"
+url = "https://github.com/anordal/shellharden/releases/download/v4.3.2/shellharden-x86_64-unknown-linux-gnu.tar.gz"
+url_api = "https://api.github.com/repos/anordal/shellharden/releases/assets/459690751"
+
+[tools.shellharden."platforms.macos-arm64"]
+checksum = "sha256:4279643d791619f7ce4a3fbdedb0cefd51916cd5d64b2956cb1e69df744678ec"
+checksum_source = "mise-versions"
+url = "https://github.com/anordal/shellharden/releases/download/v4.3.2/shellharden-aarch64-apple-darwin.tar.gz"
+url_api = "https://api.github.com/repos/anordal/shellharden/releases/assets/459690669"
+
 [[tools.shfmt]]
 version = "3.14.1"
 backend = "aqua:mvdan/sh"
@@ -370,6 +439,52 @@ checksum = "sha256:713734314c3e71894b9e77513c5349835eefbd52908445a0d73b0c7dc4693
 url = "https://github.com/tamasfe/taplo/releases/download/0.10.0/taplo-darwin-aarch64.gz"
 url_api = "https://api.github.com/repos/tamasfe/taplo/releases/assets/257323110"
 
+[[tools.tombi]]
+version = "1.11.2"
+backend = "aqua:tombi-toml/tombi"
+specifiers = ["1.11.2"]
+
+[tools.tombi."platforms.linux-arm64"]
+checksum = "sha256:14122e634113d2d9b1210b3f01d5139289575494a2d585824e1e51e116a58d96"
+url = "https://github.com/tombi-toml/tombi/releases/download/v1.11.2/tombi-cli-1.11.2-aarch64-unknown-linux-musl.tar.gz"
+url_api = "https://api.github.com/repos/tombi-toml/tombi/releases/assets/731865789"
+provenance = "github-attestations"
+
+[tools.tombi."platforms.linux-x64"]
+checksum = "sha256:8bb862497e99b415310ede463ee6cf997845368d3e6d4edac4dd33b07084beb3"
+url = "https://github.com/tombi-toml/tombi/releases/download/v1.11.2/tombi-cli-1.11.2-x86_64-unknown-linux-musl.tar.gz"
+url_api = "https://api.github.com/repos/tombi-toml/tombi/releases/assets/731865894"
+provenance = "github-attestations"
+
+[tools.tombi."platforms.macos-arm64"]
+checksum = "sha256:035be0afc61549adbe9ce6b6ab582cfff99bcd6b86f38f847149c3819dc89d33"
+url = "https://github.com/tombi-toml/tombi/releases/download/v1.11.2/tombi-cli-1.11.2-aarch64-apple-darwin.tar.gz"
+url_api = "https://api.github.com/repos/tombi-toml/tombi/releases/assets/731865806"
+provenance = "github-attestations"
+
+[[tools.trufflehog]]
+version = "3.99.9"
+backend = "aqua:trufflesecurity/trufflehog"
+specifiers = ["3.99.9"]
+
+[tools.trufflehog."platforms.linux-arm64"]
+checksum = "sha256:778b1913196dc9b9234e8fd366f64387efeb08c01930a1d2110dcb2ffd07e68b"
+checksum_source = "mise-versions"
+url = "https://github.com/trufflesecurity/trufflehog/releases/download/v3.99.9/trufflehog_3.99.9_linux_arm64.tar.gz"
+url_api = "https://api.github.com/repos/trufflesecurity/trufflehog/releases/assets/741127612"
+
+[tools.trufflehog."platforms.linux-x64"]
+checksum = "sha256:12050095c8063bf4d34f9f6cbce6ba9fa8d0deea9d503d0570364feba093658e"
+checksum_source = "mise-versions"
+url = "https://github.com/trufflesecurity/trufflehog/releases/download/v3.99.9/trufflehog_3.99.9_linux_amd64.tar.gz"
+url_api = "https://api.github.com/repos/trufflesecurity/trufflehog/releases/assets/741127614"
+
+[tools.trufflehog."platforms.macos-arm64"]
+checksum = "sha256:1d85e5c9c7eddbf12ae2714eb89317ba2cbbbf59be4e161e4b2ff396adbaa3a8"
+checksum_source = "mise-versions"
+url = "https://github.com/trufflesecurity/trufflehog/releases/download/v3.99.9/trufflehog_3.99.9_darwin_arm64.tar.gz"
+url_api = "https://api.github.com/repos/trufflesecurity/trufflehog/releases/assets/741127610"
+
 [[tools.ty]]
 version = "0.0.102"
 backend = "aqua:astral-sh/ty"
@@ -392,6 +507,21 @@ checksum = "sha256:da0fead6652ab9e5b1837e0ed057123e478ffc022292fce041e6b4513a63b
 url = "https://github.com/astral-sh/ty/releases/download/0.0.102/ty-aarch64-apple-darwin.tar.gz"
 url_api = "https://api.github.com/repos/astral-sh/ty/releases/assets/741278006"
 provenance = "github-attestations"
+
+[[tools.typos]]
+version = "1.25.0"
+backend = "aqua:crate-ci/typos"
+specifiers = ["1.25.0"]
+
+[tools.typos."platforms.linux-x64"]
+checksum = "sha256:39f231d15dd4012328e412194e344fa9475462abee375192d4bd16ea18f1dcc6"
+url = "https://github.com/crate-ci/typos/releases/download/v1.25.0/typos-v1.25.0-x86_64-unknown-linux-musl.tar.gz"
+url_api = "https://api.github.com/repos/crate-ci/typos/releases/assets/196014873"
+
+[tools.typos."platforms.macos-arm64"]
+checksum = "blake3:68d60e605f4c74291123937f3aa9bdccd4b7f219689220f52f990406230c58c4"
+url = "https://github.com/crate-ci/typos/releases/download/v1.25.0/typos-v1.25.0-aarch64-apple-darwin.tar.gz"
+url_api = "https://api.github.com/repos/crate-ci/typos/releases/assets/196015137"
 
 [[tools.yamlfmt]]
 version = "0.21.0"
