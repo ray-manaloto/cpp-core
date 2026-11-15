@@ -29,139 +29,146 @@ namespace fmt {
 
 namespace detail {
 struct fmt_spec {
-  int len{};
-  int base{};
-  bool well_formed{true};
+    int len{};
+    int base{};
+    bool well_formed{true};
 };
 
 consteval auto parse_fmt_spec(auto fmtstr) -> fmt_spec {
-  constexpr auto fmt = fmtstr();
-  auto i = fmt.begin();
-  while (*i != '{') {
+    constexpr auto fmt = fmtstr();
+    auto i = fmt.begin();
+    while (*i != '{') {
+        ++i;
+    }
     ++i;
-  }
-  ++i;
-  if (*i == '}') {
-    return {.len = 2, .base = 10};
-  } else if (*i++ == ':' and *i++ == 'x' and *i == '}') {
-    return {.len = 4, .base = 16};
-  }
-  return {.well_formed = false};
+    if (*i == '}') {
+        return {.len = 2, .base = 10};
+    } else if (*i++ == ':' and *i++ == 'x' and *i == '}') {
+        return {.len = 4, .base = 16};
+    }
+    return {.well_formed = false};
 }
 
-template <stdx::range R> consteval auto formatted_size(fmt_spec, R const &r) -> std::size_t {
-  return r.size();
+template <stdx::range R>
+consteval auto formatted_size(fmt_spec, R const &r) -> std::size_t {
+    return r.size();
 }
 
 consteval auto formatted_size(fmt_spec, char const *str) -> std::size_t {
-  std::size_t sz{};
-  while (*str) {
-    ++sz;
-    ++str;
-  }
-  return sz;
+    std::size_t sz{};
+    while (*str) {
+        ++sz;
+        ++str;
+    }
+    return sz;
 }
 
 consteval auto formatted_size(fmt_spec, char) -> std::size_t { return 1; }
 
-template <stdx::integral I> consteval auto formatted_size(fmt_spec s, I i) -> std::size_t {
-  if (i == 0) {
-    return 1;
-  } else {
-    std::size_t sz{};
-    if (i < 0) {
-      ++sz;
-    }
+template <stdx::integral I>
+consteval auto formatted_size(fmt_spec s, I i) -> std::size_t {
+    if (i == 0) {
+        return 1;
+    } else {
+        std::size_t sz{};
+        if (i < 0) {
+            ++sz;
+        }
 
-    while (i != 0) {
-      ++sz;
-      i /= static_cast<I>(s.base);
+        while (i != 0) {
+            ++sz;
+            i /= static_cast<I>(s.base);
+        }
+        return sz;
     }
-    return sz;
-  }
 }
 } // namespace detail
 
 consteval auto formatted_size(auto fmtstr, auto v) -> std::size_t {
-  constexpr auto spec = detail::parse_fmt_spec(fmtstr);
-  static_assert(spec.well_formed,
-                "Freestanding fmt implementation does not support that format "
-                "specifier");
+    constexpr auto spec = detail::parse_fmt_spec(fmtstr);
+    static_assert(
+        spec.well_formed,
+        "Freestanding fmt implementation does not support that format "
+        "specifier");
 
-  return fmtstr().size() - spec.len + detail::formatted_size(spec, v);
+    return fmtstr().size() - spec.len + detail::formatted_size(spec, v);
 }
 
 namespace detail {
-template <typename It, stdx::range R> consteval auto format_to(fmt_spec, It dest, R const &r)
-  -> It {
-  for (auto const c : r) {
+template <typename It, stdx::range R>
+consteval auto format_to(fmt_spec, It dest, R const &r) -> It {
+    for (auto const c : r) {
+        *dest++ = c;
+    }
+    return dest;
+}
+
+template <typename It>
+consteval auto format_to(fmt_spec, It dest, char const *str) -> It {
+    while (*str) {
+        *dest++ = *str++;
+    }
+    return dest;
+}
+
+template <typename It>
+consteval auto format_to(fmt_spec, It dest, char c) -> It {
     *dest++ = c;
-  }
-  return dest;
+    return dest;
 }
 
-template <typename It> consteval auto format_to(fmt_spec, It dest, char const *str) -> It {
-  while (*str) {
-    *dest++ = *str++;
-  }
-  return dest;
-}
+template <typename It, stdx::integral I>
+consteval auto format_to(fmt_spec s, It dest, I i) -> It {
+    if (i == 0) {
+        *dest++ = '0';
+    } else {
+        auto abs = []<typename T>(T v) -> T { return v < 0 ? -v : v; };
+        auto to_digit = [](auto n) -> char { return "0123456789abcdef"[n]; };
 
-template <typename It> consteval auto format_to(fmt_spec, It dest, char c) -> It {
-  *dest++ = c;
-  return dest;
-}
+        if (i < 0) {
+            *dest++ = '-';
+        }
 
-template <typename It, stdx::integral I> consteval auto format_to(fmt_spec s, It dest, I i) -> It {
-  if (i == 0) {
-    *dest++ = '0';
-  } else {
-    auto abs = []<typename T>(T v) -> T { return v < 0 ? -v : v; };
-    auto to_digit = [](auto n) -> char { return "0123456789abcdef"[n]; };
+        auto b = dest;
+        while (i != 0) {
+            auto digit = to_digit(abs(i % static_cast<I>(s.base)));
+            i /= static_cast<I>(s.base);
+            *dest++ = digit;
+        }
 
-    if (i < 0) {
-      *dest++ = '-';
+        auto e = dest - 1;
+        while (b < e) {
+            auto tmp = *b;
+            *b++ = *e;
+            *e-- = tmp;
+        }
     }
-
-    auto b = dest;
-    while (i != 0) {
-      auto digit = to_digit(abs(i % static_cast<I>(s.base)));
-      i /= static_cast<I>(s.base);
-      *dest++ = digit;
-    }
-
-    auto e = dest - 1;
-    while (b < e) {
-      auto tmp = *b;
-      *b++ = *e;
-      *e-- = tmp;
-    }
-  }
-  return dest;
+    return dest;
 }
 
 } // namespace detail
 
-template <typename It> consteval auto format_to(It dest, auto fmtstr, auto v) -> void {
-  constexpr auto fmt = fmtstr();
-  constexpr auto spec = detail::parse_fmt_spec(fmtstr);
+template <typename It>
+consteval auto format_to(It dest, auto fmtstr, auto v) -> void {
+    constexpr auto fmt = fmtstr();
+    constexpr auto spec = detail::parse_fmt_spec(fmtstr);
 
-  // copy to opening {
-  auto src = fmt.begin();
-  while (*src != '{') {
-    *dest++ = *src++;
-  }
+    // copy to opening {
+    auto src = fmt.begin();
+    while (*src != '{') {
+        *dest++ = *src++;
+    }
 
-  // skip fmt spec
-  src += spec.len;
+    // skip fmt spec
+    src += spec.len;
 
-  // format the value into the buffer
-  dest = detail::format_to(spec, dest, v);
+    // format the value into the buffer
+    dest = detail::format_to(spec, dest, v);
 
-  // copy the rest of src
-  while (*src) {
-    *dest++ = *src++;
-  }
+    // copy the rest of src
+    while (*src) {
+        *dest++ = *src++;
+    }
 }
 
 } // namespace fmt

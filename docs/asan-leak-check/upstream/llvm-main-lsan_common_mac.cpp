@@ -17,12 +17,12 @@
 
 #if CAN_SANITIZE_LEAKS && SANITIZER_APPLE
 
-#include <mach/mach.h>
-#include <mach/vm_statistics.h>
-#include <pthread.h>
+#  include <mach/mach.h>
+#  include <mach/vm_statistics.h>
+#  include <pthread.h>
 
-#include "lsan_allocator.h"
-#include "sanitizer_common/sanitizer_allocator_internal.h"
+#  include "lsan_allocator.h"
+#  include "sanitizer_common/sanitizer_allocator_internal.h"
 namespace __lsan {
 
 class ThreadContextLsanBase;
@@ -36,7 +36,8 @@ enum class SeenRegion {
 };
 
 inline SeenRegion operator|(SeenRegion left, SeenRegion right) {
-  return static_cast<SeenRegion>(static_cast<int>(left) | static_cast<int>(right));
+  return static_cast<SeenRegion>(static_cast<int>(left) |
+                                 static_cast<int>(right));
 }
 
 inline SeenRegion &operator|=(SeenRegion &left, const SeenRegion &right) {
@@ -66,7 +67,9 @@ void restore_tid_data(void *ptr) {
     pthread_setspecific(key, data);
 }
 
-static void make_tls_key() { CHECK_EQ(pthread_key_create(&key, restore_tid_data), 0); }
+static void make_tls_key() {
+  CHECK_EQ(pthread_key_create(&key, restore_tid_data), 0);
+}
 
 static thread_local_data_t *get_tls_val(bool alloc) {
   pthread_once(&key_once, make_tls_key);
@@ -103,7 +106,9 @@ ThreadContextLsanBase *GetCurrentThread() {
   return data ? data->current_thread : nullptr;
 }
 
-void SetCurrentThread(ThreadContextLsanBase *tctx) { get_tls_val(true)->current_thread = tctx; }
+void SetCurrentThread(ThreadContextLsanBase *tctx) {
+  get_tls_val(true)->current_thread = tctx;
+}
 
 AllocatorCache *GetAllocatorCache() { return &get_tls_val(true)->cache; }
 
@@ -123,9 +128,10 @@ void InitializePlatformSpecificModules() {}
 // __objc_data, __objc_const, __data, __bss, __common, __thread_data,
 // __thread_bss, __thread_vars, __objc_opt_rw, __objc_opt_ptrs
 static const char *kSkippedSecNames[] = {
-  "__cfstring",       "__la_symbol_ptr",  "__mod_init_func",  "__mod_term_func",
-  "__nl_symbol_ptr",  "__objc_classlist", "__objc_classrefs", "__objc_imageinfo",
-  "__objc_nlclslist", "__objc_protolist", "__objc_selrefs",   "__objc_superrefs"};
+    "__cfstring",       "__la_symbol_ptr",  "__mod_init_func",
+    "__mod_term_func",  "__nl_symbol_ptr",  "__objc_classlist",
+    "__objc_classrefs", "__objc_imageinfo", "__objc_nlclslist",
+    "__objc_protolist", "__objc_selrefs",   "__objc_superrefs"};
 
 // Scans global variables for heap pointers.
 void ProcessGlobalRegions(Frontier *frontier) {
@@ -139,17 +145,15 @@ void ProcessGlobalRegions(Frontier *frontier) {
   for (uptr i = 0; i < modules.size(); ++i) {
     // Even when global scanning is disabled, we still need to scan
     // system libraries for stashed pointers
-    if (!flags()->use_globals && modules[i].instrumented())
-      continue;
+    if (!flags()->use_globals && modules[i].instrumented()) continue;
 
-    for (const __sanitizer::LoadedModule::AddressRange &range : modules[i].ranges()) {
+    for (const __sanitizer::LoadedModule::AddressRange &range :
+         modules[i].ranges()) {
       // Sections storing global variables are writable and non-executable
-      if (range.executable || !range.writable)
-        continue;
+      if (range.executable || !range.writable) continue;
 
       for (auto name : kSkippedSecNames) {
-        if (!internal_strcmp(range.name, name))
-          continue;
+        if (!internal_strcmp(range.name, name)) continue;
       }
 
       ScanGlobalRange(range.beg, range.end, frontier);
@@ -170,26 +174,29 @@ void ProcessPlatformSpecificAllocations(Frontier *frontier) {
     unsigned depth = 1;
     struct vm_region_submap_info_64 info;
     mach_msg_type_number_t count = VM_REGION_SUBMAP_INFO_COUNT_64;
-    err = vm_region_recurse_64(mach_task_self(), &address, &size, &depth, (vm_region_info_t)&info,
-                               &count);
+    err = vm_region_recurse_64(mach_task_self(), &address, &size, &depth,
+                               (vm_region_info_t)&info, &count);
 
     uptr end_address = address + size;
     if (info.user_tag == VM_MEMORY_OS_ALLOC_ONCE) {
       // libxpc stashes some pointers in the Kernel Alloc Once page,
       // make sure not to report those as leaks.
       scan_state.seen_regions |= SeenRegion::AllocOnce;
-      ScanRangeForPointers(address, end_address, frontier, "GLOBAL", kReachable);
+      ScanRangeForPointers(address, end_address, frontier, "GLOBAL",
+                           kReachable);
     } else if (info.user_tag == VM_MEMORY_FOUNDATION) {
       // Objective-C block trampolines use the Foundation region.
       scan_state.seen_regions |= SeenRegion::Foundation;
-      ScanRangeForPointers(address, end_address, frontier, "GLOBAL", kReachable);
+      ScanRangeForPointers(address, end_address, frontier, "GLOBAL",
+                           kReachable);
     } else if (info.user_tag == VM_MEMORY_LIBDISPATCH) {
       // Dispatch continuations use the libdispatch region. Empirically, there
       // can be more than one region with this tag, so we'll optimistically
       // assume that they're continguous. Otherwise, we would need to scan every
       // region to ensure we find them all.
       scan_state.in_libdispatch = true;
-      ScanRangeForPointers(address, end_address, frontier, "GLOBAL", kReachable);
+      ScanRangeForPointers(address, end_address, frontier, "GLOBAL",
+                           kReachable);
     } else if (scan_state.in_libdispatch) {
       scan_state.seen_regions |= SeenRegion::LibDispatch;
       scan_state.in_libdispatch = false;
@@ -221,11 +228,12 @@ void ProcessPlatformSpecificAllocations(Frontier *frontier) {
 // causes rare race conditions.
 void HandleLeaks() {}
 
-void LockStuffAndStopTheWorld(StopTheWorldCallback callback, CheckForLeaksParam *argument) {
+void LockStuffAndStopTheWorld(StopTheWorldCallback callback,
+                              CheckForLeaksParam *argument) {
   ScopedStopTheWorldLock lock;
   StopTheWorld(callback, argument);
 }
 
-} // namespace __lsan
+}  // namespace __lsan
 
 #endif // CAN_SANITIZE_LEAKS && SANITIZER_APPLE

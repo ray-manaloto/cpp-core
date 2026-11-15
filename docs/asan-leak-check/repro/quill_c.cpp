@@ -9,12 +9,8 @@ int main() {
   auto sink = quill::Frontend::create_or_get_sink<quill::ConsoleSink>("s");
   auto *logger = quill::Frontend::create_or_get_logger("l", std::move(sink));
   static constexpr quill::MacroMetadata metadata{
-    "f.cpp",
-    "fn",
-    "hello {}",
-    nullptr,
-    quill::LogLevel::None,
-    quill::MacroMetadata::Event::LogWithRuntimeMetadataShallowCopy};
+      "f.cpp", "fn", "hello {}", nullptr, quill::LogLevel::None,
+      quill::MacroMetadata::Event::LogWithRuntimeMetadataShallowCopy};
   logger->log_statement_runtime_metadata<true>(&metadata, "hello {}", "f.cpp", "fn", "", 1U,
                                                quill::LogLevel::Info, 42);
   logger->flush_log();

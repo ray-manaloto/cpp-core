@@ -15,10 +15,7 @@ int main() {
   int status = 0;
   for (int i = 0; i < 50; ++i) {
     pid_t r = waitpid(pid, &status, WNOHANG);
-    if (r == pid) {
-      std::printf("child finished, status=%d\n", status);
-      return 0;
-    }
+    if (r == pid) { std::printf("child finished, status=%d\n", status); return 0; }
     usleep(100000);
   }
   std::printf("child still running after 5s -> killing\n");

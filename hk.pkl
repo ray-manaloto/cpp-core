@@ -1,238 +1,184 @@
+// hk configuration for cpp-core: https://hk.jdx.dev/configuration
+//
+// Every tool a step runs comes from the user's global mise config (~/.config/mise/config.toml);
+// this repository pins none. AGENTS.md records the versions hk was last tested with.
+//
+// The top-level `steps` make hk's implicit `check`, `fix` and `pre-commit` hooks: `check` only
+// checks, `fix` fixes without staging, and `pre-commit` fixes, stages the result and stashes
+// unstaged work. `pre-push` and `commit-msg` are declared below.
+amends "package://github.com/jdx/hk/releases/download/v2.12.0/hk@2.12.0#/Config.pkl"
+
 import "package://github.com/jdx/hk/releases/download/v2.12.0/hk@2.12.0#/Builtins.pkl"
-import "package://github.com/jdx/hk/releases/download/v2.12.0/hk@2.12.0#/Config.pkl" as Config
+
+min_hk_version = "2.12.0"
+
+// Vendored upstream copies are checked byte for byte against upstream/manifest.json, and the repro
+// sources are kept as they were run; no step may rewrite either.
+exclude = List("docs/**/upstream/**", "docs/**/repro/**", "build/**", ".cache/**")
+
+local cxxGlob =
+  List(
+    "**/*.c",
+    "**/*.h",
+    "**/*.cpp",
+    "**/*.hpp",
+    "**/*.cc",
+    "**/*.hh",
+    "**/*.cxx",
+    "**/*.hxx",
+    "**/*.cppm",
+  )
+
+local githubGlob =
+  List(
+    ".github/workflows/*.yml",
+    ".github/workflows/*.yaml",
+    ".github/actions/**/action.yml",
+    ".github/actions/**/action.yaml",
+    ".github/dependabot.yml",
+  )
+
+local linters = new Mapping<String, Step> {
+  // C and C++
+  ["clang-format"] = (Builtins.clang_format) {
+    glob = cxxGlob
+  }
+  ["cpp-lint"] = (Builtins.cpp_lint) {
+    glob = cxxGlob
+    check = "cpplint --config=.cpplint {{files}}"
+  }
+
+  // CMake. hk has no gersemi builtin; .gersemirc holds the style. The overlay ports keep vcpkg's
+  // own portfile style, and a portfile edit changes the port's ABI hash.
+  ["gersemi"] {
+    glob = List("**/CMakeLists.txt", "**/*.cmake")
+    exclude = List("ports/**")
+    batch = true
+    check = "gersemi --check {{files}}"
+    fix = "gersemi --in-place {{files}}"
+  }
+
+  // TOML. tombi both lints and formats, so taplo is not used.
+  ["tombi"] = (Builtins.tombi) {
+    exclude = List(".typos.toml")
+  }
+  ["tombi-format"] = (Builtins.tombi_format) {
+    exclude = List(".typos.toml")
+  }
+
+  // JSON
+  ["prettier"] = (Builtins.prettier) {
+    glob = List("**/*.json", "**/*.jsonc", "**/*.json5")
+  }
+
+  // Markdown and prose
+  ["rumdl-format"] = (Builtins.rumdl_format) {
+    glob = List("**/*.md", "**/*.markdown")
+  }
+  ["rumdl"] = (Builtins.rumdl) {
+    glob = List("**/*.md", "**/*.markdown")
+  }
+  ["lychee"] = (Builtins.lychee) {
+    glob = List("**/*.md", "**/*.markdown")
+  }
+  ["typos"] = (Builtins.typos) {
+    glob =
+      List(
+        "**/*.md",
+        "**/*.markdown",
+        "**/*.txt",
+        "**/*.rst",
+        "**/*.adoc",
+        "**/*.cpp",
+        "**/*.hpp",
+        "**/*.c",
+        "**/*.h",
+        "**/*.cmake",
+        "**/*.py",
+        "**/*.sh",
+        "**/*.toml",
+        "**/*.yaml",
+        "**/*.yml",
+        "**/*.json",
+      )
+    // Mirrors .typos.toml's extend-exclude, so hk does not hand typos files it would skip.
+    exclude =
+      List("docs/**", "ports/**", "**/upstream/**", "**/repro/**", ".opencode/**", "build/**")
+  }
+
+  // Secrets and dependencies
+  ["betterleaks"] = Builtins.betterleaks
+  ["kingfisher"] = Builtins.kingfisher
+  ["osv-scanner"] = (Builtins.osv_scanner) {
+    glob = List("**/vcpkg.json", "**/*.lock")
+  }
+
+  // GitHub Actions and containers: cpp-core has neither today; these run only if some are added.
+  ["jactionlint"] = (Builtins.jactionlint) {
+    glob = githubGlob
+  }
+  ["zizmor"] = (Builtins.zizmor) {
+    glob = githubGlob
+  }
+  ["hadolint"] = (Builtins.hadolint) {
+    glob = List("**/Dockerfile", "**/Dockerfile.*", "**/*.dockerfile")
+  }
+
+  // Shell and Python
+  ["shfmt"] = Builtins.shfmt
+  ["shellcheck"] = Builtins.shellcheck
+  ["ruff-format"] = Builtins.ruff_format
+  ["ruff"] = Builtins.ruff
+  ["ty"] = Builtins.ty
+  ["python-check-ast"] = Builtins.python_check_ast
+  ["python-debug-statements"] = Builtins.python_debug_statements
+
+  // Repository hygiene
+  ["check-merge-conflict"] = Builtins.check_merge_conflict
+  ["check-case-conflict"] = Builtins.check_case_conflict
+  ["check-added-large-files"] = (Builtins.check_added_large_files) {
+    allow_binary = true
+  }
+  ["check-executables-have-shebangs"] = Builtins.check_executables_have_shebangs
+  ["check-shebang-scripts-are-executable"] = Builtins.check_shebang_scripts_are_executable
+  ["check-symlinks"] = (Builtins.check_symlinks) {
+    allow_symlinks = true
+  }
+  ["trailing-whitespace"] = Builtins.trailing_whitespace
+  ["newlines"] = Builtins.newlines
+  ["mixed-line-ending"] = Builtins.mixed_line_ending
+  ["fix-smart-quotes"] = Builtins.fix_smart_quotes
+  ["byte-order-marker"] = Builtins.byte_order_marker
+  ["destroyed-symlinks"] = Builtins.destroyed_symlinks
+  ["detect-private-key"] = Builtins.detect_private_key
+  ["forbid-submodules"] = Builtins.forbid_submodules
+
+  // The tool configs themselves
+  ["pkl-format"] {
+    glob = List("**/*.pkl")
+    check = "pkl format --diff-name-only {{files}}"
+    fix = "pkl format --write {{files}}"
+  }
+  ["mise-fmt"] {
+    glob = List("mise.toml", ".mise.toml", "mise.local.toml", ".mise.local.toml")
+    check = "mise fmt --check"
+    fix = "mise fmt --write"
+  }
+  ["hk-validate"] {
+    glob = List("hk.pkl")
+    check = "hk validate"
+  }
+}
+
+steps {
+  ...linters
+}
 
 hooks {
   ["check"] {
     steps {
-      ["clang-format"] = (Builtins.clang_format) {
-        glob =
-          List(
-            "**/*.c",
-            "**/*.h",
-            "**/*.cpp",
-            "**/*.hpp",
-            "**/*.cc",
-            "**/*.hh",
-            "**/*.cxx",
-            "**/*.hxx",
-            "**/*.cppm",
-          )
-        exclude =
-          List(
-            "**/docs/asan-leak-check/upstream/**",
-            "**/docs/cxx26-features-audit/upstream/**",
-            "**/docs/module-source-location/upstream/**",
-          )
-      }
-      ["cpp-lint"] = (Builtins.cpp_lint) {
-        glob =
-          List(
-            "**/*.c",
-            "**/*.h",
-            "**/*.cpp",
-            "**/*.hpp",
-            "**/*.cc",
-            "**/*.hh",
-            "**/*.cxx",
-            "**/*.hxx",
-            "**/*.cppm",
-          )
-        exclude =
-          List(
-            "**/docs/asan-leak-check/upstream/**",
-            "**/docs/cxx26-features-audit/upstream/**",
-            "**/docs/module-source-location/upstream/**",
-            "**/docs/asan-leak-check/repro/**",
-            "**/docs/module-source-location/repro/**",
-          )
-        check = "cpplint --config=.cpplint {{files}}"
-      }
-      ["taplo-format"] = (Builtins.taplo_format) {
-        glob = List("**/*.toml")
-        exclude = List("**/lychee.toml")
-      }
-      ["taplo"] = (Builtins.taplo) {
-        glob = List("**/*.toml")
-      }
-      ["prettier"] = (Builtins.prettier) {
-        glob = List("**/*.json", "**/*.jsonc", "**/*.json5")
-      }
-      ["yamlfmt"] = (Builtins.yamlfmt) {
-        glob = List("**/*.yml", "**/*.yaml")
-      }
-      ["yamllint"] = (Builtins.yamllint) {
-        glob = List("**/*.yml", "**/*.yaml")
-      }
-      ["rumdl-format"] = (Builtins.rumdl_format) {
-        glob = List("**/*.md", "**/*.markdown")
-      }
-      ["rumdl"] = (Builtins.rumdl) {
-        glob = List("**/*.md", "**/*.markdown")
-      }
-      ["lychee"] = (Builtins.lychee) {
-        glob = List("**/*.md", "**/*.markdown")
-        exclude =
-          List(
-            "**/docs/asan-leak-check/upstream/**",
-            "**/docs/cxx26-features-audit/upstream/**",
-            "**/docs/module-source-location/upstream/**",
-            "**/docs/asan-leak-check/repro/**",
-            "**/docs/module-source-location/repro/**",
-          )
-      }
-      ["betterleaks"] = (Builtins.betterleaks) {}
-      ["kingfisher"] = (Builtins.kingfisher) {}
-      ["jactionlint"] = (Builtins.jactionlint) {
-        glob =
-          List(
-            ".github/workflows/*.yml",
-            ".github/workflows/*.yaml",
-            ".github/actions/**/action.yml",
-            ".github/actions/**/action.yaml",
-            ".github/dependabot.yml",
-          )
-      }
-      ["osv-scanner"] = (Builtins.osv_scanner) {
-        glob =
-          List(
-            "**/*.lock",
-            "**/Cargo.lock",
-            "**/package-lock.json",
-            "**/yarn.lock",
-            "**/pnpm-lock.yaml",
-            "**/poetry.lock",
-            "**/Pipfile.lock",
-            "**/go.mod",
-            "**/go.sum",
-            "**/vcpkg.json",
-            "**/conan.lock",
-          )
-        prefix = List("mise", "exec", "osv-scanner@2.7.1", "--")
-      }
-      ["pinact"] = (Builtins.pinact) {
-        glob =
-          List(
-            ".github/workflows/*.yml",
-            ".github/workflows/*.yaml",
-            ".github/actions/**/action.yml",
-            ".github/actions/**/action.yaml",
-          )
-      }
-      ["pinact-update"] = (Builtins.pinact_update) {
-        glob =
-          List(
-            ".github/workflows/*.yml",
-            ".github/workflows/*.yaml",
-            ".github/actions/**/action.yml",
-            ".github/actions/**/action.yaml",
-          )
-      }
-      ["typos"] = (Builtins.typos) {
-        glob =
-          List(
-            "**/*.md",
-            "**/*.markdown",
-            "**/*.txt",
-            "**/*.rst",
-            "**/*.adoc",
-            "**/*.cpp",
-            "**/*.hpp",
-            "**/*.c",
-            "**/*.h",
-            "**/*.cmake",
-            "**/*.py",
-            "**/*.sh",
-            "**/*.toml",
-            "**/*.yaml",
-            "**/*.yml",
-            "**/*.json",
-          )
-        exclude =
-          List(
-            "**/docs/**",
-            "**/ports/**",
-            "**/upstream/**",
-            "**/repro/**",
-            "**/.mise/**",
-            "**/.opencode/**",
-            "**/build/**",
-          )
-      }
-      ["tombi"] = (Builtins.tombi) {
-        glob = List("**/*.toml")
-        exclude = List("**/.mise/locks/**", ".typos.toml")
-      }
-      ["tombi-format"] = (Builtins.tombi_format) {
-        glob = List("**/*.toml")
-        exclude = List("**/.mise/locks/**", ".typos.toml")
-      }
-      ["hadolint"] = (Builtins.hadolint) {
-        glob = List("**/Dockerfile", "**/Dockerfile.*", "**/*.dockerfile")
-      }
-      ["zizmor"] = (Builtins.zizmor) {
-        glob =
-          List(
-            ".github/workflows/*.yml",
-            ".github/workflows/*.yaml",
-            ".github/dependabot.yml",
-            "**/action.yml",
-            "**/action.yaml",
-          )
-      }
-      ["trufflehog"] = (Builtins.trufflehog) {
-        glob = List("**/*")
-      }
-      ["shfmt"] = (Builtins.shfmt) {}
-      ["shellcheck"] = (Builtins.shellcheck) {
-        exclude = List("**/sample_hang.sh")
-      }
-      ["ruff-format"] = (Builtins.ruff_format) {
-        glob = List("**/*.py")
-      }
-      ["ruff"] = (Builtins.ruff) {
-        glob = List("**/*.py")
-      }
-      ["ty"] = (Builtins.ty) {
-        glob = List("**/*.py", "**/*.pyi")
-      }
-      ["python-check-ast"] = (Builtins.python_check_ast) {
-        glob = List("**/*.py")
-      }
-      ["python-debug-statements"] = (Builtins.python_debug_statements) {
-        glob = List("**/*.py")
-      }
-      ["check-merge-conflict"] = (Builtins.check_merge_conflict) {}
-      ["check-case-conflict"] = (Builtins.check_case_conflict) {}
-      ["check-added-large-files"] = (Builtins.check_added_large_files) {
-        allow_binary = true
-      }
-      ["check-executables-have-shebangs"] = (Builtins.check_executables_have_shebangs) {}
-      ["check-shebang-scripts-are-executable"] = (Builtins.check_shebang_scripts_are_executable) {}
-      ["check-symlinks"] = (Builtins.check_symlinks) {
-        allow_symlinks = true
-      }
-      ["trailing-whitespace"] = (Builtins.trailing_whitespace) {}
-      ["newlines"] = (Builtins.newlines) {}
-      ["mixed-line-ending"] = (Builtins.mixed_line_ending) {}
-      ["fix-smart-quotes"] = (Builtins.fix_smart_quotes) {}
-      ["byte-order-marker"] = (Builtins.byte_order_marker) {}
-      ["destroyed-symlinks"] = (Builtins.destroyed_symlinks) {}
-      ["detect-private-key"] = (Builtins.detect_private_key) {}
-      ["forbid-submodules"] = (Builtins.forbid_submodules) {}
-      ["pkl-format"] = (Config.Step) {
-        glob = List("**/*.pkl")
-        check = "pkl format --diff-name-only {{files}}"
-        fix = "pkl format --write {{files}}"
-      }
-      ["mise-fmt"] = (Config.Step) {
-        glob = List("mise.toml", ".mise.toml", "mise.local.toml", ".mise.local.toml")
-        check = "mise fmt --check"
-        fix = "mise fmt --write"
-      }
-      ["hk-validate"] = (Config.Step) {
-        check = "hk validate"
-      }
-      ["check-clean-workspace"] = (Config.Step) {
+      // `hk check` only: a release check wants nothing uncommitted.
+      ["check-clean-workspace"] {
         check =
           """
           if [ -n "$(git status --porcelain)" ]; then
@@ -245,476 +191,14 @@ hooks {
       }
     }
   }
-
-  ["pre-commit"] {
-    steps {
-      ["clang-format"] = (Builtins.clang_format) {
-        glob =
-          List(
-            "**/*.c",
-            "**/*.h",
-            "**/*.cpp",
-            "**/*.hpp",
-            "**/*.cc",
-            "**/*.hh",
-            "**/*.cxx",
-            "**/*.hxx",
-            "**/*.cppm",
-          )
-        exclude =
-          List(
-            "**/docs/asan-leak-check/upstream/**",
-            "**/docs/cxx26-features-audit/upstream/**",
-            "**/docs/module-source-location/upstream/**",
-          )
-      }
-      ["cpp-lint"] = (Builtins.cpp_lint) {
-        glob =
-          List(
-            "**/*.c",
-            "**/*.h",
-            "**/*.cpp",
-            "**/*.hpp",
-            "**/*.cc",
-            "**/*.hh",
-            "**/*.cxx",
-            "**/*.hxx",
-            "**/*.cppm",
-          )
-        exclude =
-          List(
-            "**/docs/asan-leak-check/upstream/**",
-            "**/docs/cxx26-features-audit/upstream/**",
-            "**/docs/module-source-location/upstream/**",
-            "**/docs/asan-leak-check/repro/**",
-            "**/docs/module-source-location/repro/**",
-          )
-        check = "cpplint --config=.cpplint {{files}}"
-      }
-      ["taplo-format"] = (Builtins.taplo_format) {
-        glob = List("**/*.toml")
-        exclude = List("**/lychee.toml")
-      }
-      ["taplo"] = (Builtins.taplo) {
-        glob = List("**/*.toml")
-      }
-      ["prettier"] = (Builtins.prettier) {
-        glob = List("**/*.json", "**/*.jsonc", "**/*.json5")
-      }
-      ["yamlfmt"] = (Builtins.yamlfmt) {
-        glob = List("**/*.yml", "**/*.yaml")
-      }
-      ["yamllint"] = (Builtins.yamllint) {
-        glob = List("**/*.yml", "**/*.yaml")
-      }
-      ["rumdl-format"] = (Builtins.rumdl_format) {
-        glob = List("**/*.md", "**/*.markdown")
-      }
-      ["rumdl"] = (Builtins.rumdl) {
-        glob = List("**/*.md", "**/*.markdown")
-      }
-      ["lychee"] = (Builtins.lychee) {
-        glob = List("**/*.md", "**/*.markdown")
-        exclude =
-          List(
-            "**/docs/asan-leak-check/upstream/**",
-            "**/docs/cxx26-features-audit/upstream/**",
-            "**/docs/module-source-location/upstream/**",
-            "**/docs/asan-leak-check/repro/**",
-            "**/docs/module-source-location/repro/**",
-          )
-      }
-      ["betterleaks"] = (Builtins.betterleaks) {}
-      ["kingfisher"] = (Builtins.kingfisher) {}
-      ["jactionlint"] = (Builtins.jactionlint) {
-        glob =
-          List(
-            ".github/workflows/*.yml",
-            ".github/workflows/*.yaml",
-            ".github/actions/**/action.yml",
-            ".github/actions/**/action.yaml",
-            ".github/dependabot.yml",
-          )
-      }
-      ["osv-scanner"] = (Builtins.osv_scanner) {
-        glob =
-          List(
-            "**/*.lock",
-            "**/Cargo.lock",
-            "**/package-lock.json",
-            "**/yarn.lock",
-            "**/pnpm-lock.yaml",
-            "**/poetry.lock",
-            "**/Pipfile.lock",
-            "**/go.mod",
-            "**/go.sum",
-            "**/vcpkg.json",
-            "**/conan.lock",
-          )
-        prefix = List("mise", "exec", "osv-scanner@2.7.1", "--")
-      }
-      ["pinact"] = (Builtins.pinact) {
-        glob =
-          List(
-            ".github/workflows/*.yml",
-            ".github/workflows/*.yaml",
-            ".github/actions/**/action.yml",
-            ".github/actions/**/action.yaml",
-          )
-      }
-      ["pinact-update"] = (Builtins.pinact_update) {
-        glob =
-          List(
-            ".github/workflows/*.yml",
-            ".github/workflows/*.yaml",
-            ".github/actions/**/action.yml",
-            ".github/actions/**/action.yaml",
-          )
-      }
-      ["typos"] = (Builtins.typos) {
-        glob =
-          List(
-            "**/*.md",
-            "**/*.markdown",
-            "**/*.txt",
-            "**/*.rst",
-            "**/*.adoc",
-            "**/*.cpp",
-            "**/*.hpp",
-            "**/*.c",
-            "**/*.h",
-            "**/*.cmake",
-            "**/*.py",
-            "**/*.sh",
-            "**/*.toml",
-            "**/*.yaml",
-            "**/*.yml",
-            "**/*.json",
-          )
-        exclude =
-          List(
-            "**/docs/**",
-            "**/ports/**",
-            "**/upstream/**",
-            "**/repro/**",
-            "**/.mise/**",
-            "**/.opencode/**",
-            "**/build/**",
-          )
-      }
-      ["tombi"] = (Builtins.tombi) {
-        glob = List("**/*.toml")
-        exclude = List("**/.mise/locks/**", ".typos.toml")
-      }
-      ["tombi-format"] = (Builtins.tombi_format) {
-        glob = List("**/*.toml")
-        exclude = List("**/.mise/locks/**", ".typos.toml")
-      }
-      ["hadolint"] = (Builtins.hadolint) {
-        glob = List("**/Dockerfile", "**/Dockerfile.*", "**/*.dockerfile")
-      }
-      ["zizmor"] = (Builtins.zizmor) {
-        glob =
-          List(
-            ".github/workflows/*.yml",
-            ".github/workflows/*.yaml",
-            ".github/dependabot.yml",
-            "**/action.yml",
-            "**/action.yaml",
-          )
-      }
-      ["trufflehog"] = (Builtins.trufflehog) {
-        glob = List("**/*")
-      }
-      ["shfmt"] = (Builtins.shfmt) {}
-      ["shellcheck"] = (Builtins.shellcheck) {
-        exclude = List("**/sample_hang.sh")
-      }
-      ["ruff-format"] = (Builtins.ruff_format) {
-        glob = List("**/*.py")
-      }
-      ["ruff"] = (Builtins.ruff) {
-        glob = List("**/*.py")
-      }
-      ["ty"] = (Builtins.ty) {
-        glob = List("**/*.py", "**/*.pyi")
-      }
-      ["python-check-ast"] = (Builtins.python_check_ast) {
-        glob = List("**/*.py")
-      }
-      ["python-debug-statements"] = (Builtins.python_debug_statements) {
-        glob = List("**/*.py")
-      }
-      ["check-merge-conflict"] = (Builtins.check_merge_conflict) {}
-      ["check-case-conflict"] = (Builtins.check_case_conflict) {}
-      ["check-added-large-files"] = (Builtins.check_added_large_files) {
-        allow_binary = true
-      }
-      ["check-executables-have-shebangs"] = (Builtins.check_executables_have_shebangs) {}
-      ["check-shebang-scripts-are-executable"] = (Builtins.check_shebang_scripts_are_executable) {}
-      ["check-symlinks"] = (Builtins.check_symlinks) {
-        allow_symlinks = true
-      }
-      ["trailing-whitespace"] = (Builtins.trailing_whitespace) {}
-      ["newlines"] = (Builtins.newlines) {}
-      ["mixed-line-ending"] = (Builtins.mixed_line_ending) {}
-      ["fix-smart-quotes"] = (Builtins.fix_smart_quotes) {}
-      ["byte-order-marker"] = (Builtins.byte_order_marker) {}
-      ["destroyed-symlinks"] = (Builtins.destroyed_symlinks) {}
-      ["detect-private-key"] = (Builtins.detect_private_key) {}
-      ["forbid-submodules"] = (Builtins.forbid_submodules) {}
-      ["pkl-format"] = (Config.Step) {
-        glob = List("**/*.pkl")
-        check = "pkl format --diff-name-only {{files}}"
-        fix = "pkl format --write {{files}}"
-      }
-      ["mise-fmt"] = (Config.Step) {
-        glob = List("mise.toml", ".mise.toml", "mise.local.toml", ".mise.local.toml")
-        check = "mise fmt --check"
-        fix = "mise fmt --write"
-      }
-      ["hk-validate"] = (Config.Step) {
-        check = "hk validate"
-      }
-    }
-  }
-
   ["pre-push"] {
     steps {
-      ["clang-format"] = (Builtins.clang_format) {
-        glob =
-          List(
-            "**/*.c",
-            "**/*.h",
-            "**/*.cpp",
-            "**/*.hpp",
-            "**/*.cc",
-            "**/*.hh",
-            "**/*.cxx",
-            "**/*.hxx",
-            "**/*.cppm",
-          )
-        exclude =
-          List(
-            "**/docs/asan-leak-check/upstream/**",
-            "**/docs/cxx26-features-audit/upstream/**",
-            "**/docs/module-source-location/upstream/**",
-          )
-      }
-      ["cpp-lint"] = (Builtins.cpp_lint) {
-        glob =
-          List(
-            "**/*.c",
-            "**/*.h",
-            "**/*.cpp",
-            "**/*.hpp",
-            "**/*.cc",
-            "**/*.hh",
-            "**/*.cxx",
-            "**/*.hxx",
-            "**/*.cppm",
-          )
-        exclude =
-          List(
-            "**/docs/asan-leak-check/upstream/**",
-            "**/docs/cxx26-features-audit/upstream/**",
-            "**/docs/module-source-location/upstream/**",
-            "**/docs/asan-leak-check/repro/**",
-            "**/docs/module-source-location/repro/**",
-          )
-        check = "cpplint --config=.cpplint {{files}}"
-      }
-      ["taplo-format"] = (Builtins.taplo_format) {
-        glob = List("**/*.toml")
-        exclude = List("**/lychee.toml")
-      }
-      ["taplo"] = (Builtins.taplo) {
-        glob = List("**/*.toml")
-      }
-      ["prettier"] = (Builtins.prettier) {
-        glob = List("**/*.json", "**/*.jsonc", "**/*.json5")
-      }
-      ["yamlfmt"] = (Builtins.yamlfmt) {
-        glob = List("**/*.yml", "**/*.yaml")
-      }
-      ["yamllint"] = (Builtins.yamllint) {
-        glob = List("**/*.yml", "**/*.yaml")
-      }
-      ["rumdl-format"] = (Builtins.rumdl_format) {
-        glob = List("**/*.md", "**/*.markdown")
-      }
-      ["rumdl"] = (Builtins.rumdl) {
-        glob = List("**/*.md", "**/*.markdown")
-      }
-      ["lychee"] = (Builtins.lychee) {
-        glob = List("**/*.md", "**/*.markdown")
-        exclude =
-          List(
-            "**/docs/asan-leak-check/upstream/**",
-            "**/docs/cxx26-features-audit/upstream/**",
-            "**/docs/module-source-location/upstream/**",
-            "**/docs/asan-leak-check/repro/**",
-            "**/docs/module-source-location/repro/**",
-          )
-      }
-      ["betterleaks"] = (Builtins.betterleaks) {}
-      ["kingfisher"] = (Builtins.kingfisher) {}
-      ["jactionlint"] = (Builtins.jactionlint) {
-        glob =
-          List(
-            ".github/workflows/*.yml",
-            ".github/workflows/*.yaml",
-            ".github/actions/**/action.yml",
-            ".github/actions/**/action.yaml",
-            ".github/dependabot.yml",
-          )
-      }
-      ["osv-scanner"] = (Builtins.osv_scanner) {
-        glob =
-          List(
-            "**/*.lock",
-            "**/Cargo.lock",
-            "**/package-lock.json",
-            "**/yarn.lock",
-            "**/pnpm-lock.yaml",
-            "**/poetry.lock",
-            "**/Pipfile.lock",
-            "**/go.mod",
-            "**/go.sum",
-            "**/vcpkg.json",
-            "**/conan.lock",
-          )
-        prefix = List("mise", "exec", "osv-scanner@2.7.1", "--")
-      }
-      ["pinact"] = (Builtins.pinact) {
-        glob =
-          List(
-            ".github/workflows/*.yml",
-            ".github/workflows/*.yaml",
-            ".github/actions/**/action.yml",
-            ".github/actions/**/action.yaml",
-          )
-      }
-      ["pinact-update"] = (Builtins.pinact_update) {
-        glob =
-          List(
-            ".github/workflows/*.yml",
-            ".github/workflows/*.yaml",
-            ".github/actions/**/action.yml",
-            ".github/actions/**/action.yaml",
-          )
-      }
-      ["typos"] = (Builtins.typos) {
-        glob =
-          List(
-            "**/*.md",
-            "**/*.markdown",
-            "**/*.txt",
-            "**/*.rst",
-            "**/*.adoc",
-            "**/*.cpp",
-            "**/*.hpp",
-            "**/*.c",
-            "**/*.h",
-            "**/*.cmake",
-            "**/*.py",
-            "**/*.sh",
-            "**/*.toml",
-            "**/*.yaml",
-            "**/*.yml",
-            "**/*.json",
-          )
-        exclude =
-          List(
-            "**/docs/**",
-            "**/ports/**",
-            "**/upstream/**",
-            "**/repro/**",
-            "**/.mise/**",
-            "**/.opencode/**",
-            "**/build/**",
-          )
-      }
-      ["tombi"] = (Builtins.tombi) {
-        glob = List("**/*.toml")
-        exclude = List("**/.mise/locks/**", ".typos.toml")
-      }
-      ["tombi-format"] = (Builtins.tombi_format) {
-        glob = List("**/*.toml")
-        exclude = List("**/.mise/locks/**", ".typos.toml")
-      }
-      ["hadolint"] = (Builtins.hadolint) {
-        glob = List("**/Dockerfile", "**/Dockerfile.*", "**/*.dockerfile")
-      }
-      ["zizmor"] = (Builtins.zizmor) {
-        glob =
-          List(
-            ".github/workflows/*.yml",
-            ".github/workflows/*.yaml",
-            ".github/dependabot.yml",
-            "**/action.yml",
-            "**/action.yaml",
-          )
-      }
-      ["trufflehog"] = (Builtins.trufflehog) {
-        glob = List("**/*")
-      }
-      ["shfmt"] = (Builtins.shfmt) {}
-      ["shellcheck"] = (Builtins.shellcheck) {
-        exclude = List("**/sample_hang.sh")
-      }
-      ["ruff-format"] = (Builtins.ruff_format) {
-        glob = List("**/*.py")
-      }
-      ["ruff"] = (Builtins.ruff) {
-        glob = List("**/*.py")
-      }
-      ["ty"] = (Builtins.ty) {
-        glob = List("**/*.py", "**/*.pyi")
-      }
-      ["python-check-ast"] = (Builtins.python_check_ast) {
-        glob = List("**/*.py")
-      }
-      ["python-debug-statements"] = (Builtins.python_debug_statements) {
-        glob = List("**/*.py")
-      }
-      ["check-merge-conflict"] = (Builtins.check_merge_conflict) {}
-      ["check-case-conflict"] = (Builtins.check_case_conflict) {}
-      ["check-added-large-files"] = (Builtins.check_added_large_files) {
-        allow_binary = true
-      }
-      ["check-executables-have-shebangs"] = (Builtins.check_executables_have_shebangs) {}
-      ["check-shebang-scripts-are-executable"] = (Builtins.check_shebang_scripts_are_executable) {}
-      ["check-symlinks"] = (Builtins.check_symlinks) {
-        allow_symlinks = true
-      }
-      ["trailing-whitespace"] = (Builtins.trailing_whitespace) {}
-      ["newlines"] = (Builtins.newlines) {}
-      ["mixed-line-ending"] = (Builtins.mixed_line_ending) {}
-      ["fix-smart-quotes"] = (Builtins.fix_smart_quotes) {}
-      ["byte-order-marker"] = (Builtins.byte_order_marker) {}
-      ["destroyed-symlinks"] = (Builtins.destroyed_symlinks) {}
-      ["detect-private-key"] = (Builtins.detect_private_key) {}
-      ["forbid-submodules"] = (Builtins.forbid_submodules) {}
-      ["pkl-format"] = (Config.Step) {
-        glob = List("**/*.pkl")
-        check = "pkl format --diff-name-only {{files}}"
-        fix = "pkl format --write {{files}}"
-      }
-      ["mise-fmt"] = (Config.Step) {
-        glob = List("mise.toml", ".mise.toml", "mise.local.toml", ".mise.local.toml")
-        check = "mise fmt --check"
-        fix = "mise fmt --write"
-      }
-      ["hk-validate"] = (Config.Step) {
-        check = "hk validate"
-      }
+      ...linters
     }
   }
-
   ["commit-msg"] {
     steps {
-      ["check-conventional-commit"] = (Builtins.check_conventional_commit) {}
+      ["check-conventional-commit"] = Builtins.check_conventional_commit
     }
   }
 }

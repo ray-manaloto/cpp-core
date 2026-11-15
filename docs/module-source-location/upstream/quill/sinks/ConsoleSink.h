@@ -11,47 +11,54 @@
 #include "quill/sinks/StreamSink.h"
 
 #ifndef QUILL_MODULE
-#include <array>
-#include <cstdint>
-#include <cstdio>
-#include <cstring>
-#include <string>
-#include <string_view>
-#include <utility>
-#include <vector>
+  #include <array>
+  #include <cstdint>
+  #include <cstdio>
+  #include <cstring>
+  #include <string>
+  #include <string_view>
+  #include <utility>
+  #include <vector>
 #endif
 
 #if defined(_WIN32)
-#if !defined(WIN32_LEAN_AND_MEAN)
-#define WIN32_LEAN_AND_MEAN
-#endif
+  #if !defined(WIN32_LEAN_AND_MEAN)
+    #define WIN32_LEAN_AND_MEAN
+  #endif
 
-#if !defined(NOMINMAX)
-// Mingw already defines this, so no need to redefine
-#define NOMINMAX
-#endif
+  #if !defined(NOMINMAX)
+    // Mingw already defines this, so no need to redefine
+    #define NOMINMAX
+  #endif
 
-#include <io.h>
-#include <windows.h>
+  #include <io.h>
+  #include <windows.h>
 #else
-#ifndef QUILL_MODULE
-#include <cstdlib>
-#endif
-#include <unistd.h>
+  #ifndef QUILL_MODULE
+    #include <cstdlib>
+  #endif
+  #include <unistd.h>
 #endif
 
 QUILL_BEGIN_NAMESPACE
 
 QUILL_BEGIN_EXPORT
 
-class ConsoleSinkConfig {
+class ConsoleSinkConfig
+{
 public:
-  enum class ColourMode { Always, Automatic, Never };
+  enum class ColourMode
+  {
+    Always,
+    Automatic,
+    Never
+  };
 
   /**
    * Represents console colours
    */
-  class Colours {
+  class Colours
+  {
   public:
     Colours() { apply_default_colours(); }
 
@@ -60,7 +67,8 @@ public:
     /**
      * Sets some default colours for terminal
      */
-    void apply_default_colours() {
+    void apply_default_colours()
+    {
       assign_colour_to_log_level(LogLevel::TraceL3, white);
       assign_colour_to_log_level(LogLevel::TraceL2, white);
       assign_colour_to_log_level(LogLevel::TraceL1, white);
@@ -78,7 +86,8 @@ public:
      * @param log_level the log level
      * @param colour the colour
      */
-    void assign_colour_to_log_level(LogLevel log_level, std::string_view colour) {
+    void assign_colour_to_log_level(LogLevel log_level, std::string_view colour)
+    {
       auto const log_lvl = static_cast<uint32_t>(log_level);
       _log_level_colours[log_lvl] = colour;
       _colours_enabled = true;
@@ -89,7 +98,8 @@ public:
     /**
      * @return true if we are in terminal and have also enabled colours
      */
-    QUILL_NODISCARD bool colours_enabled() const noexcept {
+    QUILL_NODISCARD bool colours_enabled() const noexcept
+    {
       return _colour_output_supported && _colours_enabled;
     }
 
@@ -98,7 +108,8 @@ public:
      * @param log_level the message log level
      * @return the configured colour for this log level
      */
-    QUILL_NODISCARD std::string_view log_level_colour(LogLevel log_level) const noexcept {
+    QUILL_NODISCARD std::string_view log_level_colour(LogLevel log_level) const noexcept
+    {
       auto const log_lvl = static_cast<uint32_t>(log_level);
       return _log_level_colours[log_lvl];
     }
@@ -143,19 +154,21 @@ public:
     friend class ConsoleSink;
 
     /***/
-    QUILL_NODISCARD QUILL_ATTRIBUTE_COLD static bool _supports_colour_output() noexcept {
+    QUILL_NODISCARD QUILL_ATTRIBUTE_COLD static bool _supports_colour_output() noexcept
+    {
 #ifdef _WIN32
       // On Windows 10 and later, ANSI colors are supported
       return true;
 #else
       // Get term from env
-      auto *env_p = std::getenv("TERM");
+      auto* env_p = std::getenv("TERM");
 
-      if (env_p == nullptr) {
+      if (env_p == nullptr)
+      {
         return false;
       }
 
-      static constexpr char const *terms[] = {
+      static constexpr char const* terms[] = {
         "ansi",          "color",     "console",        "cygwin",         "gnome",
         "konsole",       "kterm",     "linux",          "msys",           "putty",
         "rxvt",          "screen",    "vt100",          "xterm",          "tmux",
@@ -164,8 +177,10 @@ public:
         "kde-konsole"};
 
       // Loop through each term and check if it's found in env_p
-      for (char const *term : terms) {
-        if (std::strstr(env_p, term) != nullptr) {
+      for (char const* term : terms)
+      {
+        if (std::strstr(env_p, term) != nullptr)
+        {
           // term found
           return true;
         }
@@ -177,7 +192,8 @@ public:
     }
 
     /***/
-    QUILL_NODISCARD QUILL_ATTRIBUTE_COLD static bool _is_terminal_output(FILE *file) noexcept {
+    QUILL_NODISCARD QUILL_ATTRIBUTE_COLD static bool _is_terminal_output(FILE* file) noexcept
+    {
 #ifdef _WIN32
       return _isatty(_fileno(file)) != 0;
 #else
@@ -187,19 +203,23 @@ public:
 
 #ifdef _WIN32
     /***/
-    QUILL_ATTRIBUTE_COLD bool _activate_ansi_support(FILE *file) const noexcept {
-      if (!_colour_output_supported) {
+    QUILL_ATTRIBUTE_COLD bool _activate_ansi_support(FILE* file) const noexcept
+    {
+      if (!_colour_output_supported)
+      {
         return false;
       }
 
       // Try to enable ANSI support for Windows console
       auto const out_handle = reinterpret_cast<HANDLE>(_get_osfhandle(_fileno(file)));
-      if (out_handle == INVALID_HANDLE_VALUE) {
+      if (out_handle == INVALID_HANDLE_VALUE)
+      {
         return false;
       }
 
       DWORD dw_mode = 0;
-      if (!GetConsoleMode(out_handle, &dw_mode)) {
+      if (!GetConsoleMode(out_handle, &dw_mode))
+      {
         return false;
       }
 
@@ -211,20 +231,29 @@ public:
 #endif
 
     /***/
-    void _configure_colour_support(FILE *file, ColourMode colour_mode) noexcept {
-      if (colour_mode == ColourMode::Always) {
+    void _configure_colour_support(FILE* file, ColourMode colour_mode) noexcept
+    {
+      if (colour_mode == ColourMode::Always)
+      {
         _colour_output_supported = true;
-      } else if (colour_mode == ColourMode::Automatic) {
+      }
+      else if (colour_mode == ColourMode::Automatic)
+      {
         _colour_output_supported = _is_terminal_output(file) && _supports_colour_output();
-      } else {
+      }
+      else
+      {
         _colour_output_supported = false;
       }
 
 #ifdef _WIN32
       // Enable ANSI color support on Windows
-      if ((colour_mode == ColourMode::Automatic) && !_activate_ansi_support(file)) {
+      if ((colour_mode == ColourMode::Automatic) && !_activate_ansi_support(file))
+      {
         _colour_output_supported = false;
-      } else if (colour_mode == ColourMode::Always) {
+      }
+      else if (colour_mode == ColourMode::Always)
+      {
         static_cast<void>(_activate_ansi_support(file));
       }
 #endif
@@ -279,7 +308,7 @@ public:
    *
    * @param stream The output stream to use.
    */
-  QUILL_ATTRIBUTE_COLD void set_stream(std::string const &stream) { _stream = stream; }
+  QUILL_ATTRIBUTE_COLD void set_stream(std::string const& stream) { _stream = stream; }
 
   /**
    * @brief Sets custom pattern formatter options for this sink.
@@ -290,17 +319,17 @@ public:
    *
    * @param options The custom pattern formatter options to use
    */
-  QUILL_ATTRIBUTE_COLD void set_override_pattern_formatter_options(
-    std::optional<PatternFormatterOptions> const &options) {
+  QUILL_ATTRIBUTE_COLD void set_override_pattern_formatter_options(std::optional<PatternFormatterOptions> const& options)
+  {
     _override_pattern_formatter_options = options;
   }
 
   /** Getters **/
-  QUILL_NODISCARD Colours const &colours() const noexcept { return _colours; }
+  QUILL_NODISCARD Colours const& colours() const noexcept { return _colours; }
   QUILL_NODISCARD ColourMode colour_mode() const noexcept { return _colour_mode; }
-  QUILL_NODISCARD std::string const &stream() const noexcept { return _stream; }
-  QUILL_NODISCARD std::optional<PatternFormatterOptions> const &override_pattern_formatter_options()
-    const noexcept {
+  QUILL_NODISCARD std::string const& stream() const noexcept { return _stream; }
+  QUILL_NODISCARD std::optional<PatternFormatterOptions> const& override_pattern_formatter_options() const noexcept
+  {
     return _override_pattern_formatter_options;
   }
 
@@ -314,25 +343,31 @@ private:
 };
 
 /***/
-class ConsoleSink : public StreamSink {
+class ConsoleSink : public StreamSink
+{
 public:
   /**
    * @brief Constructor with custom ConsoleColours
    * config
    */
-  explicit ConsoleSink(ConsoleSinkConfig const &config = ConsoleSinkConfig{},
+  explicit ConsoleSink(ConsoleSinkConfig const& config = ConsoleSinkConfig{},
                        FileEventNotifier file_event_notifier = FileEventNotifier{})
     : StreamSink{config.stream(), nullptr, config.override_pattern_formatter_options(),
-                 std::move(file_event_notifier)}
-    , _config(config) {
-    if (QUILL_UNLIKELY(_config.stream() != "stdout" && _config.stream() != "stderr")) {
+                 std::move(file_event_notifier)},
+      _config(config)
+  {
+    if (QUILL_UNLIKELY(_config.stream() != "stdout" && _config.stream() != "stderr"))
+    {
       QUILL_THROW(
         QuillError{"Invalid stream name in ConsoleSink constructor, must be 'stdout' or 'stderr'"});
     }
 
-    if (_config.colour_mode() == ConsoleSinkConfig::ColourMode::Never) {
+    if (_config.colour_mode() == ConsoleSinkConfig::ColourMode::Never)
+    {
       _config._colours.set_colours_enabled(false);
-    } else {
+    }
+    else
+    {
       _config._colours._configure_colour_support(_file, _config.colour_mode());
       _config._colours.set_colours_enabled(true);
     }
@@ -355,23 +390,27 @@ public:
    * @param log_message log message
    * @param log_statement log statement
    */
-  QUILL_ATTRIBUTE_HOT void write_log(
-    MacroMetadata const *log_metadata, uint64_t log_timestamp, std::string_view thread_id,
-    std::string_view thread_name, std::string const &process_id, std::string_view logger_name,
-    LogLevel log_level, std::string_view log_level_description,
-    std::string_view log_level_short_code,
-    std::vector<std::pair<std::string, std::string>> const *named_args,
-    std::string_view log_message, std::string_view log_statement) override {
-    if (QUILL_UNLIKELY(!_file)) {
+  QUILL_ATTRIBUTE_HOT void write_log(MacroMetadata const* log_metadata, uint64_t log_timestamp,
+                                     std::string_view thread_id, std::string_view thread_name,
+                                     std::string const& process_id, std::string_view logger_name,
+                                     LogLevel log_level, std::string_view log_level_description,
+                                     std::string_view log_level_short_code,
+                                     std::vector<std::pair<std::string, std::string>> const* named_args,
+                                     std::string_view log_message, std::string_view log_statement) override
+  {
+    if (QUILL_UNLIKELY(!_file))
+    {
       return;
     }
 
-    if (_config.colours().colours_enabled()) {
+    if (_config.colours().colours_enabled())
+    {
       // Apply the user callback to the original statement exactly once and determine newline
       // placement from the transformed result.
       std::string transformed_statement;
       std::string_view statement = log_statement;
-      if (_file_event_notifier.before_write) {
+      if (_file_event_notifier.before_write)
+      {
         transformed_statement = _file_event_notifier.before_write(log_statement);
         statement = transformed_statement;
       }
@@ -382,7 +421,8 @@ public:
       // would bleed to the end of the line
       bool const has_trailing_newline = !statement.empty() && (statement.back() == '\n');
 
-      if (has_trailing_newline) {
+      if (has_trailing_newline)
+      {
         statement.remove_suffix(1);
       }
 
@@ -397,11 +437,14 @@ public:
       safe_fwrite(ConsoleSinkConfig::Colours::reset.data(), sizeof(char),
                   ConsoleSinkConfig::Colours::reset.size(), _file);
 
-      if (has_trailing_newline) {
+      if (has_trailing_newline)
+      {
         safe_fwrite("\n", sizeof(char), 1, _file);
         ++_file_size;
       }
-    } else {
+    }
+    else
+    {
       // Write record to file
       StreamSink::write_log(log_metadata, log_timestamp, thread_id, thread_name, process_id,
                             logger_name, log_level, log_level_description, log_level_short_code,

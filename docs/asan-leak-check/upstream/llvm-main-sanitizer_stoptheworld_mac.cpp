@@ -12,7 +12,8 @@
 
 #include "sanitizer_platform.h"
 
-#if SANITIZER_APPLE && (defined(__x86_64__) || defined(__aarch64__) || defined(__i386))
+#if SANITIZER_APPLE && (defined(__x86_64__) || defined(__aarch64__) || \
+                      defined(__i386))
 
 #include <mach/mach.h>
 #include <mach/thread_info.h>
@@ -27,7 +28,7 @@ typedef struct {
 } SuspendedThreadInfo;
 
 class SuspendedThreadsListMac final : public SuspendedThreadsList {
-public:
+ public:
   SuspendedThreadsListMac() = default;
 
   ThreadID GetThreadID(uptr index) const override;
@@ -36,10 +37,11 @@ public:
   bool ContainsThread(thread_t thread) const;
   void Append(thread_t thread);
 
-  PtraceRegistersStatus GetRegistersAndSP(uptr index, InternalMmapVector<uptr> *buffer,
+  PtraceRegistersStatus GetRegistersAndSP(uptr index,
+                                          InternalMmapVector<uptr> *buffer,
                                           uptr *sp) const override;
 
-private:
+ private:
   InternalMmapVector<SuspendedThreadInfo> threads_;
 };
 
@@ -62,8 +64,7 @@ void *RunThread(void *arg) {
 
   thread_t thread_self = mach_thread_self();
   for (unsigned int i = 0; i < num_threads; ++i) {
-    if (threads[i] == thread_self)
-      continue;
+    if (threads[i] == thread_self) continue;
 
     thread_suspend(threads[i]);
     suspended_threads_list.Append(threads[i]);
@@ -94,11 +95,11 @@ typedef x86_thread_state64_t regs_struct;
 typedef arm_thread_state64_t regs_struct;
 #define regs_flavor ARM_THREAD_STATE64
 
-#if __DARWIN_UNIX03
-#define SP_REG __sp
-#else
-#define SP_REG sp
-#endif
+# if __DARWIN_UNIX03
+#  define SP_REG __sp
+# else
+#  define SP_REG sp
+# endif
 
 #elif defined(__i386)
 typedef x86_thread_state32_t regs_struct;
@@ -120,12 +121,13 @@ thread_t SuspendedThreadsListMac::GetThread(uptr index) const {
   return threads_[index].thread;
 }
 
-uptr SuspendedThreadsListMac::ThreadCount() const { return threads_.size(); }
+uptr SuspendedThreadsListMac::ThreadCount() const {
+  return threads_.size();
+}
 
 bool SuspendedThreadsListMac::ContainsThread(thread_t thread) const {
   for (uptr i = 0; i < threads_.size(); i++) {
-    if (threads_[i].thread == thread)
-      return true;
+    if (threads_[i].thread == thread) return true;
   }
   return false;
 }
@@ -133,8 +135,8 @@ bool SuspendedThreadsListMac::ContainsThread(thread_t thread) const {
 void SuspendedThreadsListMac::Append(thread_t thread) {
   thread_identifier_info_data_t info;
   mach_msg_type_number_t info_count = THREAD_IDENTIFIER_INFO_COUNT;
-  kern_return_t err =
-    thread_info(thread, THREAD_IDENTIFIER_INFO, (thread_info_t)&info, &info_count);
+  kern_return_t err = thread_info(thread, THREAD_IDENTIFIER_INFO,
+                                  (thread_info_t)&info, &info_count);
   if (err != KERN_SUCCESS) {
     VReport(1, "Error - unable to get thread ident for a thread\n");
     return;
@@ -142,19 +144,20 @@ void SuspendedThreadsListMac::Append(thread_t thread) {
   threads_.push_back({info.thread_id, thread});
 }
 
-PtraceRegistersStatus SuspendedThreadsListMac::GetRegistersAndSP(uptr index,
-                                                                 InternalMmapVector<uptr> *buffer,
-                                                                 uptr *sp) const {
+PtraceRegistersStatus SuspendedThreadsListMac::GetRegistersAndSP(
+    uptr index, InternalMmapVector<uptr> *buffer, uptr *sp) const {
   thread_t thread = GetThread(index);
   regs_struct regs;
   int err;
   mach_msg_type_number_t reg_count = sizeof(regs) / sizeof(natural_t);
-  err = thread_get_state(thread, regs_flavor, (thread_state_t)&regs, &reg_count);
+  err = thread_get_state(thread, regs_flavor, (thread_state_t)&regs,
+                         &reg_count);
   if (err != KERN_SUCCESS) {
     VReport(1, "Error - unable to get registers for a thread\n");
     // MIG_ARRAY_TOO_LARGE, means that the state is too large, but it's
     // still safe to proceed.
-    return err == MIG_ARRAY_TOO_LARGE ? REGISTERS_UNAVAILABLE : REGISTERS_UNAVAILABLE_FATAL;
+    return err == MIG_ARRAY_TOO_LARGE ? REGISTERS_UNAVAILABLE
+                                      : REGISTERS_UNAVAILABLE_FATAL;
   }
 
   buffer->resize(RoundUpTo(sizeof(regs), sizeof(uptr)) / sizeof(uptr));
@@ -167,13 +170,12 @@ PtraceRegistersStatus SuspendedThreadsListMac::GetRegistersAndSP(uptr index,
 
   // On x86_64 and aarch64, we must account for the stack redzone, which is 128
   // bytes.
-  if (SANITIZER_WORDSIZE == 64)
-    *sp -= 128;
+  if (SANITIZER_WORDSIZE == 64) *sp -= 128;
 
   return REGISTERS_AVAILABLE;
 }
 
 } // namespace __sanitizer
 
-#endif // SANITIZER_APPLE && (defined(__x86_64__) || defined(__aarch64__)) ||
-//                   defined(__i386))
+#endif  // SANITIZER_APPLE && (defined(__x86_64__) || defined(__aarch64__)) ||
+        //                   defined(__i386))
