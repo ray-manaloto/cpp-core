@@ -202,7 +202,7 @@
 
 **Reasoning**: **STRONG** — No remote = CI cannot run. A workflow with no remote rots. Gates are useful locally either way. Revisit when remote exists; design doesn't change, only where it runs.
 
-**Superseded in part (2026-11-15)**: the repository now has a public GitHub remote, and `.github/workflows/ci.yml` runs the compiler-free checks (`hk check --all`, the audit checker, the lock check) on pull requests. The coverage gate and the clang-tidy check still need a compiler, so they wait for the build lane.
+**Superseded in part (2026-11-15)**: the repository now has a public GitHub remote and a workflow, `.github/workflows/ci.yml`, for the compiler-free checks (`hk check --all`, the audit checker, the lock check). The owner ruled the same day that cpp-core uses no paid services, so the workflow is kept disabled and the gate stays local: `hk check --all` before each merge. The coverage gate and the clang-tidy check still need a compiler, so they wait for the build lane.
 
 ---
 

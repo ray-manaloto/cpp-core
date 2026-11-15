@@ -49,7 +49,7 @@ and it is deliberately conservative about what enters the module interface.
 - **Check:** `mise run audit:verify` runs every check that does not need a compiler: the audit's
   item counts, duplicate and dangling IDs, the decisions sheet against the open list, the counts
   the prose claims, Markdown table shape, fence balance, relative links, the parts tables, the
-  privacy scan, the vendored upstream copies, and the citation anchor. It is fast, needs only Python, and must pass before each commit. The hk `audit-verify` step runs it in check, fix, pre-commit and pre-push, so `git commit` enforces it. CI (`.github/workflows/ci.yml`) runs it and the lock check on every pull request, and `hk check --all` on every pull request that changes more than Markdown; the `ci` job is the one required check.
+  privacy scan, the vendored upstream copies, and the citation anchor. It is fast, needs only Python, and must pass before each commit. The hk `audit-verify` step runs it in check, fix, pre-commit and pre-push, so `git commit` enforces it. No CI gates a merge: the owner ruled on 2026-11-15 that cpp-core uses no paid services, and GitHub Actions does not run for this account. `.github/workflows/ci.yml` stays for when Actions runs again; keep it disabled (`gh workflow disable ci.yml`) so it posts no failed runs. The gate is local: `hk check --all` in the worktree and the Codex reviewer's approval.
 
 - **Tools:** cpp-core pins every tool its hk steps run in `.mise.toml` and commits `mise.lock`,
   which records what the checks ran with (the owner's ruling of 2026-11-15). Renovate, with the
@@ -61,14 +61,14 @@ and it is deliberately conservative about what enters the module interface.
   `"generate"` mode writes an incomplete conda entry for clang-format. Known gap: while the
   user's global `npm.package_manager` is `bun`, `tools:lock-verify` fails on prettier, because bun
   is not a cpp-core tool. The other 19 pins install from the lock. The lock check runs on pre-push
-  and in CI, not on pre-commit.
+  and in `hk check --all`, not on pre-commit.
 
 - **Changing hk.pkl:** `hk validate` and `hk check` never run a step's `fix` command. Run
   `mise run hk:fix-smoke`, which runs `hk fix --all` on a scratch worktree of HEAD.
 
 - **Shipping:** The remote is `github.com/ray-manaloto/cpp-core`, a public repository. Every change
   is a pull request: a branch in its own worktree, one commit or more, opened with `repotools
-  pr-create --title <title> --body-file <body file>`. The owner merges it; never push to `main`.
+  pr-create --title <title> --body-file <body file>`. Run `hk check --all` in the worktree before you ask for the merge, and report its result in the pull request. The owner merges it; never push to `main`.
 
 - **Research:** The notes live in [Audit Bundle](./okf-bundles/audit/index.md). The open items are in
   [open-items.md](./okf-bundles/audit/open-items.md); the owner's decisions are in
