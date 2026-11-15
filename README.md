@@ -148,7 +148,7 @@ suite tests = [] {
 - No machine name, host name, LAN address, tailnet name, account name, organisation name, real name or private project name is ever written into a tracked file.
 - This is forward-only — old branches, worktrees, commits, closed pull requests and old job logs are **not** scrubbed.
 - No key value is ever printed. Report key-file paths only.
-- Values are injected with `mise run secret:set NAME` - the value is piped in, never passed as an argument.
+- Values are injected with `mise run secret:set NAME` - the value is piped in, never passed as an argument. `secret:set` is a task in the user's global mise config, not in this repository; a clone without that global config does not have it.
 
 ### Full Documentation
 

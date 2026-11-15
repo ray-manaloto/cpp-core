@@ -3,8 +3,9 @@
 
 The docs and the scripts' own messages name tasks (`mise run audit:verify`, `mise run hk:check`).
 A name that is neither a task nor a task alias is a command that fails for whoever follows it.
-The task list comes from `mise tasks --json`, so it includes the user's global tasks; the
-vendored upstream copies are not scanned.
+The task list is this repository's own tasks from `mise tasks --json` plus `GLOBAL_TASKS`.
+The user's global tasks are left out, so the answer is the same on a workstation and in CI,
+where no global config exists. The vendored upstream copies are not scanned.
 
 `--self-test` first proves the check fails on a name that does not exist.
 
@@ -23,6 +24,12 @@ from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
 
+# Tasks the docs may name that live in the user's global mise config, not in this repository,
+# each with the reason the docs name it. Add one here only when the docs must name it.
+GLOBAL_TASKS = {
+    "secret:set": "the Privacy rules tell readers to inject a value with it, never with `fnox set`",
+}
+
 
 def task_names() -> set[str]:
     out = subprocess.run(
@@ -32,8 +39,10 @@ def task_names() -> set[str]:
         text=True,
         check=True,
     ).stdout
-    names: set[str] = set()
+    names: set[str] = set(GLOBAL_TASKS)
     for task in json.loads(out):
+        if task.get("global"):
+            continue
         names.add(task["name"])
         names.update(task.get("aliases") or [])
     return names
