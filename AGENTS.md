@@ -146,7 +146,9 @@ it" with a compiler.
 - **No key value is ever printed.** Report key-file paths only.
 
 - **Values are injected with `mise run secret:set NAME`** — the value is piped in, never passed as
-  an argument — and **never** with `fnox set`.
+  an argument — and **never** with `fnox set`. `secret:set` is a task in the user's global mise
+  config, not in this repository, which keeps secret handling out of the tracked files; a clone
+  without that global config does not have it.
 
 - **On this machine, `fnox get`, `exec`, `export`, `edit`, `tui`, `mcp`, `push` and `list --values`
   may not be run.** Use `fnox --non-interactive proxy run -- <command>`.

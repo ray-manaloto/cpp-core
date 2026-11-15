@@ -129,7 +129,7 @@ Key dependencies:
 
 - No private values in tracked files (machine name, host, LAN/tailnet address, account, org, real name, private project)
 - Forward-only: history not rewritten
-- Keys injected via `mise run secret:set NAME` (piped, never args)
+- Keys injected via `mise run secret:set NAME` (piped, never args); `secret:set` is a global mise task, not one of this repository's
 - `fnox get/exec/export/edit/tui/mcp/push/list --values` forbidden on this machine
 
 ### Audit Conventions
