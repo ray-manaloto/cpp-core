@@ -76,7 +76,19 @@ alias = "hk:fix-smoke"
 description = "Run hk fix --all on a scratch worktree of HEAD and show what it would change"
 run = """
 set -eu
-dir=$(cd "$(mktemp -d)" && pwd -P)
+made=$(mktemp -d) || { echo "hk:fix-smoke: mktemp failed" >&2; exit 1; }
+dir=$(cd "$made" && pwd -P) || exit 1
+repo=$(git rev-parse --show-toplevel)
+# Never let the cleanup below point at a real tree: the scratch dir must be a new, empty
+# directory under the system temp dir, and not the repository or anything inside it.
+case "$dir" in
+  "$repo" | "$repo"/*) echo "hk:fix-smoke: refusing scratch path $dir" >&2; exit 1 ;;
+esac
+case "$dir" in
+  /private/var/folders/* | /var/folders/* | /tmp/* | /private/tmp/*) ;;
+  *) echo "hk:fix-smoke: scratch path $dir is not under a temp dir" >&2; exit 1 ;;
+esac
+[ -z "$(ls -A "$dir")" ] || { echo "hk:fix-smoke: scratch dir $dir is not empty" >&2; exit 1; }
 trap 'git worktree remove --force "$dir" >/dev/null 2>&1 || true; rm -rf "$dir"' EXIT
 git worktree add --quiet --detach "$dir" HEAD
 # paranoid mode trusts file by file; trust the whole scratch tree (its resolved path) instead.

@@ -49,7 +49,7 @@ and it is deliberately conservative about what enters the module interface.
 - **Check:** `mise run audit:verify` runs every check that does not need a compiler: the audit's
   item counts, duplicate and dangling IDs, the decisions sheet against the open list, the counts
   the prose claims, Markdown table shape, fence balance, relative links, the parts tables, the
-  privacy scan, the vendored upstream copies, and the citation anchor. It is fast, needs only Python, and must pass before each commit. The hk `audit-verify` step runs it on every hook, so `git commit` enforces it.
+  privacy scan, the vendored upstream copies, and the citation anchor. It is fast, needs only Python, and must pass before each commit. The hk `audit-verify` step runs it in check, fix, pre-commit and pre-push, so `git commit` enforces it.
 
 - **Tools:** cpp-core pins every tool its hk steps run in `.mise.toml` and commits `mise.lock`,
   which records what the checks ran with (the owner's ruling of 2026-11-15; no Renovate, since

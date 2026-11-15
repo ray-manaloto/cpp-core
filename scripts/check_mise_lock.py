@@ -108,11 +108,13 @@ INSTALL_TIMEOUT_SECONDS = 1200
 
 
 def isolated_env(root: Path) -> dict[str, str]:
-    """An environment in which mise sees only this repository's config.
+    """An environment in which mise sees only this repository's config and writes only to root.
 
-    `MISE_CONFIG_DIR` points at an empty directory, so the user's global config (and every
-    global tool) is not loaded; `MISE_GLOBAL_CONFIG_FILE` alone does not stop that. One run
-    without it installed 160 global tools and hung compiling lua.
+    Every inherited `MISE_*` variable is dropped (an inherited `MISE_INSTALLS_DIR` or
+    `MISE_SHIMS_DIR` would send installs into the user's real tool directory), then the config,
+    data, cache and state directories are pointed under root. `MISE_CONFIG_DIR` at an empty
+    directory keeps the user's global config (and every global tool) out; `MISE_GLOBAL_CONFIG_FILE`
+    alone does not. One run without it installed 160 global tools and hung compiling lua.
 
     The npm installer is a user setting, and it decides how mise.lock records npm tools; the
     user's own choice is passed through so the lock is installed the way it was written.
@@ -126,18 +128,21 @@ def isolated_env(root: Path) -> dict[str, str]:
         timeout=60,
     ).stdout.strip()
     (root / "config").mkdir()
-    return dict(
-        os.environ,
+    env = {
+        key: value for key, value in os.environ.items() if not key.startswith("MISE_")
+    }
+    env.update(
         MISE_CONFIG_DIR=str(root / "config"),
         MISE_DATA_DIR=str(root / "data"),
         MISE_CACHE_DIR=str(root / "cache"),
+        MISE_STATE_DIR=str(root / "state"),
         MISE_TRUSTED_CONFIG_PATHS=str(REPO_ROOT),
         MISE_NPM_PACKAGE_MANAGER=npm_installer,
     )
+    return env
 
 
-def foreign_tools(env: dict[str, str], pinned: set[str]) -> list[str]:
-    """Tools mise would load in this environment that .mise.toml does not pin."""
+def current_tools(env: dict[str, str]) -> dict[str, list[dict]]:
     out = subprocess.run(
         ["mise", "ls", "--current", "--json"],
         check=True,
@@ -147,18 +152,55 @@ def foreign_tools(env: dict[str, str], pinned: set[str]) -> list[str]:
         text=True,
         timeout=120,
     ).stdout
-    return sorted(set(json.loads(out)) - pinned)
+    return json.loads(out)
+
+
+def foreign_tools(env: dict[str, str], pinned: set[str]) -> list[str]:
+    """Tools mise would load in this environment that .mise.toml does not pin."""
+    return sorted(set(current_tools(env)) - pinned)
+
+
+def installs_outside(env: dict[str, str], root: Path) -> list[str]:
+    """Installed tools whose install path is not under root."""
+    outside = []
+    for name, versions in current_tools(env).items():
+        for version in versions:
+            path = version.get("install_path")
+            if path and not Path(path).resolve().is_relative_to(root.resolve()):
+                outside.append(f"{name}: {path}")
+    return outside
+
+
+def stop_group(process: subprocess.Popen) -> None:
+    """End the installer's whole process group: TERM, a grace period, then KILL."""
+    for sig, grace in ((signal.SIGTERM, 10), (signal.SIGKILL, 10)):
+        try:
+            os.killpg(process.pid, sig)
+        except ProcessLookupError:
+            break
+        try:
+            process.wait(timeout=grace)
+        except subprocess.TimeoutExpired:
+            continue
+        # The leader is gone; a descendant may still hold the group, so the next signal
+        # still goes out unless the group is empty.
+    try:
+        os.killpg(process.pid, signal.SIGKILL)
+    except ProcessLookupError:
+        pass
+    process.wait()
 
 
 def install_locked(pinned: set[str]) -> int:
     """Install only this repository's pins, from the lock, into empty directories."""
     with tempfile.TemporaryDirectory() as scratch:
-        env = isolated_env(Path(scratch))
+        root = Path(scratch)
+        env = isolated_env(root)
         foreign = foreign_tools(env, pinned)
         if foreign:
             print(f"problem: refusing to install; mise would also load {foreign}")
             return 1
-        # Its own process group, so a timeout ends the installers it started too.
+        # Its own process group, so every installer it starts can be ended with it.
         process = subprocess.Popen(
             ["mise", "install", "--locked"],
             cwd=REPO_ROOT,
@@ -166,12 +208,17 @@ def install_locked(pinned: set[str]) -> int:
             start_new_session=True,
         )
         try:
-            return process.wait(timeout=INSTALL_TIMEOUT_SECONDS)
+            code = process.wait(timeout=INSTALL_TIMEOUT_SECONDS)
         except subprocess.TimeoutExpired:
-            os.killpg(process.pid, signal.SIGTERM)
-            process.wait()
             print(f"problem: mise install --locked ran over {INSTALL_TIMEOUT_SECONDS}s")
-            return 1
+            code = 1
+        finally:
+            # Also on Ctrl-C and on a normal exit: nothing it started may outlive it.
+            stop_group(process)
+        outside = installs_outside(env, root)
+        for line in outside:
+            print(f"problem: installed outside the scratch directory: {line}")
+        return 1 if outside else code
 
 
 def main() -> int:

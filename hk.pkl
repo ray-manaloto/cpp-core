@@ -177,7 +177,8 @@ local linters = new Mapping<String, Step> {
   }
 
   // The audit's own checker. It reads the whole tree (citations, vendored copies, derived JSON),
-  // so it runs on every hook and alone, after no formatter is still writing.
+  // so it runs in check, fix, pre-commit and pre-push (not commit-msg, which checks only the
+  // message), and alone, after no formatter is still writing.
   ["audit-verify"] {
     exclusive = true
     check = new CommandSpec { command = "python3 scripts/verify_audit.py --quiet"; effect = "read" }
