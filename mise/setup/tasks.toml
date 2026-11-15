@@ -28,7 +28,7 @@ mise install --locked
 hk validate
 """
 
-# No remote means no Renovate; this is how staleness shows. It reads only and changes nothing.
+# What Renovate would update next, for a bump by hand. It reads only and changes nothing.
 [tools_outdated]
 alias = "tools:outdated"
 description = "List the project's pinned tools that have a newer release"

@@ -202,6 +202,8 @@
 
 **Reasoning**: **STRONG** — No remote = CI cannot run. A workflow with no remote rots. Gates are useful locally either way. Revisit when remote exists; design doesn't change, only where it runs.
 
+**Superseded in part (2026-11-15)**: the repository now has a public GitHub remote, and `.github/workflows/ci.yml` runs the compiler-free checks (`hk check --all`, the audit checker, the lock check) on pull requests. The coverage gate and the clang-tidy check still need a compiler, so they wait for the build lane.
+
 ---
 
 ### 10. BUILD-8 — Catalog vs Call Sites Check
