@@ -58,9 +58,9 @@ and it is deliberately conservative about what enters the module interface.
   `mise run tools:outdated`, edit the version, `mise lock`,
   `mise run tools:lock-check`, then `mise run tools:lock-verify` (slow; installs from the lock into
   an empty directory). Never run `mise upgrade`. Keep `lockfile_mode = "merge"`: the trial
-  `"generate"` mode writes an incomplete conda entry for clang-format. Known gap: while the
-  user's global `npm.package_manager` is `bun`, `tools:lock-verify` fails on prettier, because bun
-  is not a cpp-core tool. The other 19 pins install from the lock. The lock check runs on pre-push
+  `"generate"` mode writes an incomplete conda entry for clang-format. `tools:lock-verify`
+  installs all 22 pins from the lock, prettier included (mise installs npm tools with its embedded
+  aube). Python and uv are pinned because cpplint and gersemi install from Python dependency locks. The lock check runs on pre-push
   and in `hk check --all`, not on pre-commit.
 
 - **Changing hk.pkl:** `hk validate` and `hk check` never run a step's `fix` command. Run
