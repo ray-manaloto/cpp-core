@@ -1,5 +1,3 @@
-// Copyright 2024 cpp-core authors
-//
 // cpp-core: the quill logger that backs the logging library.
 //
 // Quill formats on its backend thread, so the messages are queued and written asynchronously.

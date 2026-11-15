@@ -35,12 +35,10 @@ sources:
     title: Module source location research
 ---
 
-## PARKED — Work Status Map
-
 > **This is a pointer document.** The full parked work documentation has been migrated to OKF bundles.
 > See the linked bundles below for complete documentation.
 
-### Status
+## Status
 
 **The build lane is parked.** As of 2026-11-12 the owner's decision is that this repository is research-only:
 
@@ -50,7 +48,7 @@ sources:
 
 `PARKED.md` records what is parked and what the plan is when the lane reopens. Do not "just try it" with a compiler.
 
-### Research Complete — Documentation Migrated to OKF Bundles
+## Research Complete — Documentation Migrated to OKF Bundles
 
 The research for all three parts of the original request is complete and documented in OKF bundles:
 
@@ -60,7 +58,7 @@ The research for all three parts of the original request is complete and documen
 | 2. clang-format, clang-tidy, cmake-format and 100% unit-test coverage | [Architecture Bundle](./okf-bundles/architecture/index.md) + [Audit Bundle → Tooling](./okf-bundles/audit/open-items.md#tool-tooling--13-items) |
 | 3. Macros reduced/eliminated in favor of C++26 features | [Audit Bundle → Macro Reduction](./okf-bundles/audit/macro-reduction.md) + [Architecture Bundle](./okf-bundles/architecture/index.md) |
 
-### Key Decisions (All 14 Answered)
+## Key Decisions (All 14 Answered)
 
 See [Audit Bundle → Decisions](./okf-bundles/audit/decisions.md) for full rationale.
 
@@ -81,7 +79,7 @@ See [Audit Bundle → Decisions](./okf-bundles/audit/decisions.md) for full rati
 | **ENV-2** | Abandoned tree | **Keep + document** with README |
 | **ENV-3** | `ZAI_API_KEY` | **Deferred**, not a cpp-core decision |
 
-### What's Done and Committed
+## What's Done and Committed
 
 - ASan leak check on `p2996-asan`: `fd79fc0`, `87d2fcf`
 - Macro-free source location in the module: `8800b0a`
@@ -90,9 +88,9 @@ See [Audit Bundle → Decisions](./okf-bundles/audit/decisions.md) for full rati
 - Features audit in 21 parts: [Audit Bundle](./okf-bundles/audit/index.md)
 - SDLC subagent role definitions: `22b6a65`
 
-### Research Complete — All in OKF Bundles
+## Research Complete — All in OKF Bundles
 
-#### Architecture Documentation (7 visual documents)
+### Architecture Documentation (7 visual documents)
 
 [Architecture Bundle](./okf-bundles/architecture/index.md):
 
@@ -104,7 +102,7 @@ See [Audit Bundle → Decisions](./okf-bundles/audit/decisions.md) for full rati
 - Decision Log — all 14 architectural decisions with rationale
 - Architecture README — bundle overview
 
-#### C++26 Features Audit (21 parts)
+### C++26 Features Audit (21 parts)
 
 [Audit Bundle](./okf-bundles/audit/index.md):
 
@@ -114,22 +112,53 @@ See [Audit Bundle → Decisions](./okf-bundles/audit/decisions.md) for full rati
 - Metrics harness (`scripts/measure.py`)
 - Upstream verification (`scripts/verify_upstream.py`)
 
-#### Other Research
+### Other Research
 
 - ASAN leak-check analysis: [docs/asan-leak-check/README.md](./docs/asan-leak-check/README.md)
 - Module source location research: [docs/module-source-location/README.md](./docs/module-source-location/README.md)
 
-### The Three-Part Request — Research Complete
+## The Three-Part Request — Research Complete
 
 1. **C++26 / third-party-library features that replace hand-rolled code** → [Audit Bundle](./okf-bundles/audit/index.md)
 2. **clang-format, clang-tidy, cmake-format and 100% unit-test coverage set up** → [Architecture Bundle](./okf-bundles/architecture/index.md) + [Audit Bundle → Tooling](./okf-bundles/audit/open-items.md#tool-tooling--13-items)
 3. **Macros reduced or eliminated in favour of C++26 features, static reflection and templates** → [Audit Bundle → Macro Reduction](./okf-bundles/audit/macro-reduction.md)
 
-### The Research Lane — Complete
+## The Research Lane — Complete
 
 The research for all three parts is complete and written down. What remains is the implementation, which is parked.
 
-### Not Started — Next Steps When Lane Reopens
+`docs/cxx26-features-audit/`:
+
+| Part | File | Subject |
+|---|---|---|
+| 1 | [README.md](docs/cxx26-features-audit/README.md) | the verdict and the 20-row keep / replace / defer table |
+| 2 | [intel-libraries.md](docs/cxx26-features-audit/intel-libraries.md) | what the Intel libraries in the dependency tree provide, header by header |
+| 3 | [tooling-design.md](docs/cxx26-features-audit/tooling-design.md) | clang-tidy, cmake-format/cmake-lint and the coverage gate |
+| 4 | [import-std.md](docs/cxx26-features-audit/import-std.md) | `import std;` and the standard-library-free rule, against the C++26 text |
+| 5 | [reflection.md](docs/cxx26-features-audit/reflection.md) | C++26 static reflection (P2996) against the C++26 text |
+| 6 | [macro-reduction.md](docs/cxx26-features-audit/macro-reduction.md) | what each macro does, and whether a template can do it |
+| 7 | [coverage-gaps.md](docs/cxx26-features-audit/coverage-gaps.md) | what the tests do not reach today, branch by branch |
+| 8 | [quill-runtime-formatting.md](docs/cxx26-features-audit/quill-runtime-formatting.md) | quill's runtime formatting, the type-erasure boundary, and the defect below |
+| 9 | [constexpr-and-fmt.md](docs/cxx26-features-audit/constexpr-and-fmt.md) | fmt over `std::format`, and the `constexpr` inventory |
+| 10 | [open-items.md](docs/cxx26-features-audit/open-items.md) | **every open question, defect and to-do, in one list** |
+| 11 | [cxx26-library-availability.md](docs/cxx26-features-audit/cxx26-library-availability.md) | the verified C++26 library sweep against both toolchains' headers |
+| 12 | [build-and-dependencies.md](docs/cxx26-features-audit/build-and-dependencies.md) | the vcpkg overlays, the triplets and the CMake - the build as a subject |
+| 13 | [format-dialect.md](docs/cxx26-features-audit/format-dialect.md) | the module path's format strings against the C++26 grammar and fmt's - and the two paths' disagreement |
+| 14 | [remaining-research.md](docs/cxx26-features-audit/remaining-research.md) | the four questions that needed no compile: Intel's `stdx`, the logger's lifetime, `ut`'s module, the upstream watch |
+| 15 | [catalog-ids.md](docs/cxx26-features-audit/catalog-ids.md) | are the catalog IDs the same under both compilers? - and why they are not the same between releases |
+| 16 | [readme-check.md](docs/cxx26-features-audit/readme-check.md) | the root `README.md`, checked line by line - and the proof that the committed tree is the tree that built |
+| 17 | [decisions.md](docs/cxx26-features-audit/decisions.md) | the thirteen decisions the owner has to make, with a recommendation for each |
+| 18 | [followup-research.md](docs/cxx26-features-audit/followup-research.md) | **the eight things the audit never asked** - and the answers |
+| 19 | [measurements.md](docs/cxx26-features-audit/measurements.md) | **what the project actually is, in numbers** - the shape, the discipline, the API, the dependency closure, and what cannot be measured |
+| 20 | [read-gap.md](docs/cxx26-features-audit/read-gap.md) | **the 520 lines the audit had not read** - read line by line, and the six things the reading found |
+| 21 | [cmake-feature-checks.md](docs/cxx26-features-audit/cmake-feature-checks.md) | **can CMake ask the compiler?** - the feature-check facilities, what CMake 4.5.0 added on 2026-11-12, the presets the project has not used, and two worked checks |
+| - | [decision-brief.md](docs/cxx26-features-audit/decision-brief.md) | the owner's thirteen decisions on one page - pre-filled, marked by strength, and answerable in a sitting |
+
+The upstream sources those parts quote are vendored under
+[`docs/cxx26-features-audit/upstream/`](docs/cxx26-features-audit/upstream/README.md), so the review
+can be done offline.
+
+## Not Started — Next Steps When Lane Reopens
 
 When the build lane reopens, see [Audit Bundle → Decisions](./okf-bundles/audit/decisions.md#first-10-steps-when-lane-reopens) for the ordered plan:
 
@@ -144,7 +173,7 @@ When the build lane reopens, see [Audit Bundle → Decisions](./okf-bundles/audi
 9. Coverage gate at 100%
 10. `import std;` decision — keep status quo
 
-### Open Items Summary
+## Open Items Summary
 
 | Status | Count |
 |--------|-------|
@@ -152,9 +181,18 @@ When the build lane reopens, see [Audit Bundle → Decisions](./okf-bundles/audi
 | Answered (decisions recorded) | 19 |
 | Contingent (on BUILD-5) | 1 |
 
-See [Audit Bundle → Open Items](./okf-bundles/audit/open-items.md) for the canonical list.
+See [Audit Bundle → Open Items](./okf-bundles/audit/open-items.md) for the canonical list. By kind:
+8 defects, 13 fmt/`constexpr` questions, 7 quill questions, 13 tooling questions, 11 `import std;` questions, 4 reflection questions, 3 macro questions, 10 coverage to-dos, 0 build questions and 1 environment questions - **70 in all**.
 
-### Key Defects Still Open
+**70 open items**: 0 owner decisions, 0 registry reads, 70 settled by a compile, a run or a preprocessor pass.
+
+The counts are derived, not typed: `scripts/audit_index.py` parses `open-items.md` into
+`docs/cxx26-features-audit/audit-index.json`, and `scripts/verify_audit.py` fails when the numbers
+above and the registry disagree. The audit had **83 open items** when part 17 was written; the
+parts since then and the owner's decisions answered some and added others, which is how it
+came to 70.
+
+## Key Defects Still Open
 
 | ID | Title |
 |----|-------|
@@ -169,7 +207,7 @@ See [Audit Bundle → Open Items](./okf-bundles/audit/open-items.md) for the can
 
 See [Audit Bundle → Open Items](./okf-bundles/audit/open-items.md) for all 70 items.
 
-### Key Research Findings
+## Key Research Findings
 
 1. **Use fmt, not `std::format`** — fmt's compile-time API includes floating point; `std::format` excludes floats from constant evaluation. Neither libstdc++ 16 nor libc++ 21 implements `constexpr std::format`.
 
@@ -187,7 +225,7 @@ See [Audit Bundle → Open Items](./okf-bundles/audit/open-items.md) for all 70 
 
 8. **QUIL-1 is the key blocker** — Can a `quill::Codec` push N fields from one pack element? Required for FMT-14(c).
 
-### All Documentation in OKF Bundles
+## All Documentation in OKF Bundles
 
 | Bundle | Path | Documents |
 |--------|------|-----------|
@@ -196,7 +234,7 @@ See [Audit Bundle → Open Items](./okf-bundles/audit/open-items.md) for all 70 
 | ASAN Leak Check | `./docs/asan-leak-check/README.md` | 1 document |
 | Module Source Location | `./docs/module-source-location/README.md` | 1 document |
 
-### When Lane Reopens
+## When Lane Reopens
 
 See [Audit Bundle → Decisions → First 10 Steps](./okf-bundles/audit/decisions.md#first-10-steps-when-lane-reopens) for the exact ordered plan.
 

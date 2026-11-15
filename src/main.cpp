@@ -1,5 +1,3 @@
-// Copyright 2024 cpp-core authors
-//
 // cpp-core: the application's entry point.
 //
 // The main is a stub: the log calls live in the application library, so that the string catalog

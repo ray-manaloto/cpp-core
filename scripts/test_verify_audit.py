@@ -82,7 +82,7 @@ def mutate_decisions() -> None:
 
 
 def mutate_split_table() -> None:
-    insert_after(OPEN_ITEMS, "| FMT-8 |", "\na paragraph in the middle of a table\n")
+    insert_after(OPEN_ITEMS, "| FMT-8 ", "\na paragraph in the middle of a table\n")
 
 
 def mutate_fence() -> None:
@@ -107,8 +107,8 @@ def mutate_privacy() -> None:
 def mutate_registry() -> None:
     replace(
         OPEN_ITEMS,
-        "| FMT-1 | Does `FMT_STATIC_FORMAT` compile",
-        "| FMT-1 | Does `FMT_STATIC_FORMAT` really compile",
+        "Does `FMT_STATIC_FORMAT` compile on both toolchains?",
+        "Does `FMT_STATIC_FORMAT` really compile on both toolchains?",
     )
 
 
@@ -129,7 +129,7 @@ def mutate_upstream() -> None:
 def mutate_contradiction() -> None:
     insert_after(
         OPEN_ITEMS,
-        "| FMT-8 |",
+        "| FMT-8 ",
         "| FMT-9 | Does the vcpkg `quill` port have an external-fmt feature? | a compile |",
     )
 

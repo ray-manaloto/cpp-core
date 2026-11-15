@@ -14,7 +14,12 @@
       "trace",
       "warning"
     ],
-    "not_tested_at_source_level": ["critical", "debug", "log", "trace"],
+    "not_tested_at_source_level": [
+      "critical",
+      "debug",
+      "log",
+      "trace"
+    ],
     "public_functions": 12,
     "tested_at_source_level": [
       "current_level",
@@ -75,7 +80,7 @@
       },
       "cmake/presets/cpp-core.json": {
         "cited_lines": 1,
-        "source_lines": 436,
+        "source_lines": 402,
         "whole_file_cited": true
       },
       "cmake/project-is-top-level.cmake": {
@@ -145,7 +150,7 @@
       },
       "ports/intel-cpp-std-extensions/vcpkg.json": {
         "cited_lines": 0,
-        "source_lines": 12,
+        "source_lines": 8,
         "whole_file_cited": true
       },
       "ports/ut/portfile.cmake": {
@@ -190,7 +195,7 @@
       },
       "vcpkg.json": {
         "cited_lines": 1,
-        "source_lines": 12,
+        "source_lines": 8,
         "whole_file_cited": true
       }
     },
@@ -198,370 +203,14 @@
     "specific_share": 1.0
   },
   "dependencies": {
-    "available": true,
-    "distinct_closure_sizes": 1,
-    "installed_headers": 460,
-    "installed_packages": [
-      "async",
-      "boost",
-      "cib",
-      "conc",
-      "flow",
-      "fmt",
-      "interrupt",
-      "log",
-      "log_binary",
-      "log_fmt",
-      "lookup",
-      "match",
-      "msg",
-      "nexus",
-      "quill",
-      "seq",
-      "stdx",
-      "ut"
-    ],
-    "packages": {
-      "boost": 27,
-      "fmt": 3,
-      "log": 5,
-      "log_binary": 2,
-      "quill": 52,
-      "stdx": 16,
-      "ut": 1
-    },
-    "per_tree": [
-      {
-        "installed_headers": 0,
-        "installed_packages": [],
-        "packages": {
-          "boost": 27,
-          "fmt": 3,
-          "log": 5,
-          "log_binary": 2,
-          "quill": 52,
-          "stdx": 16,
-          "ut": 1
-        },
-        "reached_headers": 106,
-        "translation_units": 7,
-        "tree": "coverage-clang"
-      },
-      {
-        "installed_headers": 460,
-        "installed_packages": [
-          "async",
-          "boost",
-          "cib",
-          "conc",
-          "flow",
-          "fmt",
-          "interrupt",
-          "log",
-          "log_binary",
-          "log_fmt",
-          "lookup",
-          "match",
-          "msg",
-          "nexus",
-          "quill",
-          "seq",
-          "stdx",
-          "ut"
-        ],
-        "packages": {
-          "boost": 27,
-          "fmt": 3,
-          "log": 5,
-          "log_binary": 2,
-          "quill": 52,
-          "stdx": 16,
-          "ut": 1
-        },
-        "reached_headers": 106,
-        "translation_units": 8,
-        "tree": "gcc16-asan"
-      },
-      {
-        "installed_headers": 460,
-        "installed_packages": [
-          "async",
-          "boost",
-          "cib",
-          "conc",
-          "flow",
-          "fmt",
-          "interrupt",
-          "log",
-          "log_binary",
-          "log_fmt",
-          "lookup",
-          "match",
-          "msg",
-          "nexus",
-          "quill",
-          "seq",
-          "stdx",
-          "ut"
-        ],
-        "packages": {
-          "boost": 27,
-          "fmt": 3,
-          "log": 5,
-          "log_binary": 2,
-          "quill": 52,
-          "stdx": 16,
-          "ut": 1
-        },
-        "reached_headers": 106,
-        "translation_units": 7,
-        "tree": "gcc16-debug"
-      },
-      {
-        "installed_headers": 460,
-        "installed_packages": [
-          "async",
-          "boost",
-          "cib",
-          "conc",
-          "flow",
-          "fmt",
-          "interrupt",
-          "log",
-          "log_binary",
-          "log_fmt",
-          "lookup",
-          "match",
-          "msg",
-          "nexus",
-          "quill",
-          "seq",
-          "stdx",
-          "ut"
-        ],
-        "packages": {
-          "boost": 27,
-          "fmt": 3,
-          "log": 5,
-          "log_binary": 2,
-          "quill": 52,
-          "stdx": 16,
-          "ut": 1
-        },
-        "reached_headers": 106,
-        "translation_units": 8,
-        "tree": "gcc16-release"
-      },
-      {
-        "installed_headers": 460,
-        "installed_packages": [
-          "async",
-          "boost",
-          "cib",
-          "conc",
-          "flow",
-          "fmt",
-          "interrupt",
-          "log",
-          "log_binary",
-          "log_fmt",
-          "lookup",
-          "match",
-          "msg",
-          "nexus",
-          "quill",
-          "seq",
-          "stdx",
-          "ut"
-        ],
-        "packages": {
-          "boost": 27,
-          "fmt": 3,
-          "log": 5,
-          "log_binary": 2,
-          "quill": 52,
-          "stdx": 16,
-          "ut": 1
-        },
-        "reached_headers": 106,
-        "translation_units": 7,
-        "tree": "p2996-asan"
-      },
-      {
-        "installed_headers": 460,
-        "installed_packages": [
-          "async",
-          "boost",
-          "cib",
-          "conc",
-          "flow",
-          "fmt",
-          "interrupt",
-          "log",
-          "log_binary",
-          "log_fmt",
-          "lookup",
-          "match",
-          "msg",
-          "nexus",
-          "quill",
-          "seq",
-          "stdx",
-          "ut"
-        ],
-        "packages": {
-          "boost": 27,
-          "fmt": 3,
-          "log": 5,
-          "log_binary": 2,
-          "quill": 52,
-          "stdx": 16,
-          "ut": 1
-        },
-        "reached_headers": 106,
-        "translation_units": 7,
-        "tree": "p2996-debug"
-      },
-      {
-        "installed_headers": 460,
-        "installed_packages": [
-          "async",
-          "boost",
-          "cib",
-          "conc",
-          "flow",
-          "fmt",
-          "interrupt",
-          "log",
-          "log_binary",
-          "log_fmt",
-          "lookup",
-          "match",
-          "msg",
-          "nexus",
-          "quill",
-          "seq",
-          "stdx",
-          "ut"
-        ],
-        "packages": {
-          "boost": 27,
-          "fmt": 3,
-          "log": 5,
-          "log_binary": 2,
-          "quill": 52,
-          "stdx": 16,
-          "ut": 1
-        },
-        "reached_headers": 106,
-        "translation_units": 7,
-        "tree": "p2996-iwyu"
-      },
-      {
-        "installed_headers": 460,
-        "installed_packages": [
-          "async",
-          "boost",
-          "cib",
-          "conc",
-          "flow",
-          "fmt",
-          "interrupt",
-          "log",
-          "log_binary",
-          "log_fmt",
-          "lookup",
-          "match",
-          "msg",
-          "nexus",
-          "quill",
-          "seq",
-          "stdx",
-          "ut"
-        ],
-        "packages": {
-          "boost": 27,
-          "fmt": 3,
-          "log": 5,
-          "log_binary": 2,
-          "quill": 52,
-          "stdx": 16,
-          "ut": 1
-        },
-        "reached_headers": 106,
-        "translation_units": 8,
-        "tree": "p2996-release"
-      },
-      {
-        "installed_headers": 460,
-        "installed_packages": [
-          "async",
-          "boost",
-          "cib",
-          "conc",
-          "flow",
-          "fmt",
-          "interrupt",
-          "log",
-          "log_binary",
-          "log_fmt",
-          "lookup",
-          "match",
-          "msg",
-          "nexus",
-          "quill",
-          "seq",
-          "stdx",
-          "ut"
-        ],
-        "packages": {
-          "boost": 27,
-          "fmt": 3,
-          "log": 5,
-          "log_binary": 2,
-          "quill": 52,
-          "stdx": 16,
-          "ut": 1
-        },
-        "reached_headers": 106,
-        "translation_units": 7,
-        "tree": "p2996-tsan"
-      }
-    ],
-    "reached_headers": 106,
-    "resolved_fallback": {
-      "installed_files": 462,
-      "installed_headers": 460,
-      "packages": {
-        "boost": 27,
-        "fmt": 4,
-        "log": 5,
-        "log_binary": 1,
-        "quill": 23,
-        "stdx": 17
-      },
-      "reached_headers": 77
-    },
-    "source": "the depfiles the last build wrote",
-    "trees_agreeing": true,
-    "trees_measured": 9,
-    "unreached_packages": [
-      "async",
-      "cib",
-      "conc",
-      "flow",
-      "interrupt",
-      "log_fmt",
-      "lookup",
-      "match",
-      "msg",
-      "nexus",
-      "seq"
-    ]
+    "available": false
   },
   "generated_by": "scripts/measure.py",
   "interface": {
-    "project_includes": ["cpp-core/logging/internal.hpp", "format.hpp"],
+    "project_includes": [
+      "cpp-core/logging/internal.hpp",
+      "format.hpp"
+    ],
     "standard_library_include_names": [],
     "standard_library_includes": 0
   },

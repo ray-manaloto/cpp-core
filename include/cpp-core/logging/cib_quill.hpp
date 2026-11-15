@@ -1,5 +1,3 @@
-// Copyright 2024 cpp-core authors
-//
 // cpp-core: Intel's compile-time-init-build (cib) logging interface, implemented on top of quill.
 //
 // cib's logging is in two parts (https://github.com/intel/compile-time-init-build/blob/main/docs/logging.adoc):
@@ -55,7 +53,7 @@ template <typename T> [[nodiscard]] constexpr auto level_of(T &&t) noexcept {
 // fmt (and therefore quill) cannot format a scoped enum that has no formatter of its own; cib's
 // fmt logger decays enums to their underlying type for the same reason.
 template <typename T> [[nodiscard]] auto decay_enum_value(T const &t) -> decltype(auto) {
-  if constexpr (requires { format_as(t); } || not std::is_enum_v<T>) {
+  if constexpr (requires { format_as(t); } or not std::is_enum_v<T>) {
     return (t);
   } else {
     return stdx::to_underlying(t);

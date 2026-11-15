@@ -147,7 +147,9 @@
       "tests/logging_test.cpp:83-90",
       "tests/logging_test.cpp:92-98"
     ],
-    "decision-brief.md": ["modules/logging/logging.cppm:89"],
+    "decision-brief.md": [
+      "modules/logging/logging.cppm:89"
+    ],
     "decisions.md": [
       "cmake/cpp-core-check.cmake:40-42",
       "modules/logging/logging.cppm:89",
@@ -241,7 +243,7 @@
       "tests/logging_test.cpp:74-81",
       "tests/logging_test.cpp:9",
       "tests/logging_test.cpp:92-98",
-      "vcpkg.json:7"
+      "vcpkg.json:6"
     ],
     "format-dialect.md": [
       "include/cpp-core/logging/internal.hpp:52-53",
@@ -294,7 +296,9 @@
       "src/logging/quill_logger.cpp:131-137",
       "src/logging/quill_logger.cpp:150-155"
     ],
-    "import-std.md": ["modules/logging/logging.cppm:59-60"],
+    "import-std.md": [
+      "modules/logging/logging.cppm:59-60"
+    ],
     "intel-libraries.md": [
       "include/cpp-core/logging/cib_quill.hpp:157-159",
       "include/cpp-core/logging/cib_quill.hpp:68-88",
@@ -2172,7 +2176,7 @@
       "162": "sha256:4090dde93fd9d0a5cd6ef38dd7a55edfc760faefe1716684bcf4bd0ae6d9332a"
     },
     "vcpkg.json": {
-      "7": "sha256:bd685b1664288516384db12c7a16c6fef272bc8e004e841c022b7f59f0be614c"
+      "6": "sha256:f69e08dfbba43bc2bd3d9d68aaef8a022dee007181fd97d2f1ce33a50b478834"
     }
   }
 }

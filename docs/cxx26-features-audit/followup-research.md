@@ -263,7 +263,7 @@ Every input the build depends on, and whether it is pinned:
 | the `clang23` compiler | Clang 23.x | `:22-25` | **a version range** (23 ≤ v < 24), and explicitly *not* a p2996 path |
 | the `p2996` compiler | **nothing** | `:27-30` | **not pinned at all** - the path only has to contain the string `p2996` |
 | the p2996 *snapshot* | a commit | the install tool | **not in the repo** - the repo never names a commit |
-| the vcpkg registry | `245d37306671ea67d8f313081a81aae8079f8916` | `vcpkg.json:7` | **exactly** - a registry commit, which is the strongest form vcpkg offers |
+| the vcpkg registry | `245d37306671ea67d8f313081a81aae8079f8916` | `vcpkg.json:6` | **exactly** - a registry commit, which is the strongest form vcpkg offers |
 | the vcpkg *tool* | a build | the install tool | **not in the repo** - no file records the tool version |
 | the five overlay ports | a `REF` + a `SHA512` | `ports/*/portfile.cmake` | **exactly** - the archive hash is checked on download |
 | the overlay ports' *upstream* | `HEAD_REF main` | the same | **not pinned** - `HEAD_REF` is what `--head` would use, not what a normal build uses |

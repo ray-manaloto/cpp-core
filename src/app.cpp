@@ -1,5 +1,3 @@
-// Copyright 2024 cpp-core authors
-//
 // cpp-core: the application library.
 //
 // The log calls live here (and not in main.cpp), so that the string catalog tooling can scan the
