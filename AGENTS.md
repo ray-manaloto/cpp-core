@@ -54,7 +54,7 @@ and it is deliberately conservative about what enters the module interface.
 - **Tools:** cpp-core pins every tool its hk steps run in `.mise.toml` and commits `mise.lock`,
   which records what the checks ran with (the owner's ruling of 2026-11-15). Renovate, with the
   `risu729/renovate-config` preset in `renovate.json`, opens the update PRs and updates `mise.lock`
-  with them, and it merges minor, patch and digest updates once CI passes. To update by hand:
+  with them. No update merges itself: `renovate.json` turns automerge off, because no CI runs on this repository, and the owner merges each update PR. To update by hand:
   `mise run tools:outdated`, edit the version, `mise lock`,
   `mise run tools:lock-check`, then `mise run tools:lock-verify` (slow; installs from the lock into
   an empty directory). Never run `mise upgrade`. Keep `lockfile_mode = "merge"`: the trial

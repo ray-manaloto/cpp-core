@@ -1,4 +1,13 @@
 {
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
-  "extends": ["github>risu729/renovate-config#3.23.3"]
+  "extends": ["github>risu729/renovate-config#3.23.3"],
+  "automerge": false,
+  "lockFileMaintenance": { "automerge": false },
+  "packageRules": [
+    {
+      "description": "No CI runs on this repository, so every update waits for the owner's merge.",
+      "matchPackageNames": ["*"],
+      "automerge": false
+    }
+  ]
 }
