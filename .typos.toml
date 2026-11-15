@@ -13,6 +13,9 @@ extend-exclude = [
   "build/**",
 ]
 
+[default]
+extend-ignore-re = ["`[0-9a-f]{7,40}`"]
+
 [default.extend-words]
 "cpp-core" = "cpp-core"
 "ray-manaloto" = "ray-manaloto"
@@ -111,5 +114,3 @@ extend-exclude = [
 "git" = "git"
 "status" = "status"
 "porcelain" = "porcelain"
-"ba" = "ba"
-"61ba2da" = "61ba2da"

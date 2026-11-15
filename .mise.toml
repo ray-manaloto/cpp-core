@@ -36,7 +36,6 @@ taplo = "0.10.0"
 tombi = "1.11.2"
 trufflehog = "3.99.9"
 ty = { version = "0.0.102", minimum_release_age = "0s" }
-typos = { version = "1.25.0", minimum_release_age = "0s" }
 yamlfmt = "0.21.0"
 yamllint = "1.38.0"
 
