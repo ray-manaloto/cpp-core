@@ -113,6 +113,9 @@ hooks {
       ["mixed-line-ending"] = (Builtins.mixed_line_ending) {}
       ["fix-smart-quotes"] = (Builtins.fix_smart_quotes) {}
       ["byte-order-marker"] = (Builtins.byte_order_marker) {}
+      ["destroyed-symlinks"] = (Builtins.destroyed_symlinks) {}
+      ["detect-private-key"] = (Builtins.detect_private_key) {}
+      ["forbid-submodules"] = (Builtins.forbid_submodules) {}
       ["pkl-format"] = (Config.Step) {
         glob = List("**/*.pkl")
         check = "pkl format --diff-name-only {{files}}"
@@ -251,6 +254,9 @@ hooks {
       ["mixed-line-ending"] = (Builtins.mixed_line_ending) {}
       ["fix-smart-quotes"] = (Builtins.fix_smart_quotes) {}
       ["byte-order-marker"] = (Builtins.byte_order_marker) {}
+      ["destroyed-symlinks"] = (Builtins.destroyed_symlinks) {}
+      ["detect-private-key"] = (Builtins.detect_private_key) {}
+      ["forbid-submodules"] = (Builtins.forbid_submodules) {}
       ["pkl-format"] = (Config.Step) {
         glob = List("**/*.pkl")
         check = "pkl format --diff-name-only {{files}}"
@@ -378,6 +384,9 @@ hooks {
       ["mixed-line-ending"] = (Builtins.mixed_line_ending) {}
       ["fix-smart-quotes"] = (Builtins.fix_smart_quotes) {}
       ["byte-order-marker"] = (Builtins.byte_order_marker) {}
+      ["destroyed-symlinks"] = (Builtins.destroyed_symlinks) {}
+      ["detect-private-key"] = (Builtins.detect_private_key) {}
+      ["forbid-submodules"] = (Builtins.forbid_submodules) {}
       ["pkl-format"] = (Config.Step) {
         glob = List("**/*.pkl")
         check = "pkl format --diff-name-only {{files}}"
