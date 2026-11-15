@@ -49,7 +49,19 @@ and it is deliberately conservative about what enters the module interface.
 - **Check:** `mise run audit:verify` runs every check that does not need a compiler: the audit's
   item counts, duplicate and dangling IDs, the decisions sheet against the open list, the counts
   the prose claims, Markdown table shape, fence balance, relative links, the parts tables, the
-  privacy scan, the vendored upstream copies, and the citation anchor. It is fast, needs only Python, and must pass before each commit.
+  privacy scan, the vendored upstream copies, and the citation anchor. It is fast, needs only Python, and must pass before each commit. The hk `audit-verify` step runs it on every hook, so `git commit` enforces it.
+
+- **Tools:** cpp-core pins every tool its hk steps run in `.mise.toml` and commits `mise.lock`,
+  which records what the checks ran with (the owner's ruling of 2026-11-15; no Renovate, since
+  there is no remote). To update: `mise run tools:outdated`, edit the version by hand, `mise lock`,
+  `mise run tools:lock-check`, then `mise run tools:lock-verify` (slow; installs from the lock into
+  an empty directory). Never run `mise upgrade`. Keep `lockfile_mode = "merge"`: the trial
+  `"generate"` mode writes an incomplete conda entry for clang-format. Known gap: while the
+  user's global `npm.package_manager` is `bun`, `tools:lock-verify` fails on prettier, because bun
+  is not a cpp-core tool. The other 16 pins install from the lock.
+
+- **Changing hk.pkl:** `hk validate` and `hk check` never run a step's `fix` command. Run
+  `mise run hk:fix-smoke`, which runs `hk fix --all` on a scratch worktree of HEAD.
 
 - **Shipping:** A change is a local commit. **There is no git remote** — every commit in this
   repository is local and nothing has been pushed. Do not push, do not open a pull request, and do
@@ -165,6 +177,8 @@ All are stdlib-only Python, none invokes a compiler.
 | `scripts/measure.py` | Measures project: shape, discipline, API, audit coverage, dependency closure (`--write`, `--check`) |
 | `scripts/verify_upstream.py` | Vendored upstream copies against `upstream/manifest.json` |
 | `scripts/check_overlay_drift.py` | Overlay ports' pins against their upstreams' tips (`--network`) |
+| `scripts/check_mise_lock.py` | mise.lock has every pin and every conda dependency record (`--self-test`, `--install`) |
+| `scripts/check_doc_commands.py` | Every `mise run <task>` in the docs and scripts names a real task (`--self-test`) |
 
 **Run `mise run audit:test` before you trust the checker.** A check that never fails is not a
 check; the test breaks the tree fourteen ways and asserts that each one is caught. If you add a
@@ -225,13 +239,17 @@ All documentation has been migrated to OKF bundles. See the bundles for complete
 | Validate hk config | `mise run hk:validate` |
 | Run pre-commit | `mise run pre-commit` |
 | Validate commit msg | `mise run commit-msg` |
+| List stale tool pins | `mise run tools:outdated` |
+| Check the lockfile | `mise run tools:lock-check` |
+| Smoke-test hk fix commands | `mise run hk:fix-smoke` |
 
 ### Key Files
 
 | File | Purpose |
 |------|---------|
-| `hk.pkl` | hk configuration (27 checks, 4 hooks) |
-| `.mise.toml` | mise task configuration (modular, 8 task files) |
+| `hk.pkl` | hk configuration: shared steps for check, fix, pre-commit and pre-push, plus commit-msg |
+| `.mise.toml` | pinned tools, lockfile settings, and the task file includes |
+| `mise.lock` | the locked tool versions, URLs and checksums for macos-arm64, linux-x64 and linux-arm64 |
 | `.clang-format` | clang-format configuration |
 | `.rumdl.toml` | rumdl configuration (MD013, MD041, MD052, MD033 disabled) |
 | `.cpplint` | cpplint configuration (line length 120, disable specific checks) |
