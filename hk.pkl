@@ -79,6 +79,95 @@ hooks {
             "**/docs/module-source-location/repro/**",
           )
       }
+      ["gitleaks"] = (Builtins.gitleaks) {}
+      ["jactionlint"] = (Builtins.jactionlint) {
+        glob =
+          List(
+            ".github/workflows/*.yml",
+            ".github/workflows/*.yaml",
+            ".github/actions/**/action.yml",
+            ".github/actions/**/action.yaml",
+            ".github/dependabot.yml",
+          )
+      }
+      ["osv-scanner"] = (Builtins.osv_scanner) {
+        glob =
+          List(
+            "**/*.lock",
+            "**/Cargo.lock",
+            "**/package-lock.json",
+            "**/yarn.lock",
+            "**/pnpm-lock.yaml",
+            "**/poetry.lock",
+            "**/Pipfile.lock",
+            "**/go.mod",
+            "**/go.sum",
+            "**/vcpkg.json",
+            "**/conan.lock",
+          )
+        prefix = List("mise", "exec", "osv-scanner@2.7.1", "--")
+      }
+      ["pinact"] = (Builtins.pinact) {
+        glob =
+          List(
+            ".github/workflows/*.yml",
+            ".github/workflows/*.yaml",
+            ".github/actions/**/action.yml",
+            ".github/actions/**/action.yaml",
+          )
+      }
+      ["pinact-update"] = (Builtins.pinact_update) {
+        glob =
+          List(
+            ".github/workflows/*.yml",
+            ".github/workflows/*.yaml",
+            ".github/actions/**/action.yml",
+            ".github/actions/**/action.yaml",
+          )
+      }
+      ["typos"] = (Builtins.typos) {
+        glob =
+          List(
+            "**/*.md",
+            "**/*.markdown",
+            "**/*.txt",
+            "**/*.rst",
+            "**/*.adoc",
+            "**/*.cpp",
+            "**/*.hpp",
+            "**/*.c",
+            "**/*.h",
+            "**/*.cmake",
+            "**/*.py",
+            "**/*.sh",
+            "**/*.toml",
+            "**/*.yaml",
+            "**/*.yml",
+            "**/*.json",
+          )
+      }
+      ["tombi"] = (Builtins.tombi) {
+        glob = List("**/*.toml")
+      }
+      ["tombi-format"] = (Builtins.tombi_format) {
+        glob = List("**/*.toml")
+      }
+      ["hadolint"] = (Builtins.hadolint) {
+        glob = List("**/Dockerfile", "**/Dockerfile.*", "**/*.dockerfile")
+      }
+      ["zizmor"] = (Builtins.zizmor) {
+        glob =
+          List(
+            ".github/workflows/*.yml",
+            ".github/workflows/*.yaml",
+            ".github/dependabot.yml",
+            "**/action.yml",
+            "**/action.yaml",
+          )
+      }
+      ["trufflehog"] = (Builtins.trufflehog) {
+        glob = List("**/*")
+      }
       ["shfmt"] = (Builtins.shfmt) {}
       ["shellcheck"] = (Builtins.shellcheck) {
         exclude = List("**/sample_hang.sh")
@@ -220,6 +309,95 @@ hooks {
             "**/docs/module-source-location/repro/**",
           )
       }
+      ["gitleaks"] = (Builtins.gitleaks) {}
+      ["jactionlint"] = (Builtins.jactionlint) {
+        glob =
+          List(
+            ".github/workflows/*.yml",
+            ".github/workflows/*.yaml",
+            ".github/actions/**/action.yml",
+            ".github/actions/**/action.yaml",
+            ".github/dependabot.yml",
+          )
+      }
+      ["osv-scanner"] = (Builtins.osv_scanner) {
+        glob =
+          List(
+            "**/*.lock",
+            "**/Cargo.lock",
+            "**/package-lock.json",
+            "**/yarn.lock",
+            "**/pnpm-lock.yaml",
+            "**/poetry.lock",
+            "**/Pipfile.lock",
+            "**/go.mod",
+            "**/go.sum",
+            "**/vcpkg.json",
+            "**/conan.lock",
+          )
+        prefix = List("mise", "exec", "osv-scanner@2.7.1", "--")
+      }
+      ["pinact"] = (Builtins.pinact) {
+        glob =
+          List(
+            ".github/workflows/*.yml",
+            ".github/workflows/*.yaml",
+            ".github/actions/**/action.yml",
+            ".github/actions/**/action.yaml",
+          )
+      }
+      ["pinact-update"] = (Builtins.pinact_update) {
+        glob =
+          List(
+            ".github/workflows/*.yml",
+            ".github/workflows/*.yaml",
+            ".github/actions/**/action.yml",
+            ".github/actions/**/action.yaml",
+          )
+      }
+      ["typos"] = (Builtins.typos) {
+        glob =
+          List(
+            "**/*.md",
+            "**/*.markdown",
+            "**/*.txt",
+            "**/*.rst",
+            "**/*.adoc",
+            "**/*.cpp",
+            "**/*.hpp",
+            "**/*.c",
+            "**/*.h",
+            "**/*.cmake",
+            "**/*.py",
+            "**/*.sh",
+            "**/*.toml",
+            "**/*.yaml",
+            "**/*.yml",
+            "**/*.json",
+          )
+      }
+      ["tombi"] = (Builtins.tombi) {
+        glob = List("**/*.toml")
+      }
+      ["tombi-format"] = (Builtins.tombi_format) {
+        glob = List("**/*.toml")
+      }
+      ["hadolint"] = (Builtins.hadolint) {
+        glob = List("**/Dockerfile", "**/Dockerfile.*", "**/*.dockerfile")
+      }
+      ["zizmor"] = (Builtins.zizmor) {
+        glob =
+          List(
+            ".github/workflows/*.yml",
+            ".github/workflows/*.yaml",
+            ".github/dependabot.yml",
+            "**/action.yml",
+            "**/action.yaml",
+          )
+      }
+      ["trufflehog"] = (Builtins.trufflehog) {
+        glob = List("**/*")
+      }
       ["shfmt"] = (Builtins.shfmt) {}
       ["shellcheck"] = (Builtins.shellcheck) {
         exclude = List("**/sample_hang.sh")
@@ -349,6 +527,95 @@ hooks {
             "**/docs/asan-leak-check/repro/**",
             "**/docs/module-source-location/repro/**",
           )
+      }
+      ["gitleaks"] = (Builtins.gitleaks) {}
+      ["jactionlint"] = (Builtins.jactionlint) {
+        glob =
+          List(
+            ".github/workflows/*.yml",
+            ".github/workflows/*.yaml",
+            ".github/actions/**/action.yml",
+            ".github/actions/**/action.yaml",
+            ".github/dependabot.yml",
+          )
+      }
+      ["osv-scanner"] = (Builtins.osv_scanner) {
+        glob =
+          List(
+            "**/*.lock",
+            "**/Cargo.lock",
+            "**/package-lock.json",
+            "**/yarn.lock",
+            "**/pnpm-lock.yaml",
+            "**/poetry.lock",
+            "**/Pipfile.lock",
+            "**/go.mod",
+            "**/go.sum",
+            "**/vcpkg.json",
+            "**/conan.lock",
+          )
+        prefix = List("mise", "exec", "osv-scanner@2.7.1", "--")
+      }
+      ["pinact"] = (Builtins.pinact) {
+        glob =
+          List(
+            ".github/workflows/*.yml",
+            ".github/workflows/*.yaml",
+            ".github/actions/**/action.yml",
+            ".github/actions/**/action.yaml",
+          )
+      }
+      ["pinact-update"] = (Builtins.pinact_update) {
+        glob =
+          List(
+            ".github/workflows/*.yml",
+            ".github/workflows/*.yaml",
+            ".github/actions/**/action.yml",
+            ".github/actions/**/action.yaml",
+          )
+      }
+      ["typos"] = (Builtins.typos) {
+        glob =
+          List(
+            "**/*.md",
+            "**/*.markdown",
+            "**/*.txt",
+            "**/*.rst",
+            "**/*.adoc",
+            "**/*.cpp",
+            "**/*.hpp",
+            "**/*.c",
+            "**/*.h",
+            "**/*.cmake",
+            "**/*.py",
+            "**/*.sh",
+            "**/*.toml",
+            "**/*.yaml",
+            "**/*.yml",
+            "**/*.json",
+          )
+      }
+      ["tombi"] = (Builtins.tombi) {
+        glob = List("**/*.toml")
+      }
+      ["tombi-format"] = (Builtins.tombi_format) {
+        glob = List("**/*.toml")
+      }
+      ["hadolint"] = (Builtins.hadolint) {
+        glob = List("**/Dockerfile", "**/Dockerfile.*", "**/*.dockerfile")
+      }
+      ["zizmor"] = (Builtins.zizmor) {
+        glob =
+          List(
+            ".github/workflows/*.yml",
+            ".github/workflows/*.yaml",
+            ".github/dependabot.yml",
+            "**/action.yml",
+            "**/action.yaml",
+          )
+      }
+      ["trufflehog"] = (Builtins.trufflehog) {
+        glob = List("**/*")
       }
       ["shfmt"] = (Builtins.shfmt) {}
       ["shellcheck"] = (Builtins.shellcheck) {
