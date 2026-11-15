@@ -11,7 +11,7 @@ endif()
 
 set(_id "${CMAKE_CXX_COMPILER_ID}")
 set(_ver "${CMAKE_CXX_COMPILER_VERSION}")
-set(_path "${CMAKE_CXX_COMPILER}")  # full path: a p2996 build may install a plain clang++ under a p2996 dir
+set(_path "${CMAKE_CXX_COMPILER}") # full path: a p2996 build may install a plain clang++ under a p2996 dir
 set(_ok FALSE)
 if(CPP_CORE_COMPILER STREQUAL "gcc16")
   if(_id STREQUAL "GNU" AND _ver VERSION_GREATER_EQUAL 16 AND _ver VERSION_LESS 17)
@@ -19,7 +19,12 @@ if(CPP_CORE_COMPILER STREQUAL "gcc16")
   endif()
   set(_want "GCC 16")
 elseif(CPP_CORE_COMPILER STREQUAL "clang23")
-  if(_id STREQUAL "Clang" AND _ver VERSION_GREATER_EQUAL 23 AND _ver VERSION_LESS 24 AND NOT _path MATCHES "p2996")
+  if(
+    _id STREQUAL "Clang"
+    AND _ver VERSION_GREATER_EQUAL 23
+    AND _ver VERSION_LESS 24
+    AND NOT _path MATCHES "p2996"
+  )
     set(_ok TRUE)
   endif()
   set(_want "LLVM clang 23 (not Apple clang, not clang-p2996)")
@@ -31,14 +36,19 @@ elseif(CPP_CORE_COMPILER STREQUAL "p2996")
 endif()
 
 if(NOT _ok)
-  message(FATAL_ERROR
+  message(
+    FATAL_ERROR
     "CPP_CORE_COMPILER=${CPP_CORE_COMPILER} wants ${_want}, but CMake found "
-    "${_id} ${_ver} at ${CMAKE_CXX_COMPILER}. Fix PATH, or set CPP_CORE_CXX and CPP_CORE_CC (see README.md).")
+    "${_id} ${_ver} at ${CMAKE_CXX_COMPILER}. Fix PATH, or set CPP_CORE_CXX and CPP_CORE_CC (see README.md)."
+  )
 endif()
 
 # Reflection flags (set by the toolchain in CPP_CORE_REFLECTION_FLAGS) for this project's C++ only.
-foreach(_flag IN LISTS CPP_CORE_REFLECTION_FLAGS)  # one generator expression per flag
+foreach(_flag IN LISTS CPP_CORE_REFLECTION_FLAGS) # one generator expression per flag
   add_compile_options("$<$<COMPILE_LANGUAGE:CXX>:${_flag}>")
 endforeach()
-message(STATUS "cpp-core: ${CPP_CORE_COMPILER} = ${_id} ${_ver} (${CMAKE_CXX_COMPILER}), "
-               "sanitizer ${CPP_CORE_SANITIZER}, hardening ${CPP_CORE_HARDENING}, reflection [${CPP_CORE_REFLECTION_FLAGS}]")
+message(
+  STATUS
+  "cpp-core: ${CPP_CORE_COMPILER} = ${_id} ${_ver} (${CMAKE_CXX_COMPILER}), "
+  "sanitizer ${CPP_CORE_SANITIZER}, hardening ${CPP_CORE_HARDENING}, reflection [${CPP_CORE_REFLECTION_FLAGS}]"
+)

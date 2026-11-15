@@ -7,8 +7,11 @@ include(CMakeDependentOption)
 # unconditionally, so consumers can trivially build and package the project.
 if(PROJECT_IS_TOP_LEVEL)
   cmake_dependent_option(
-    cpp_core_DEVELOPER_MODE "Enable developer mode" ON
-    "PROJECT_IS_TOP_LEVEL" OFF
+    cpp_core_DEVELOPER_MODE
+    "Enable developer mode"
+    ON
+    "PROJECT_IS_TOP_LEVEL"
+    OFF
   )
 endif()
 
@@ -20,9 +23,9 @@ endif()
 set(warning_guard "")
 if(NOT PROJECT_IS_TOP_LEVEL)
   option(
-      cpp_core_INCLUDES_WITH_SYSTEM
-      "Use SYSTEM modifier for cpp-core's includes, disabling warnings"
-      ON
+    cpp_core_INCLUDES_WITH_SYSTEM
+    "Use SYSTEM modifier for cpp-core's includes, disabling warnings"
+    ON
   )
   mark_as_advanced(cpp_core_INCLUDES_WITH_SYSTEM)
   if(cpp_core_INCLUDES_WITH_SYSTEM)

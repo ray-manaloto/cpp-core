@@ -34,8 +34,8 @@ build a **module interface unit** in the process; `check_cxx_compiler_flag` asks
   whose form is "does this compile against the project's module". `FMT-15` already says so, and it
   is right.
 - **The project's reflection flags do not reach a check.** They are deliberately kept out of
-  `CMAKE_CXX_FLAGS` (`cmake/toolchains/cpp-core.cmake:76-80`), and they are added instead as a
-  directory-scope `add_compile_options()` (`cmake/cpp-core-check.cmake:40-42`) in a file CMake does
+  `CMAKE_CXX_FLAGS` (`cmake/toolchains/cpp-core.cmake:94-98`), and they are added instead as a
+  directory-scope `add_compile_options()` (`cmake/cpp-core-check.cmake:47-49`) in a file CMake does
   **not** run inside a try_compile project. A reflection check has to pass the flags itself.
 - **A check runs once.** Its answer is an INTERNAL cache variable, kept for the life of the build
   tree. Upgrade the compiler under the same preset name and the old answer survives.
@@ -149,28 +149,28 @@ carry.
 
 **It sees the compiler.** The toolchain already does the work: `CMAKE_TRY_COMPILE_PLATFORM_VARIABLES`
 carries `CPP_CORE_COMPILER`, `CPP_CORE_SANITIZER`, `CPP_CORE_HARDENING`, `CPP_CORE_PORT_BUILD` and
-`CPP_CORE_EXTRA_CXX_FLAGS` (`cmake/toolchains/cpp-core.cmake:30`), and the toolchain file is
+`CPP_CORE_EXTRA_CXX_FLAGS` (`cmake/toolchains/cpp-core.cmake:38-45`), and the toolchain file is
 re-read inside the check's project. A check therefore knows which of `gcc16`, `clang23` or `p2996`
 it is running under, and can name its answer per compiler.
 
 **It sees the flags.** `CMAKE_CXX_FLAGS` is copied into the generated project, so the sanitizer
 flags, the hardening macro, `-stdlib=libc++` and `CPP_CORE_EXTRA_CXX_FLAGS` all reach the check
-(`cmake/toolchains/cpp-core.cmake:157-161` builds that string).
+(`cmake/toolchains/cpp-core.cmake:192-196` builds that string).
 
 **It sees the standard.** `CMAKE_CXX_STANDARD 26`, `CMAKE_CXX_STANDARD_REQUIRED ON` and
-`CMAKE_CXX_EXTENSIONS OFF` are set by the toolchain (`cmake/toolchains/cpp-core.cmake:70-74`), and
+`CMAKE_CXX_EXTENSIONS OFF` are set by the toolchain (`cmake/toolchains/cpp-core.cmake:88-92`), and
 the generated project honours them and sets them as target properties. A check compiles as C++26.
 
 **It does not see the reflection flags.** The toolchain keeps them out of `CMAKE_CXX_FLAGS` for a
-reason it states (`cmake/toolchains/cpp-core.cmake:76-80`): GCC 16 refuses `-freflection` below
+reason it states (`cmake/toolchains/cpp-core.cmake:94-98`): GCC 16 refuses `-freflection` below
 `-std=c++26`, so a flag in `CMAKE_CXX_FLAGS` breaks every compile that is not C++26 - the vcpkg
 port builds, CMake's own compiler checks, and any consumer that forwards `CMAKE_CXX_FLAGS`. They
-are added instead by `cmake/cpp-core-check.cmake:40-42`, and that file is reached through
+are added instead by `cmake/cpp-core-check.cmake:47-49`, and that file is reached through
 `CMAKE_PROJECT_INCLUDE`. **`CMAKE_PROJECT_INCLUDE` is not among the variables CMake propagates into
 a try_compile project** - the list is explicit in CMake's own source, and the project's five
 `CMAKE_TRY_COMPILE_PLATFORM_VARIABLES` are the only project-specific entries in it. So:
 
-- the project's compiler **gate** (`cmake/cpp-core-check.cmake:12-37`) does not run inside a check
+- the project's compiler **gate** (`cmake/cpp-core-check.cmake:12-44`) does not run inside a check
   either - a check is not protected by the gate that protects the build;
 - **a reflection check must pass `-freflection` itself**, through `CMAKE_REQUIRED_FLAGS`. That is a
   real cost for the `REFL-` items and for `FMT-10`/`MAC-1`.
@@ -259,7 +259,7 @@ hand-write.
 
 **A new diagnostic, `CMD_NON_TARGET_DIRECTIVE`.** It fires on commands that affect the directory
 scope when a comparable target-specific command exists - and the project has exactly one:
-`add_compile_options()` in `cmake/cpp-core-check.cmake:40-42`, which adds the reflection flags for
+`add_compile_options()` in `cmake/cpp-core-check.cmake:47-49`, which adds the reflection flags for
 every target in the directory because they cannot go in `CMAKE_CXX_FLAGS`. The diagnostic is
 **controllable from the presets**, in `configurePresets.warnings` and `configurePresets.errors`
 (schema version 12 renamed `dev` to `author`; 4.5 added `nonTargetDirective` and `strict`). So the
@@ -479,7 +479,7 @@ re-measured in every build tree rather than remembered from a scratch file.
 2. **The reflection flags are the project's own gap.** They are outside `CMAKE_CXX_FLAGS` and
    outside the file a check runs, so every `REFL-` check carries `CMAKE_REQUIRED_FLAGS` by hand.
    That is a cost, and it is the price of the toolchain's (correct) decision at
-   `cmake/toolchains/cpp-core.cmake:76-80`.
+   `cmake/toolchains/cpp-core.cmake:94-98`.
 3. **The check is cached, and its answer can outlive its compiler.** `CMAKE_SYSTEM_ENVIRONMENT_ID`
    and `--fresh`, new in 4.5, are the answer; a check whose answer is load-bearing should be
    re-run when the environment changes.

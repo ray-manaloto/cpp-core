@@ -93,8 +93,8 @@ target_sources(
 target_include_directories(cpp-core-logging PUBLIC "${PROJECT_SOURCE_DIR}/include")
 ```
 
-`format.hpp` is a **PRIVATE** source (`modules/logging/CMakeLists.txt:19`), and the only published
-include directory is `include/` (`modules/logging/CMakeLists.txt:22`). The module's own directory
+`format.hpp` is a **PRIVATE** source (`modules/logging/CMakeLists.txt:14-16`), and the only published
+include directory is `include/` (`modules/logging/CMakeLists.txt:19`). The module's own directory
 is not on any include path for a consumer.
 
 And the module includes it in its **private implementation section** - after `export module`
@@ -238,7 +238,7 @@ what would detect a drift?
 
 **The evidence, before the research.**
 
-- `cmake/cpp-core-check.cmake:27-29` validates `p2996` with `_path MATCHES "p2996"` - **no version
+- `cmake/cpp-core-check.cmake:32-34` validates `p2996` with `_path MATCHES "p2996"` - **no version
   bound**. The `gcc16` and `clang23` branches do check a version range; `p2996` does not.
 - The compiler on `PATH` is `~/.local/share/p2996/current`, a **symlink between git snapshots**.
   The machine has at least two (`562409c...`, `f17c8d6...`); the symlink is repointed by
@@ -260,8 +260,8 @@ Every input the build depends on, and whether it is pinned:
 | What | Pinned to | Where | Pinned how well |
 |---|---|---|---|
 | the `gcc16` compiler | GCC 16.x | `cpp-core-check.cmake:17-19` | **a version range** (16 ≤ v < 17), not a build |
-| the `clang23` compiler | Clang 23.x | `:22-25` | **a version range** (23 ≤ v < 24), and explicitly *not* a p2996 path |
-| the `p2996` compiler | **nothing** | `:27-30` | **not pinned at all** - the path only has to contain the string `p2996` |
+| the `clang23` compiler | Clang 23.x | `:22-30` | **a version range** (23 ≤ v < 24), and explicitly *not* a p2996 path |
+| the `p2996` compiler | **nothing** | `:32-35` | **not pinned at all** - the path only has to contain the string `p2996` |
 | the p2996 *snapshot* | a commit | the install tool | **not in the repo** - the repo never names a commit |
 | the vcpkg registry | `245d37306671ea67d8f313081a81aae8079f8916` | `vcpkg.json:6` | **exactly** - a registry commit, which is the strongest form vcpkg offers |
 | the vcpkg *tool* | a build | the install tool | **not in the repo** - no file records the tool version |
@@ -284,10 +284,10 @@ the repository.
 The three compilers are not interchangeable, and a bump to each breaks something different.
 
 **A GCC bump (17.x) breaks the reflection flag.** The toolchain sets `-freflection` for `gcc16`
-(`cpp-core.cmake:39`) and `-freflection -fexpansion-statements -fannotation-attributes` for
-`p2996` (`:48`). GCC 16 refuses `-freflection` below `-std=c++26`, which is why the flags live in
+(`cpp-core.cmake:54`) and `-freflection -fexpansion-statements -fannotation-attributes` for
+`p2996` (`:63`). GCC 16 refuses `-freflection` below `-std=c++26`, which is why the flags live in
 `CPP_CORE_REFLECTION_FLAGS` and are applied only to this project's C++ compiles
-(`cpp-core-check.cmake:40-42`). A GCC 17 that renames or gates that flag differently would fail
+(`cpp-core-check.cmake:47-49`). A GCC 17 that renames or gates that flag differently would fail
 the *first* compile of the module, not a configure.
 
 **A p2996 bump breaks three things at once, and the check will not catch any of them.** The
@@ -314,7 +314,7 @@ non-gated in 4.5. The project sets **no** gate today - `grep` for
 So this is a constraint on option (c) in part 4, not on the build as it stands.
 
 **A libc++ bump breaks the hardening default.** The toolchain sets `_LIBCPP_HARDENING_MODE`
-explicitly (`cpp-core.cmake:117-129`), so the mode names matter, not the default. The installed
+explicitly (`cpp-core.cmake:138-156`), so the mode names matter, not the default. The installed
 libc++ 21 defines all four (`__config:123-126`): `NONE` (1 << 1), `FAST` (1 << 2),
 `EXTENSIVE` (1 << 4) and `DEBUG` (1 << 3) - and `__config_site:43` sets
 `_LIBCPP_HARDENING_MODE_DEFAULT 16`, which is `EXTENSIVE`. A future libc++ that renames or
@@ -370,7 +370,7 @@ overlay half.
 Three layers, cheapest first. **None of this is applied** - the build lane is parked - but the
 shapes are known and each is a small script or a one-line change.
 
-**Layer 1 - a version bound for `p2996`.** The check at `cpp-core-check.cmake:27-30` accepts any
+**Layer 1 - a version bound for `p2996`.** The check at `cpp-core-check.cmake:32-35` accepts any
 Clang whose path contains `p2996`. A bound is easy and catches gross changes:
 
 ```cmake
@@ -1301,7 +1301,7 @@ where `FMT_USE_CMAKE_MODULES` is TRUE only if CMake >= 3.28, `CMAKE_CXX_STANDARD
 not vendored here, so there is no line citation for it).
 
 **The project's own environment clears every one of those gates**: CMake 4.4.5, Ninja 1.13.2, GCC
-16.2.0, clang-p2996 21.0.0git, and `CMAKE_CXX_STANDARD 26` (`cmake/toolchains/cpp-core.cmake:70-72`).
+16.2.0, clang-p2996 21.0.0git, and `CMAKE_CXX_STANDARD 26` (`cmake/toolchains/cpp-core.cmake:88-90`).
 
 **But the vcpkg port at the pinned baseline does not build it.** The baseline's `ports/fmt`
 portfile passes only three options - `-DFMT_CMAKE_DIR`, `-DFMT_TEST=OFF`, `-DFMT_DOC=OFF` - and
@@ -1496,9 +1496,9 @@ library, the headers and the target - and the consumer's `import com.rsm.logging
 
 | # | The obstacle | Why it matters |
 |---|---|---|
-| **A** | **`format.hpp` is a textual dependency of the module's interface unit, but it is a `PRIVATE` source** | `logging.cppm:33` does `#include "format.hpp"` **in the module's purview**, and `modules/logging/CMakeLists.txt:19` lists `format.hpp` under `PRIVATE`. A consumer that rebuilds the module from source **needs that file installed and on the include path**. So the module's *private* implementation is a **public build-time dependency** of the installed module - and `PRIVATE` says it is not |
+| **A** | **`format.hpp` is a textual dependency of the module's interface unit, but it is a `PRIVATE` source** | `logging.cppm:33` does `#include "format.hpp"` **in the module's purview**, and `modules/logging/CMakeLists.txt:14-16` lists `format.hpp` under `PRIVATE`. A consumer that rebuilds the module from source **needs that file installed and on the include path**. So the module's *private* implementation is a **public build-time dependency** of the installed module - and `PRIVATE` says it is not |
 | **B** | **`internal.hpp` is in the global module fragment** | `logging.cppm:28` does `#include <cpp-core/logging/internal.hpp>` before `export module`. It is also a textual dependency. It lives under `include/cpp-core/logging/` and is published by `target_include_directories(... PUBLIC ...)`, but it is **not in a file set**, so an install would have to add it as one |
-| **C** | **the target's public link closure** | `modules/logging/CMakeLists.txt:23` links `PUBLIC intel::cib quill::quill`. The exported config must `find_dependency(intel-cib)` and `find_dependency(quill)` - so the **consumer** must have those ports, at the same triplet, with the same `intel-cib` **overlay** port. Publishing the module publishes the whole dependency closure |
+| **C** | **the target's public link closure** | `modules/logging/CMakeLists.txt:20` links `PUBLIC intel::cib quill::quill`. The exported config must `find_dependency(intel-cib)` and `find_dependency(quill)` - so the **consumer** must have those ports, at the same triplet, with the same `intel-cib` **overlay** port. Publishing the module publishes the whole dependency closure |
 | **D** | **the catalog is separable - good** | `cpp-core-catalog` is a separate target, and the test executable links it explicitly (`tests/CMakeLists.txt:12`), so the module's consumers would not be forced to carry the string catalog |
 | **E** | **a BMI is compiler- and flag-specific** | `CXX_MODULES_BMI` would install a prebuilt module interface - but the BMI embeds the `-std=c++26 -freflection` flags and the module mapper, so the consumer's flags have to match. **CMake's default is source-based** (the consumer rebuilds the module), which is the right choice here, and it is what makes obstacles A and B load-bearing |
 

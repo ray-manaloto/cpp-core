@@ -120,7 +120,7 @@ are exactly right:
 |---|---|
 | **the module's API is `setup`, `flush`, `set_level`, `current_level`, `log_raw`, `log` and the six level shortcuts** | `logging.cppm:85-151` - the list matches, in that order, with nothing missing |
 | **the `format_string<>` constructor is `consteval` and takes the location as defaulted parameters** | `logging.cppm:66-69` - the README quotes the signature verbatim, and it is verbatim |
-| **the IWYU scope table** | `cmake/iwyu.cmake:39-64` - the three checked sources and the three skipped ones, with the same reasons, in the same order |
+| **the IWYU scope table** | `cmake/iwyu.cmake:39-67` - the three checked sources and the three skipped ones, with the same reasons, in the same order |
 
 The preset table, the sanitizer options (`detect_leaks=1` with `cmake/lsan.supp` for
 `p2996-asan`, `detect_leaks=0` for `gcc16-asan`), the hardening rules, the compiler check, the

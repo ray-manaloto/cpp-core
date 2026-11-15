@@ -11,12 +11,9 @@ add_library(cpp-core::logging ALIAS cpp-core-logging)
 target_compile_features(cpp-core-logging PUBLIC cxx_std_26)
 
 target_sources(
-    cpp-core-logging
-    PUBLIC
-        FILE_SET CXX_MODULES FILES logging.cppm
-    PRIVATE
-        ${PROJECT_SOURCE_DIR}/src/logging/quill_logger.cpp
-        format.hpp
+  cpp-core-logging
+  PUBLIC FILE_SET CXX_MODULES FILES logging.cppm
+  PRIVATE ${PROJECT_SOURCE_DIR}/src/logging/quill_logger.cpp format.hpp
 )
 
 target_include_directories(cpp-core-logging PUBLIC "${PROJECT_SOURCE_DIR}/include")

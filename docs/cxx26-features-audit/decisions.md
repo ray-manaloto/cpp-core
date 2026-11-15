@@ -304,7 +304,7 @@ answer as a cache variable. About 20 of the 30 are that shape. But:
 - a check **cannot import `com.rsm.logging;`** - the module does not exist at configure time, so
   `MOD-10`, `FMT-4` and `REFL-4` are outside its reach (`FMT-15` reached the same conclusion);
 - the project's **reflection flags do not reach a check**, because they are a directory-scope
-  `add_compile_options()` in `cmake/cpp-core-check.cmake:40-42` and `CMAKE_PROJECT_INCLUDE` is not
+  `add_compile_options()` in `cmake/cpp-core-check.cmake:47-49` and `CMAKE_PROJECT_INCLUDE` is not
   propagated into a try_compile project - so a `REFL-` check must pass `-freflection` itself;
 - a check's answer is **cached for the life of the build tree**, so it can outlive the compiler it
   was measured on.

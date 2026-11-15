@@ -13,7 +13,13 @@ set(VCPKG_LIBRARY_LINKAGE static)
 set(VCPKG_CMAKE_SYSTEM_NAME Darwin)
 set(VCPKG_OSX_ARCHITECTURES arm64)
 set(VCPKG_CHAINLOAD_TOOLCHAIN_FILE "${CMAKE_CURRENT_LIST_DIR}/../cmake/toolchains/cpp-core.cmake")
-set(VCPKG_CMAKE_CONFIGURE_OPTIONS -DCPP_CORE_COMPILER=gcc16 -DCPP_CORE_SANITIZER=none -DCPP_CORE_HARDENING=none -DCPP_CORE_PORT_BUILD=ON)
+set(
+  VCPKG_CMAKE_CONFIGURE_OPTIONS
+  -DCPP_CORE_COMPILER=gcc16
+  -DCPP_CORE_SANITIZER=none
+  -DCPP_CORE_HARDENING=none
+  -DCPP_CORE_PORT_BUILD=ON
+)
 # Compilers chosen outside PATH (see the toolchain); passed through and part of the port hash.
 set(VCPKG_ENV_PASSTHROUGH CPP_CORE_CXX CPP_CORE_CC)
 # Rebuild every port when the toolchain file changes.

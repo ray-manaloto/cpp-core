@@ -21,16 +21,31 @@ include_guard(GLOBAL)
 
 set(CPP_CORE_COMPILER "gcc16" CACHE STRING "Compiler: gcc16, clang23 or p2996")
 set(CPP_CORE_SANITIZER "none" CACHE STRING "Sanitizer: none, asan or tsan")
-set(CPP_CORE_HARDENING "none" CACHE STRING "Standard library hardening: none, fast, extensive or debug")
+set(
+  CPP_CORE_HARDENING
+  "none"
+  CACHE STRING
+  "Standard library hardening: none, fast, extensive or debug"
+)
 set_property(CACHE CPP_CORE_COMPILER PROPERTY STRINGS gcc16 clang23 p2996)
 set_property(CACHE CPP_CORE_SANITIZER PROPERTY STRINGS none asan tsan)
-set_property(CACHE CPP_CORE_HARDENING PROPERTY STRINGS none fast extensive debug)
+set_property(
+  CACHE CPP_CORE_HARDENING
+  PROPERTY STRINGS none fast extensive debug
+)
 
 # try_compile projects re-read this file; pass the choices through to them.
-list(APPEND CMAKE_TRY_COMPILE_PLATFORM_VARIABLES CPP_CORE_COMPILER CPP_CORE_SANITIZER CPP_CORE_HARDENING CPP_CORE_PORT_BUILD CPP_CORE_EXTRA_CXX_FLAGS)
+list(
+  APPEND CMAKE_TRY_COMPILE_PLATFORM_VARIABLES
+  CPP_CORE_COMPILER
+  CPP_CORE_SANITIZER
+  CPP_CORE_HARDENING
+  CPP_CORE_PORT_BUILD
+  CPP_CORE_EXTRA_CXX_FLAGS
+)
 
-set(_cpp_core_flags "")        # C and C++
-set(_cpp_core_cxx_only "")     # C++ only
+set(_cpp_core_flags "") # C and C++
+set(_cpp_core_cxx_only "") # C++ only
 set(_cpp_core_link "")
 set(_cpp_core_reflection "")
 if(CPP_CORE_COMPILER STREQUAL "gcc16")
@@ -48,7 +63,10 @@ elseif(CPP_CORE_COMPILER STREQUAL "p2996")
   set(_cpp_core_reflection -freflection -fexpansion-statements -fannotation-attributes)
   set(_cpp_core_libcxx ON)
 else()
-  message(FATAL_ERROR "CPP_CORE_COMPILER must be gcc16, clang23 or p2996, not '${CPP_CORE_COMPILER}'")
+  message(
+    FATAL_ERROR
+    "CPP_CORE_COMPILER must be gcc16, clang23 or p2996, not '${CPP_CORE_COMPILER}'"
+  )
 endif()
 
 if(DEFINED ENV{CPP_CORE_CXX} AND NOT "$ENV{CPP_CORE_CXX}" STREQUAL "")
@@ -101,7 +119,10 @@ if(CPP_CORE_PORT_BUILD AND DEFINED VCPKG_TARGET_ARCHITECTURE)
       set(CMAKE_SYSTEM_PROCESSOR aarch64 CACHE STRING "")
     endif()
   endif()
-  if(CMAKE_SYSTEM_NAME STREQUAL CMAKE_HOST_SYSTEM_NAME AND CMAKE_SYSTEM_PROCESSOR STREQUAL CMAKE_HOST_SYSTEM_PROCESSOR)
+  if(
+    CMAKE_SYSTEM_NAME STREQUAL CMAKE_HOST_SYSTEM_NAME
+    AND CMAKE_SYSTEM_PROCESSOR STREQUAL CMAKE_HOST_SYSTEM_PROCESSOR
+  )
     set(CMAKE_CROSSCOMPILING OFF CACHE BOOL "")
   endif()
   if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
@@ -121,16 +142,27 @@ if(CPP_CORE_HARDENING STREQUAL "none")
 elseif(CPP_CORE_HARDENING MATCHES "^(fast|extensive|debug)$")
   if(_cpp_core_libcxx)
     string(TOUPPER "${CPP_CORE_HARDENING}" _cpp_core_mode)
-    list(APPEND _cpp_core_cxx_only -D_LIBCPP_HARDENING_MODE=_LIBCPP_HARDENING_MODE_${_cpp_core_mode})
+    list(
+      APPEND _cpp_core_cxx_only
+      -D_LIBCPP_HARDENING_MODE=_LIBCPP_HARDENING_MODE_${_cpp_core_mode}
+    )
   else()
     list(APPEND _cpp_core_cxx_only -D_GLIBCXX_ASSERTIONS)
   endif()
 else()
-  message(FATAL_ERROR "CPP_CORE_HARDENING must be none, fast, extensive or debug, not '${CPP_CORE_HARDENING}'")
+  message(
+    FATAL_ERROR
+    "CPP_CORE_HARDENING must be none, fast, extensive or debug, not '${CPP_CORE_HARDENING}'"
+  )
 endif()
 
 if(CPP_CORE_SANITIZER STREQUAL "asan")
-  list(APPEND _cpp_core_flags -fsanitize=address,undefined -fno-omit-frame-pointer -fno-sanitize-recover=undefined)
+  list(
+    APPEND _cpp_core_flags
+    -fsanitize=address,undefined
+    -fno-omit-frame-pointer
+    -fno-sanitize-recover=undefined
+  )
   list(APPEND _cpp_core_link -fsanitize=address,undefined)
   # Third-party C ports call functions through mismatched pointer types on purpose; clang's
   # -fsanitize=function aborts on that. Our own code keeps it.
@@ -146,7 +178,10 @@ if(CPP_CORE_SANITIZER STREQUAL "asan")
 elseif(CPP_CORE_SANITIZER STREQUAL "tsan")
   # GCC's TSan runtime exists on Linux, not on macOS.
   if(CPP_CORE_COMPILER STREQUAL "gcc16" AND CMAKE_HOST_APPLE)
-    message(FATAL_ERROR "GCC 16 on macOS has no ThreadSanitizer runtime (___tsan_* undefined at link); use p2996")
+    message(
+      FATAL_ERROR
+      "GCC 16 on macOS has no ThreadSanitizer runtime (___tsan_* undefined at link); use p2996"
+    )
   endif()
   list(APPEND _cpp_core_flags -fsanitize=thread -fno-omit-frame-pointer)
   list(APPEND _cpp_core_link -fsanitize=thread)

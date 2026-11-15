@@ -16,9 +16,9 @@ find_program(CPP_CORE_IWYU_EXECUTABLE NAMES include-what-you-use)
 
 if(NOT CPP_CORE_IWYU_EXECUTABLE)
   message(
-      FATAL_ERROR
-        "include-what-you-use was not found. Install it (brew install include-what-you-use), or "
-        "turn the check off (CPP_CORE_IWYU_ENABLED=OFF)."
+    FATAL_ERROR
+    "include-what-you-use was not found. Install it (brew install include-what-you-use), or "
+    "turn the check off (CPP_CORE_IWYU_ENABLED=OFF)."
   )
 endif()
 
@@ -36,10 +36,11 @@ set(
 )
 
 # The translation units that are checked.
-set(CPP_CORE_IWYU_SOURCES
-    "${PROJECT_SOURCE_DIR}/modules/logging/logging.cppm"
-    "${PROJECT_SOURCE_DIR}/src/app.cpp"
-    "${PROJECT_SOURCE_DIR}/src/logging/quill_logger.cpp"
+set(
+  CPP_CORE_IWYU_SOURCES
+  "${PROJECT_SOURCE_DIR}/modules/logging/logging.cppm"
+  "${PROJECT_SOURCE_DIR}/src/app.cpp"
+  "${PROJECT_SOURCE_DIR}/src/logging/quill_logger.cpp"
 )
 
 # The translation units that are not checked, and why. These are limitations of the tool, not
@@ -51,16 +52,18 @@ set(CPP_CORE_IWYU_SOURCES
 #   nothing but the import and the names of the logging functions.
 # - The reflection demo needs the reflection header (<meta>), which is not part of the standard
 #   library that IWYU's compiler (Homebrew's clang) uses yet.
-set(CPP_CORE_IWYU_SKIPPED_SOURCES
-    "${PROJECT_SOURCE_DIR}/src/main.cpp"
-    "${PROJECT_SOURCE_DIR}/src/reflection_demo.cpp"
-    "${PROJECT_SOURCE_DIR}/tests/logging_test.cpp"
+set(
+  CPP_CORE_IWYU_SKIPPED_SOURCES
+  "${PROJECT_SOURCE_DIR}/src/main.cpp"
+  "${PROJECT_SOURCE_DIR}/src/reflection_demo.cpp"
+  "${PROJECT_SOURCE_DIR}/tests/logging_test.cpp"
 )
 
-set(CPP_CORE_IWYU_SKIP_REASONS
-    "IWYU crashes on a module import"
-    "<meta> is not in IWYU's standard library"
-    "IWYU crashes on a module import"
+set(
+  CPP_CORE_IWYU_SKIP_REASONS
+  "IWYU crashes on a module import"
+  "<meta> is not in IWYU's standard library"
+  "IWYU crashes on a module import"
 )
 
 list(LENGTH CPP_CORE_IWYU_SKIPPED_SOURCES skipped_count)
