@@ -127,8 +127,37 @@ hooks {
             ".github/actions/**/action.yaml",
           )
       }
-      // ["typos"] = (Builtins.typos) { ... }
-      // DISABLED: typos config issues; re-enable after .typos.toml is fixed
+      ["typos"] = (Builtins.typos) {
+        glob =
+          List(
+            "**/*.md",
+            "**/*.markdown",
+            "**/*.txt",
+            "**/*.rst",
+            "**/*.adoc",
+            "**/*.cpp",
+            "**/*.hpp",
+            "**/*.c",
+            "**/*.h",
+            "**/*.cmake",
+            "**/*.py",
+            "**/*.sh",
+            "**/*.toml",
+            "**/*.yaml",
+            "**/*.yml",
+            "**/*.json",
+          )
+        exclude =
+          List(
+            "**/docs/**",
+            "**/ports/**",
+            "**/upstream/**",
+            "**/repro/**",
+            "**/.mise/**",
+            "**/.opencode/**",
+            "**/build/**",
+          )
+      }
       ["tombi"] = (Builtins.tombi) {
         glob = List("**/*.toml")
         exclude = List("**/.mise/locks/**", ".typos.toml")
@@ -342,8 +371,37 @@ hooks {
             ".github/actions/**/action.yaml",
           )
       }
-      // ["typos"] = (Builtins.typos) { ... }
-      // DISABLED: typos config issues; re-enable after .typos.toml is fixed
+      ["typos"] = (Builtins.typos) {
+        glob =
+          List(
+            "**/*.md",
+            "**/*.markdown",
+            "**/*.txt",
+            "**/*.rst",
+            "**/*.adoc",
+            "**/*.cpp",
+            "**/*.hpp",
+            "**/*.c",
+            "**/*.h",
+            "**/*.cmake",
+            "**/*.py",
+            "**/*.sh",
+            "**/*.toml",
+            "**/*.yaml",
+            "**/*.yml",
+            "**/*.json",
+          )
+        exclude =
+          List(
+            "**/docs/**",
+            "**/ports/**",
+            "**/upstream/**",
+            "**/repro/**",
+            "**/.mise/**",
+            "**/.opencode/**",
+            "**/build/**",
+          )
+      }
       ["tombi"] = (Builtins.tombi) {
         glob = List("**/*.toml")
         exclude = List("**/.mise/locks/**", ".typos.toml")
@@ -546,8 +604,37 @@ hooks {
             ".github/actions/**/action.yaml",
           )
       }
-      // ["typos"] = (Builtins.typos) { ... }
-      // DISABLED: typos config issues; re-enable after .typos.toml is fixed
+      ["typos"] = (Builtins.typos) {
+        glob =
+          List(
+            "**/*.md",
+            "**/*.markdown",
+            "**/*.txt",
+            "**/*.rst",
+            "**/*.adoc",
+            "**/*.cpp",
+            "**/*.hpp",
+            "**/*.c",
+            "**/*.h",
+            "**/*.cmake",
+            "**/*.py",
+            "**/*.sh",
+            "**/*.toml",
+            "**/*.yaml",
+            "**/*.yml",
+            "**/*.json",
+          )
+        exclude =
+          List(
+            "**/docs/**",
+            "**/ports/**",
+            "**/upstream/**",
+            "**/repro/**",
+            "**/.mise/**",
+            "**/.opencode/**",
+            "**/build/**",
+          )
+      }
       ["tombi"] = (Builtins.tombi) {
         glob = List("**/*.toml")
         exclude = List("**/.mise/locks/**", ".typos.toml")

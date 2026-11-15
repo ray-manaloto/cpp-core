@@ -2,8 +2,8 @@
 # typos configuration for cpp-core
 # https://github.com/crate-ci/typos
 
-[default]
-exclude = [
+[files]
+extend-exclude = [
   "docs/**",
   "ports/**",
   "upstream/**",
@@ -13,106 +13,103 @@ exclude = [
   "build/**",
 ]
 
-extend-words = [
-  "cpp-core",
-  "ray-manaloto",
-  "okf-bundles",
-  "asan-leak-check",
-  "module-source-location",
-  "cpp26",
-  "cmake-format",
-  "mise",
-  "hk",
-  "lychee",
-  "typos",
-  "tombi",
-  "rumdl",
-  "cpplint",
-  "clang-format",
-  "editorconfig",
-  "vcpkg",
-  "quill",
-  "intel",
-  "cib",
-  "fmt",
-  "stdx",
-  "ut",
-  "gcc",
-  "clang",
-  "libstdc++",
-  "libc++",
-  "cmake",
-  "gitleaks",
-  "trufflehog",
-  "osv-scanner",
-  "pinact",
-  "jactionlint",
-  "zizmor",
-  "checker",
-  "hooks",
-  "pre-commit",
-  "pre-push",
-  "commit-msg",
-  "toml",
-  "yaml",
-  "json",
-  "markdown",
-  "rust",
-  "cargo",
-  "pkl",
-  "ninja",
-  "ninja-build",
-  "sanitizer",
-  "asan",
-  "tsan",
-  "iwyu",
-  "cpp26",
-  "c++26",
-  "p2996",
-  "reflection",
-  "meta",
-  "stdx",
-  "intel-cib",
-  "spdlog",
-  "boost",
-  "mp11",
-  "conan",
-  "meson",
-  "pkg-config",
-  "ccache",
-  "sccache",
-  "distcc",
-  "icecc",
-  "countr",
-  "countr_zero",
-  "countl_zero",
-  "popcount",
-  "rotl",
-  "rotr",
-  "has_single_bit",
-  "bit_cast",
-  "byteswap",
-  "endian",
-  "endianness",
-  "reflection_demo",
-  "logging",
-  "quill",
-  "spdlog",
-  "patternformatter",
-  "pattern_formatter",
-  "frontend",
-  "backend",
-  "workaround",
-  "workarounds",
-  "precommit",
-  "prepush",
-  "commitmsg",
-  "check-clean-workspace",
-  "check-clean",
-  "workspace",
-  "dirty",
-  "clean",
-  "git",
-  "status",
-  "porcelain",
-]
+[default.extend-words]
+"cpp-core" = "cpp-core"
+"ray-manaloto" = "ray-manaloto"
+"okf-bundles" = "okf-bundles"
+"asan-leak-check" = "asan-leak-check"
+"module-source-location" = "module-source-location"
+"cpp26" = "cpp26"
+"cmake-format" = "cmake-format"
+"mise" = "mise"
+"hk" = "hk"
+"lychee" = "lychee"
+"typos" = "typos"
+"tombi" = "tombi"
+"rumdl" = "rumdl"
+"cpplint" = "cpplint"
+"clang-format" = "clang-format"
+"editorconfig" = "editorconfig"
+"vcpkg" = "vcpkg"
+"quill" = "quill"
+"intel" = "intel"
+"cib" = "cib"
+"fmt" = "fmt"
+"stdx" = "stdx"
+"ut" = "ut"
+"gcc" = "gcc"
+"clang" = "clang"
+"libstdc++" = "libstdc++"
+"libc++" = "libc++"
+"cmake" = "cmake"
+"gitleaks" = "gitleaks"
+"trufflehog" = "trufflehog"
+"osv-scanner" = "osv-scanner"
+"pinact" = "pinact"
+"jactionlint" = "jactionlint"
+"zizmor" = "zizmor"
+"checker" = "checker"
+"hooks" = "hooks"
+"pre-commit" = "pre-commit"
+"pre-push" = "pre-push"
+"commit-msg" = "commit-msg"
+"toml" = "toml"
+"yaml" = "yaml"
+"json" = "json"
+"markdown" = "markdown"
+"rust" = "rust"
+"cargo" = "cargo"
+"pkl" = "pkl"
+"ninja" = "ninja"
+"ninja-build" = "ninja-build"
+"sanitizer" = "sanitizer"
+"asan" = "asan"
+"tsan" = "tsan"
+"iwyu" = "iwyu"
+"c++26" = "c++26"
+"p2996" = "p2996"
+"reflection" = "reflection"
+"meta" = "meta"
+"intel-cib" = "intel-cib"
+"spdlog" = "spdlog"
+"boost" = "boost"
+"mp11" = "mp11"
+"conan" = "conan"
+"meson" = "meson"
+"pkg-config" = "pkg-config"
+"ccache" = "ccache"
+"sccache" = "sccache"
+"distcc" = "distcc"
+"icecc" = "icecc"
+"countr" = "countr"
+"countr_zero" = "countr_zero"
+"countl_zero" = "countl_zero"
+"popcount" = "popcount"
+"rotl" = "rotl"
+"rotr" = "rotr"
+"has_single_bit" = "has_single_bit"
+"bit_cast" = "bit_cast"
+"byteswap" = "byteswap"
+"endian" = "endian"
+"endianness" = "endianness"
+"reflection_demo" = "reflection_demo"
+"logging" = "logging"
+"patternformatter" = "patternformatter"
+"pattern_formatter" = "pattern_formatter"
+"frontend" = "frontend"
+"backend" = "backend"
+"workaround" = "workaround"
+"workarounds" = "workarounds"
+"precommit" = "precommit"
+"prepush" = "prepush"
+"commitmsg" = "commitmsg"
+"check-clean-workspace" = "check-clean-workspace"
+"check-clean" = "check-clean"
+"workspace" = "workspace"
+"dirty" = "dirty"
+"clean" = "clean"
+"git" = "git"
+"status" = "status"
+"porcelain" = "porcelain"
+"ba" = "ba"
+"61ba2da" = "61ba2da"
