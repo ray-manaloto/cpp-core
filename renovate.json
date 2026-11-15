@@ -5,7 +5,7 @@
   "lockFileMaintenance": { "automerge": false },
   "packageRules": [
     {
-      "description": "CI here is advisory, not a merge gate, so every update waits for the local checks and the owner's merge.",
+      "description": "CI here is advisory, not a merge gate, so every update waits for the local checks, the Codex review and a manual merge.",
       "matchPackageNames": ["*"],
       "automerge": false
     }

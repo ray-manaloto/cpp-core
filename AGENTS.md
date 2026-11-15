@@ -54,7 +54,7 @@ and it is deliberately conservative about what enters the module interface.
 - **Tools:** cpp-core pins every tool its hk steps run in `.mise.toml` and commits `mise.lock`,
   which records what the checks ran with (the owner's ruling of 2026-11-15). Renovate, with the
   `risu729/renovate-config` preset in `renovate.json`, opens the update PRs and updates `mise.lock`
-  with them. No update merges itself: `renovate.json` turns automerge off, because CI on this repository is advisory, not a merge gate, and the owner merges each update PR. To update by hand:
+  with them. No update merges itself: `renovate.json` turns automerge off, because CI on this repository is advisory, not a merge gate, and no update PR merges on CI alone: an agent checks it out in its own worktree, runs `hk check --all` there and has the Codex reviewer approve it, then merges it as Shipping describes. To update by hand:
   `mise run tools:outdated`, edit the version, `mise lock`,
   `mise run tools:lock-check`, then `mise run tools:lock-verify` (slow; installs from the lock into
   an empty directory). Never run `mise upgrade`. Keep `lockfile_mode = "merge"`: the trial
@@ -68,7 +68,7 @@ and it is deliberately conservative about what enters the module interface.
 
 - **Shipping:** The remote is `github.com/ray-manaloto/cpp-core`, a public repository. Every change
   is a pull request: a branch in its own worktree, one commit or more, opened with `repotools
-  pr-create --title <title> --body-file <body file>`. Run `hk check --all` in the worktree before you ask for the merge, and report its result in the pull request. The owner approves each merge with "merge #N"; then merge with `gh pr merge N --merge --match-head-commit <head sha> --author-email "$(git config user.email)"`. This repository's local `user.email` is the merging account's `users.noreply.github.com` address; check it before the first commit or merge from a new clone. Without `--author-email`, GitHub credits the merge commit to the account's personal email, and this history is public: the merge commits of #1 to #4 carry it, and the owner chose to leave them as they are. Never push to `main`.
+  pr-create --title <title> --body-file <body file>`. Run `hk check --all` in the worktree on the head commit and report its result in the pull request. The agent that opened the pull request (for a Renovate update, the agent that checked it out) merges it itself, with no separate approval from the owner, once `hk check --all` passes on the head commit, the Codex reviewer has approved that commit and the pull request text, and the advisory CI run has been looked at. Merge with `gh pr merge N --merge --match-head-commit <head sha> --author-email "$(git config user.email)"`. This repository's local `user.email` is the merging account's `users.noreply.github.com` address; check it before the first commit or merge from a new clone. Without `--author-email`, GitHub credits the merge commit to the account's personal email, and this history is public: the merge commits of #1 to #4 carry it, and the owner chose to leave them as they are. Never push to `main`. The owner still decides deleting the repository, rewriting or force-pushing `main`, changing its visibility, and removing a protection.
 
 - **Research:** The notes live in [Audit Bundle](./okf-bundles/audit/index.md). The open items are in
   [open-items.md](./okf-bundles/audit/open-items.md); the owner's decisions are in
