@@ -18,9 +18,10 @@
 min_version = "2026.10.9"
 
 # Every tool an hk step runs on this repository, pinned at its latest version and locked in
-# mise.lock, which is the record of what the checks were run with. There is no remote, so no
-# Renovate: `mise run tools:outdated` shows what is stale. Bump a version here by hand, then run
-# `mise lock`, `mise run tools:lock-check` and `mise install --locked` (never `mise upgrade`).
+# mise.lock, which is the record of what the checks were run with. Renovate (renovate.json) opens
+# the update PRs. To bump one by hand, `mise run tools:outdated` shows what is stale; edit the
+# version here, then run `mise lock`, `mise run tools:lock-check` and `mise install --locked`
+# (never `mise upgrade`).
 # Secret scanning is betterleaks (patterns; gitleaks' successor) plus kingfisher (validated
 # findings); gitleaks and trufflehog would only duplicate them.
 [tools]
