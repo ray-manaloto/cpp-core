@@ -2,12 +2,13 @@ name: ci
 
 # The checks run here are the same ones the hk hooks run locally. The checking jobs run in an
 # ubuntu:26.10 container pinned by digest, because GitHub's hosted runners stop at 26.04.
-# Keep this workflow disabled (`gh workflow disable ci.yml`): the owner ruled on 2026-11-15 that cpp-core
-# uses no paid services, so no CI gates a merge; the gate is a local `hk check --all` plus the
-# Codex reviewer's approval. The file stays for when Actions runs again. When it runs, a pull
-# request that changes only Markdown skips the `hk` job, and the `audit` job, which checks the
-# Markdown itself, still runs. To make a check required, make it `ci`: a job skipped by its `if`
-# reports success, so `ci` is the job that fails when another job fails or is cancelled.
+# This workflow is advisory. The owner ruled on 2026-11-15 that cpp-core uses no paid services
+# and that no CI check gates a merge: the gate is a local `hk check --all` plus the Codex
+# reviewer's approval. Actions costs nothing on this public repository, so the workflow runs and
+# reports, but `ci` is not a required check. A pull request that changes only Markdown skips the
+# `hk` job, and the `audit` job, which checks the Markdown itself, still runs. If a check is
+# ever made required, make it `ci`: a job skipped by its `if` reports success, so `ci` is the job
+# that fails when another job fails or is cancelled.
 
 on:
   pull_request:

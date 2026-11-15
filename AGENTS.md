@@ -49,12 +49,12 @@ and it is deliberately conservative about what enters the module interface.
 - **Check:** `mise run audit:verify` runs every check that does not need a compiler: the audit's
   item counts, duplicate and dangling IDs, the decisions sheet against the open list, the counts
   the prose claims, Markdown table shape, fence balance, relative links, the parts tables, the
-  privacy scan, the vendored upstream copies, and the citation anchor. It is fast, needs only Python, and must pass before each commit. The hk `audit-verify` step runs it in check, fix, pre-commit and pre-push, so `git commit` enforces it. No CI gates a merge: the owner ruled on 2026-11-15 that cpp-core uses no paid services, and GitHub Actions does not run for this account. `.github/workflows/ci.yml` stays for when Actions runs again; keep it disabled (`gh workflow disable ci.yml`) so it posts no failed runs. The gate is local: `hk check --all` in the worktree and the Codex reviewer's approval.
+  privacy scan, the vendored upstream copies, and the citation anchor. It is fast, needs only Python, and must pass before each commit. The hk `audit-verify` step runs it in check, fix, pre-commit and pre-push, so `git commit` enforces it. No CI check gates a merge: the owner ruled on 2026-11-15 that cpp-core uses no paid services. `.github/workflows/ci.yml` runs on GitHub Actions, which is free on this public repository, as an advisory check; `ci` is not a required check, so a red run reports a problem but blocks nothing. The gate is local: `hk check --all` in the worktree and the Codex reviewer's approval.
 
 - **Tools:** cpp-core pins every tool its hk steps run in `.mise.toml` and commits `mise.lock`,
   which records what the checks ran with (the owner's ruling of 2026-11-15). Renovate, with the
   `risu729/renovate-config` preset in `renovate.json`, opens the update PRs and updates `mise.lock`
-  with them. No update merges itself: `renovate.json` turns automerge off, because no CI runs on this repository, and the owner merges each update PR. To update by hand:
+  with them. No update merges itself: `renovate.json` turns automerge off, because CI on this repository is advisory, not a merge gate, and the owner merges each update PR. To update by hand:
   `mise run tools:outdated`, edit the version, `mise lock`,
   `mise run tools:lock-check`, then `mise run tools:lock-verify` (slow; installs from the lock into
   an empty directory). Never run `mise upgrade`. Keep `lockfile_mode = "merge"`: the trial
