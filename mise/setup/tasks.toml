@@ -17,31 +17,14 @@ run = "hk run pre-commit"
 description = "Validate commit message"
 run = "hk run commit-msg"
 
-# Setup task: install all tools via mise
+# cpp-core pins no tools: every tool hk runs comes from the user's global mise config, which the
+# dotfiles repository manages. This installs what that config lists.
+# Never `mise use` here: that writes a pin into this repository's .mise.toml.
 [setup_tools]
-description = "Install all hk/mise tools via mise"
+description = "Install the tools the global mise config lists, then validate hk.pkl"
 run = """
-mise use yamlfmt yamllint
-mise use rumdl
-mise use shfmt shellcheck
-mise use ruff ty
-mise use taplo
-mise use prettier
-mise use yamlfmt yamllint
-mise use rumdl
-mise use shfmt shellcheck
-mise use ruff ty
-mise use taplo
-mise use prettier
-mise use yamlfmt yamllint
-mise use rumdl
-mise use shfmt shellcheck
-mise use ruff ty
-mise use taplo
-mise use prettier
-mise use clang-format
-mise use pipx:cpplint
-mise use pipx:cmakelang
+mise install
+hk validate
 """
 
 [setup_all]

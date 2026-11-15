@@ -5,12 +5,8 @@ description = "Lint C++ files with cpplint"
 run = "hk check --step cpp-lint --all"
 
 [lint_toml]
-description = "Lint TOML files with taplo"
-run = "hk check --step taplo --all"
-
-[lint_yaml]
-description = "Lint YAML files with yamllint"
-run = "hk check --step yamllint --all"
+description = "Lint TOML files with tombi"
+run = "hk check --step tombi --all"
 
 [lint_md]
 description = "Lint Markdown files with rumdl"

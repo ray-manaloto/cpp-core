@@ -9,20 +9,16 @@ description = "Format C++ files with clang-format"
 run = "hk fix --step clang-format --all"
 
 [fmt_cmake]
-description = "Format CMake files with cmake-format"
-run = "hk fix --step cmake-format --all"
+description = "Format CMake files with gersemi"
+run = "hk fix --step gersemi --all"
 
 [fmt_toml]
-description = "Format TOML files with taplo"
-run = "hk fix --step taplo-format --all"
+description = "Format TOML files with tombi"
+run = "hk fix --step tombi-format --all"
 
 [fmt_json]
 description = "Format JSON files with prettier"
 run = "hk fix --step prettier --all"
-
-[fmt_yaml]
-description = "Format YAML files with yamlfmt"
-run = "hk fix --step yamlfmt --all"
 
 [fmt_md]
 description = "Format Markdown files with rumdl"

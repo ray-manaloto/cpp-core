@@ -10,8 +10,8 @@ run = "mise doctor && mise doctor project --verbose"
 
 # hk doctor (via mise)
 [hk_doctor]
-description = "Run hk doctor to check tool availability"
-run = "hk doctor"
+description = "Validate hk.pkl and list the steps hk check would run (hk has no doctor command)"
+run = "hk validate && hk check --all --plan"
 
 # Project diagnostics via mise doctor
 [diag_project]

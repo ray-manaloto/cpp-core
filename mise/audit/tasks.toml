@@ -78,7 +78,7 @@ run = "python3 scripts/check_overlay_drift.py --network"
 # Parallel audit checks - run independent verification in parallel
 [audit_checks]
 description = "Run all audit verification checks in parallel"
-run = "mise run verify test metrics acceptance"
+run = "mise run verify ::: audit_test ::: audit_metrics ::: audit_acceptance"
 
 # Full audit pipeline - index first, then parallel checks
 [audit]
@@ -101,4 +101,4 @@ run = "python3 scripts/audit_index.py --write"
 
 [checks]
 description = "Run all audit verification checks in parallel"
-run = "mise run verify test metrics acceptance"
+run = "mise run verify ::: audit_test ::: audit_metrics ::: audit_acceptance"
