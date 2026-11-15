@@ -52,8 +52,10 @@ and it is deliberately conservative about what enters the module interface.
   privacy scan, the vendored upstream copies, and the citation anchor. It is fast, needs only Python, and must pass before each commit. The hk `audit-verify` step runs it in check, fix, pre-commit and pre-push, so `git commit` enforces it.
 
 - **Tools:** cpp-core pins every tool its hk steps run in `.mise.toml` and commits `mise.lock`,
-  which records what the checks ran with (the owner's ruling of 2026-11-15; no Renovate, since
-  there is no remote). To update: `mise run tools:outdated`, edit the version by hand, `mise lock`,
+  which records what the checks ran with (the owner's ruling of 2026-11-15). Renovate, with the
+  `risu729/renovate-config` preset in `renovate.json`, opens the update PRs and updates `mise.lock`
+  with them, and it merges minor, patch and digest updates once CI passes. To update by hand:
+  `mise run tools:outdated`, edit the version, `mise lock`,
   `mise run tools:lock-check`, then `mise run tools:lock-verify` (slow; installs from the lock into
   an empty directory). Never run `mise upgrade`. Keep `lockfile_mode = "merge"`: the trial
   `"generate"` mode writes an incomplete conda entry for clang-format. Known gap: while the
