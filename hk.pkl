@@ -49,6 +49,7 @@ hooks {
       }
       ["taplo-format"] = (Builtins.taplo_format) {
         glob = List("**/*.toml")
+        exclude = List("**/lychee.toml")
       }
       ["taplo"] = (Builtins.taplo) {
         glob = List("**/*.toml")
@@ -148,9 +149,11 @@ hooks {
       }
       ["tombi"] = (Builtins.tombi) {
         glob = List("**/*.toml")
+        exclude = List("**/.mise/locks/**")
       }
       ["tombi-format"] = (Builtins.tombi_format) {
         glob = List("**/*.toml")
+        exclude = List("**/.mise/locks/**")
       }
       ["hadolint"] = (Builtins.hadolint) {
         glob = List("**/Dockerfile", "**/Dockerfile.*", "**/*.dockerfile")
@@ -279,6 +282,7 @@ hooks {
       }
       ["taplo-format"] = (Builtins.taplo_format) {
         glob = List("**/*.toml")
+        exclude = List("**/lychee.toml")
       }
       ["taplo"] = (Builtins.taplo) {
         glob = List("**/*.toml")
@@ -378,9 +382,11 @@ hooks {
       }
       ["tombi"] = (Builtins.tombi) {
         glob = List("**/*.toml")
+        exclude = List("**/.mise/locks/**")
       }
       ["tombi-format"] = (Builtins.tombi_format) {
         glob = List("**/*.toml")
+        exclude = List("**/.mise/locks/**")
       }
       ["hadolint"] = (Builtins.hadolint) {
         glob = List("**/Dockerfile", "**/Dockerfile.*", "**/*.dockerfile")
@@ -498,6 +504,7 @@ hooks {
       }
       ["taplo-format"] = (Builtins.taplo_format) {
         glob = List("**/*.toml")
+        exclude = List("**/lychee.toml")
       }
       ["taplo"] = (Builtins.taplo) {
         glob = List("**/*.toml")
@@ -597,9 +604,11 @@ hooks {
       }
       ["tombi"] = (Builtins.tombi) {
         glob = List("**/*.toml")
+        exclude = List("**/.mise/locks/**")
       }
       ["tombi-format"] = (Builtins.tombi_format) {
         glob = List("**/*.toml")
+        exclude = List("**/.mise/locks/**")
       }
       ["hadolint"] = (Builtins.hadolint) {
         glob = List("**/Dockerfile", "**/Dockerfile.*", "**/*.dockerfile")
