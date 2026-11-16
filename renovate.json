@@ -3,11 +3,36 @@
   "extends": ["github>risu729/renovate-config#3.23.3"],
   "automerge": false,
   "lockFileMaintenance": { "automerge": false },
+  "customManagers": [
+    {
+      "customType": "regex",
+      "description": "gersemi's own python pin in .mise.toml, which the mise manager does not read. It does not update mise.lock: whoever checks the PR out runs mise lock, tools:lock-check and tools:lock-verify.",
+      "managerFilePatterns": ["/^\\.mise\\.toml$/"],
+      "matchStrings": [
+        "\"pypi:gersemi\"\\s*=\\s*\\{[^}]*\\bpython\\s*=\\s*\"(?<currentValue>[^\"]+)\""
+      ],
+      "depNameTemplate": "python (gersemi)",
+      "packageNameTemplate": "python/cpython",
+      "datasourceTemplate": "github-tags",
+      "extractVersionTemplate": "^v(?<version>\\S+)"
+    }
+  ],
   "packageRules": [
     {
       "description": "CI here is advisory, not a merge gate, so every update waits for the local checks, the Codex review and a manual merge.",
       "matchPackageNames": ["*"],
       "automerge": false
+    },
+    {
+      "description": "The CI container is a numbered Ubuntu release; dated or code-name tags such as stonking-20261105.1 are not candidates.",
+      "matchDatasources": ["docker"],
+      "matchPackageNames": ["ubuntu"],
+      "allowedVersions": "/^\\d{2}\\.\\d{2}$/"
+    },
+    {
+      "description": "cmakelang (cmake-format) fails on Python 3.15, so gersemi's python stays on 3.14 patch releases.",
+      "matchDepNames": ["python (gersemi)"],
+      "allowedVersions": "<3.15"
     }
   ]
 }
