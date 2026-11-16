@@ -59,9 +59,17 @@ and it is deliberately conservative about what enters the module interface.
   `mise run tools:lock-check`, then `mise run tools:lock-verify` (slow; installs from the lock into
   an empty directory). Never run `mise upgrade`. Keep `lockfile_mode = "merge"`: the trial
   `"generate"` mode writes an incomplete conda entry for clang-format. `tools:lock-verify`
-  installs all 22 pins from the lock, prettier included (mise installs npm tools with its embedded
+  installs all 23 pins from the lock, prettier included (mise installs npm tools with its embedded
   aube). Python and uv are pinned because cpplint and gersemi install from Python dependency locks. The lock check runs on pre-push
-  and in `hk check --all`, not on pre-commit.
+  and in `hk check --all`, not on pre-commit. Find the copy of a tool the checks run with
+  `mise ls --current --json <tool>` (its `install_path`), not `$PATH`: an agent's shell keeps the
+  PATH its session started with, which can name an older install.
+
+- **Renovate warnings:** `mise run renovate:problems` lists the "Repository Problems" in each
+  revision Renovate saved to the Dependency Dashboard (#12), with its time. It shows when a warning
+  appeared and went away, not what raised it, and a run that left the dashboard unchanged saves no
+  revision: before you name a cause or say a run was clean, quote that run's log on
+  developer.mend.io, including the WARN line's `branch=`.
 
 - **Changing hk.pkl:** `hk validate` and `hk check` never run a step's `fix` command. Run
   `mise run hk:fix-smoke`, which runs `hk fix --all` on a scratch worktree of HEAD.
@@ -193,6 +201,7 @@ All are stdlib-only Python, none invokes a compiler.
 | `scripts/check_mise_lock.py` | mise.lock has every pin and every conda dependency record (`--self-test`, `--install`) |
 | `scripts/check_doc_commands.py` | Every `mise run <task>` in the docs and scripts names a real task (`--self-test`) |
 | `scripts/ship_merge.py` | Merges a pull request only when the Shipping gates hold (`--dry-run`) |
+| `scripts/renovate_problems.py` | Dependency Dashboard's Repository Problems, revision by revision (`--since`, `--issue`) |
 
 **Run `mise run audit:test` before you trust the checker.** A check that never fails is not a
 check; the test breaks the tree fourteen ways and asserts that each one is caught. If you add a
