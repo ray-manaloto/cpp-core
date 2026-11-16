@@ -34,6 +34,13 @@ alias = "tools:outdated"
 description = "List the project's pinned tools that have a newer release"
 run = "mise outdated --bump --no-global"
 
+# Read-only: each Dependency Dashboard revision's "Repository Problems" lines, with the time of the
+# revision. Shows when a Renovate warning appeared and went away; the Mend log names its branch.
+[renovate_problems]
+alias = "renovate:problems"
+description = "List the Repository Problems in every revision of the Dependency Dashboard (#12)"
+run = "python3 scripts/renovate_problems.py"
+
 # Fast and read-only; hk runs it on pre-push and `hk check`.
 [tools_lock_check]
 alias = "tools:lock-check"

@@ -93,6 +93,19 @@ local linters = new Mapping<String, Step> {
       )
   }
 
+  // Renovate's own validator, so a renovate.json change is checked before it reaches Renovate.
+  // --no-global checks it as repository config; a named file is otherwise read as self-hosted
+  // global config. Its "RE2 not usable" warning is expected: aube skips re2's native build, so
+  // regexes are checked with JavaScript RegExp, not RE2 as Mend runs them. After a regex change,
+  // read the next Mend run's log for errors.
+  ["renovate-config"] {
+    glob = List("renovate.json")
+    check = new CommandSpec {
+      command = "renovate-config-validator --strict --no-global renovate.json"
+      effect = "read"
+    }
+  }
+
   // Markdown and prose
   ["rumdl-format"] = (Builtins.rumdl_format) {
     glob = List("**/*.md", "**/*.markdown")

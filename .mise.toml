@@ -33,6 +33,15 @@ kingfisher = "2.18.1"
 lychee = "0.24.2"
 # prettier is an npm tool: mise installs it without node, but it needs node to run.
 node = "26.13.1"
+# Renovate itself, for its renovate-config-validator (hk step renovate-config). Runs on the node above.
+# aube's trust policy refuses @yarnpkg/libzip 3.2.2 (via @yarnpkg/core 4.9.1, which needs ^3.2.2):
+# yarnbot published 3.2.0 and 3.2.1 with npm provenance; a maintainer account published 3.2.2
+# without it. Its code change from 3.2.1, three parentPath fields in ZipFS.js, is in the source at
+# the upstream tag @yarnpkg/libzip/3.2.2 (yarnpkg/berry #6889, the TypeScript 5.9 bump), so that
+# one version, and no other, is exempt. The dependency graph is locked under .mise/locks/.
+"npm:renovate" = { version = "44.239.1", trust_policy_excludes = [
+  "@yarnpkg/libzip@3.2.2",
+] }
 osv-scanner = "2.7.1"
 "pipx:cpplint" = "2.0.2"
 pkl = "0.33.0"
