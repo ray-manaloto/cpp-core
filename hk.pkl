@@ -44,7 +44,23 @@ local linters = new Mapping<String, Step> {
   }
   ["cpp-lint"] = (Builtins.cpp_lint) {
     glob = cxxGlob
+    // cpplint skips .cppm files ("not a valid file name"); cpp-lint-modules lints them.
+    exclude = List("**/*.cppm")
     check = new CommandSpec { command = "cpplint --config=.cpplint {{files}}"; effect = "read" }
+  }
+  // Module interface units. --extensions=cppm makes cpplint read them (it replaces cpplint's
+  // extension list, so this step lints .cppm files only). The two filters, on top of .cpplint's,
+  // drop what cpplint 2.0.2 gets wrong about modules: whitespace/blank_line, because it exempts the
+  // blank lines inside `namespace x {` but not inside `export namespace x {`; and
+  // build/include_subdir, because a module includes its private headers, such as
+  // modules/logging/format.hpp, by bare name from its own directory.
+  ["cpp-lint-modules"] = (Builtins.cpp_lint) {
+    glob = List("**/*.cppm")
+    check = new CommandSpec {
+      command =
+        "cpplint --config=.cpplint --extensions=cppm --filter=-whitespace/blank_line,-build/include_subdir {{files}}"
+      effect = "read"
+    }
   }
 
   // CMake. hk has no gersemi builtin; .gersemirc holds the style. The overlay ports keep vcpkg's
