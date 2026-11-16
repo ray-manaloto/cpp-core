@@ -2,7 +2,10 @@
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
   "extends": ["github>risu729/renovate-config#3.23.3"],
   "automerge": false,
-  "lockFileMaintenance": { "automerge": false },
+  "lockFileMaintenance": {
+    "automerge": false,
+    "minimumReleaseAge": null
+  },
   "customManagers": [
     {
       "customType": "regex",

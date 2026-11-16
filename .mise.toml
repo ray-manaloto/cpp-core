@@ -59,6 +59,13 @@ lockfile = true
 # clang-format entry that names a conda package it has no record for, and `mise install --locked`
 # then fails (mise 2026.11.8). `mise run tools:lock-check` catches a lock like that.
 lockfile_mode = "merge"
+# Hold back versions published in the last 24 hours whenever mise resolves a version itself:
+# a fuzzy or "latest" request in `mise lock` or `mise lock --bump` (Renovate's lock file
+# maintenance). An exact pin skips the filter, and so do its unrecorded transitive
+# dependencies; the exact pins here move only through Renovate's per-tool PRs, which wait one
+# day. Set here so it does not depend on mise's default or a user's global config. The per-tool
+# "0s" entries above opt out.
+minimum_release_age = "24h"
 
 [task_config]
 includes = [
