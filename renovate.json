@@ -36,6 +36,12 @@
       "description": "cmakelang (cmake-format) fails on Python 3.15, so gersemi's python stays on 3.14 patch releases.",
       "matchDepNames": ["python (gersemi)"],
       "allowedVersions": "<3.15"
+    },
+    {
+      "description": "shellcheck is maintained (commits and merges through 2026-11) but its releases from v0.8.0 (2021-11) to v0.11.0 (2025-08) came 13 to 17 months apart, so the default 1-year abandonment threshold flags it (koalaman/shellcheck#3609). cpplint keeps the default: its maintainer gap is real (cpplint/cpplint#402).",
+      "matchManagers": ["mise"],
+      "matchDepNames": ["shellcheck"],
+      "abandonmentThreshold": "2 years"
     }
   ]
 }
