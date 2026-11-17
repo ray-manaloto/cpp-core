@@ -56,7 +56,7 @@ ruff = { version = "0.17.5", minimum_release_age = "0s" }
 rumdl = { version = "0.3.4", minimum_release_age = "0s" }
 shellcheck = { version = "0.11.0", minimum_release_age = "0s" }
 shfmt = { version = "3.14.1", minimum_release_age = "0s" }
-tombi = "1.11.2"
+tombi = "1.11.3"
 ty = { version = "0.0.104", minimum_release_age = "0s" }
 typos = "1.52.2"
 uv = "0.13.8"
