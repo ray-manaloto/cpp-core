@@ -6,8 +6,8 @@ The gates, in order:
 1. The pull request is open and targets `main`.
 2. Its head commit is checked out, clean, in a worktree of this repository.
 3. That worktree's `user.email` is the noreply address of the account `gh` is logged in as.
-4. The pinned Codex reviewer approved the pull request's title and body at that head
-   (`repotools pr-approved`). The body is GitHub's copy with CodeRabbit's bounded summary block
+4. The pinned Codex reviewer approved the pull request, its whole diff and its title and body, at
+   that head (`repotools pr-approved`); this one review is the pull request's only approval. The body is GitHub's copy with CodeRabbit's bounded summary block
    removed; any other text added after the approval fails the gate.
 5. `hk check --all` passes in that worktree.
 
@@ -17,9 +17,9 @@ request's head, base, title and body have not changed, then merges with
 the merge commit with that email. `--dry-run` checks the gates and stops.
 
 Limits. The approval gate reads the reviewer pane's session log, a plain file the author's own
-tools can reach: it catches a stale, edited or unreviewed head, not a forged approval. It checks
-the approval of the pull request text at the head, not each commit's own approval, which is
-given before each commit. The final check and the merge are not atomic; `--match-head-commit`
+tools can reach: it catches a stale, edited or unreviewed head, not a forged approval. That the
+review read the whole diff rests on the brief given to the reviewer; the gate cannot see it. The
+final check and the merge are not atomic; `--match-head-commit`
 covers the head, not a title or body edited in between. The advisory CI run is looked at by hand.
 
 Exit status is 0 when the gates pass (and the merge, unless `--dry-run`, succeeded), 1 otherwise.
