@@ -87,7 +87,7 @@ jobs:
           echo "MISE_TRUSTED_CONFIG_PATHS=$GITHUB_WORKSPACE" >> "$GITHUB_ENV"
       # The action adds --locked because mise.lock exists; it is spelled out so that a
       # missing lock fails instead of resolving fresh versions.
-      - uses: jdx/mise-action@d5574b52816a478f9d4e6529a3f6ff17a8a36785 # v5.2.8
+      - uses: jdx/mise-action@90f833d396d0cc3674b631d2d225e306476c303a # v5.2.10
         with:
           version: 2026.11.8
           install_args: --locked
