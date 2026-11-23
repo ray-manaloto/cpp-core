@@ -288,26 +288,26 @@ signer = "sigstore-oidc:https://github.com/jdx/jactionlint/.github/workflows/rel
 repository_ids = { repository = "1404951382" }
 
 [[tools.kingfisher]]
-version = "2.18.1"
+version = "2.20.0"
 backend = "github:mongodb/kingfisher"
-specifiers = ["2.18.1"]
+specifiers = ["v2.20.0"]
 
 [tools.kingfisher."platforms.linux-arm64"]
-checksum = "sha256:37a6341c9899693d6cf2ef18d54bf65395a8ad9b6c6152aea90f8626b4be9d8e"
-url = "https://github.com/mongodb/kingfisher/releases/download/v2.18.1/kingfisher-linux-arm64.tgz"
-url_api = "https://api.github.com/repos/mongodb/kingfisher/releases/assets/728535631"
+checksum = "sha256:245c34ee00caf24bffe9fed54a23bcb617fe95a0755ff881ef7d2c869f9d4ad7"
+url = "https://github.com/mongodb/kingfisher/releases/download/v2.20.0/kingfisher-linux-arm64.tgz"
+url_api = "https://api.github.com/repos/mongodb/kingfisher/releases/assets/777444095"
 provenance = "github-attestations"
 
 [tools.kingfisher."platforms.linux-x64"]
-checksum = "sha256:8f29b5ba1818f13bccd0b079c798659cfd2eccf21998003c8aaf75f8a3794529"
-url = "https://github.com/mongodb/kingfisher/releases/download/v2.18.1/kingfisher-linux-x64.tgz"
-url_api = "https://api.github.com/repos/mongodb/kingfisher/releases/assets/728535321"
+checksum = "sha256:825a5e89cdf6c0d52e85bf029061f76ad6ba7cc6e55406c6eb9f68572ee6b774"
+url = "https://github.com/mongodb/kingfisher/releases/download/v2.20.0/kingfisher-linux-x64.tgz"
+url_api = "https://api.github.com/repos/mongodb/kingfisher/releases/assets/777443918"
 provenance = "github-attestations"
 
 [tools.kingfisher."platforms.macos-arm64"]
-checksum = "sha256:42251cf04af60c37053986c2d89096691043ac07e07f1b62384f29fba143c7a3"
-url = "https://github.com/mongodb/kingfisher/releases/download/v2.18.1/kingfisher-darwin-arm64.tgz"
-url_api = "https://api.github.com/repos/mongodb/kingfisher/releases/assets/728536025"
+checksum = "sha256:eade605f6c4ae091aeb06e186b9d3d802b4c4a222956f661991f2b16d6655ab3"
+url = "https://github.com/mongodb/kingfisher/releases/download/v2.20.0/kingfisher-darwin-arm64.tgz"
+url_api = "https://api.github.com/repos/mongodb/kingfisher/releases/assets/777444280"
 provenance = "github-attestations"
 
 [[tools.lychee]]
