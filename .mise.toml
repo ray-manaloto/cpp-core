@@ -29,7 +29,7 @@ betterleaks = "1.10.1"
 clang-format = "23.1.5"
 hk = "2.12.0"
 jactionlint = "2.6.0"
-kingfisher = "2.18.1"
+kingfisher = "v2.20.0"
 lychee = "0.24.2"
 # prettier is an npm tool: mise installs it without node, but it needs node to run.
 node = "26.13.1"
