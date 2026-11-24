@@ -223,7 +223,7 @@ local linters = new Mapping<String, Step> {
     check = new CommandSpec { command = "pkl format --diff-name-only {{files}}"; effect = "read" }
     fix = new CommandSpec { command = "pkl format --write {{files}}"; effect = "write" }
   }
-  ["mise-fmt"] {
+  ["mise-fmt"] = (Builtins.mise_config_dir) {
     glob =
       List(
         "mise.toml",
@@ -233,12 +233,7 @@ local linters = new Mapping<String, Step> {
         ".github/ci/mise.toml",
         "mise/**/*.toml",
       )
-    check = new CommandSpec {
-      command = "mise fmt --check && mise -C .github/ci fmt --check"
-      effect = "read"
-    }
-    // `mise fmt` rewrites in place; it has no --write flag.
-    fix = new CommandSpec { command = "mise fmt && mise -C .github/ci fmt"; effect = "write" }
+    exclude = List()
   }
   ["hk-validate"] {
     glob = List("hk.pkl")

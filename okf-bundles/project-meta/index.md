@@ -45,9 +45,9 @@ Reference for cpp-core project metadata, tool versions, and configuration files.
 
 Per the **2026-11-24 owner ruling** (overturning 2026-11-15), `.mise.toml` declares zero `[tools]` and commits no root `mise.lock`:
 
-- **Developer workstation tools (`dotfiles-v2`):** `hk` (`2.14.0`), `betterleaks`, `jactionlint`, `lychee`, `node`, `pkl`, `ruff`, `rumdl`, `shellcheck`, `shfmt`, `tombi`, `ty`, `typos`, `uv`, `zizmor` come from global `~/.config/mise/config.toml`.
+- **Developer workstation tools (`dotfiles-v2`):** `hk` (`2.14.0`), `betterleaks`, `hadolint`, `jactionlint`, `kingfisher`, `lychee`, `node`, `osv-scanner`, `pkl`, `prettier`, `npm:renovate`, `ruff`, `rumdl`, `shellcheck`, `shfmt`, `tombi`, `ty`, `typos`, `uv`, `zizmor` come from global `~/.config/mise/config.toml`.
 - **Python-packaged C++/CMake tools (`pyproject.toml` + `uv.lock`):** `clang-format==23.1.5`, `cpplint==2.0.2`, and `gersemi==0.29.2` install via `mise deps uv` (`uv sync --locked`) into `.venv/` and run via `uv run --locked`.
-- **Advisory CI tools (`.github/ci/mise.toml` + `.github/ci/mise.lock`):** `.github/workflows/ci.yml` sets `MISE_GLOBAL_CONFIG_FILE=${{ github.workspace }}/.github/ci/mise.toml` and installs locked CI pins including `kingfisher`, `osv-scanner`, `prettier`, and `npm:renovate`.
+- **Advisory CI tools (`.github/ci/mise.toml` + `.github/ci/mise.lock`):** `.github/workflows/ci.yml` sets `MISE_GLOBAL_CONFIG_FILE=${{ github.workspace }}/.github/ci/mise.toml` and mirrors the repository's CI pins under `--locked`.
 
 ### Configuration Files
 
@@ -82,7 +82,7 @@ Per the **2026-11-24 owner ruling** (overturning 2026-11-15), `.mise.toml` decla
 **Steps**:
 
 - Formatters: `clang-format`, `gersemi`, `shfmt`, `ruff-format`, `tombi-format`, `rumdl-format`, `prettier`, `mise-fmt`, `pkl-format`
-- Linters: `clang-format` (check), `cpp-lint`, `cpp-lint-modules`, `gersemi` (check), `ruff`, `rumdl`, `tombi`, `renovate-config`, `jactionlint`, `zizmor`, `hadolint`, `shellcheck`, `ty`, `typos`, `python-check-ast`, `python-debug-statements`, `betterleaks`, `kingfisher`, `osv-scanner`, **lychee** (`flaky` profile)
+- Linters: `clang-format` (check), `cpp-lint`, `cpp-lint-modules`, `gersemi` (check), `ruff`, `rumdl`, `tombi`, `renovate-config`, `jactionlint`, `zizmor`, `hadolint`, `shellcheck`, `ty`, `typos`, `python-check-ast`, `python-debug-statements`, `betterleaks`, `kingfisher`, `osv-scanner`, **lychee**
 - Utilities & Audit: `check-merge-conflict`, `check-added-large-files`, `check-symlinks`, `trailing-whitespace`, `newlines`, `mixed-line-ending`, `fix-smart-quotes`, `byte-order-marker`, `check-case-conflict`, `check-executables-have-shebangs`, `check-shebang-scripts-are-executable`, `destroyed-symlinks`, `detect-private-key`, `forbid-submodules`, `hk-validate`, `audit-verify`, `docs-commands`, `mise-lock`, `check-clean-workspace`
 - Commit: `check-conventional-commit` (`commit-msg` hook)
 

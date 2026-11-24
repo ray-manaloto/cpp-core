@@ -13,6 +13,12 @@
       "automerge": false
     },
     {
+      "description": "ubuntu:26.10 ships Python 3.14.8 and uv.lock locks cp314 wheels for gersemi; keep requires-python on >=3.14,<3.15 with the container rather than pinning an exact patch or bumping to 3.15.",
+      "matchManagers": ["pep621"],
+      "matchDepTypes": ["requires-python"],
+      "enabled": false
+    },
+    {
       "description": "The CI container is a numbered Ubuntu release; dated or code-name tags such as stonking-20261105.1 are not candidates.",
       "matchDatasources": ["docker"],
       "matchPackageNames": ["ubuntu"],

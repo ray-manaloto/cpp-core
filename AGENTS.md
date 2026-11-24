@@ -53,18 +53,21 @@ and it is deliberately conservative about what enters the module interface.
 
 - **Tools:** Per the **2026-11-24 owner ruling** (overturning the 2026-11-15 project-lockfile
   ruling), cpp-core declares zero `[tools]` in `.mise.toml` and commits no root `mise.lock`:
-  developer tools live at user/global scope (`dotfiles-v2`), Python-packaged C++/CMake lint and
-  format tools (`clang-format`, `cpplint`, `gersemi`) are pinned in `pyproject.toml` + `uv.lock`
-  (`[tool.uv] package = false`, synced via `mise deps uv` / `uv sync --locked` on Python 3.14 for
-  prebuilt `gersemi` wheels and run via `uv run --locked`), and advisory CI pins live in
-  `.github/ci/mise.toml` + `.github/ci/mise.lock` (loaded in CI via `MISE_GLOBAL_CONFIG_FILE`).
+  developer tools live at user/global scope (`dotfiles-v2`, including `hk`, `betterleaks`,
+  `hadolint`, `jactionlint`, `kingfisher`, `lychee`, `node`, `osv-scanner`, `pkl`, `prettier`,
+  `npm:renovate`, `ruff`, `rumdl`, `shellcheck`, `shfmt`, `tombi`, `ty`, `typos`, `uv`, `zizmor`),
+  Python-packaged C++/CMake lint and format tools (`clang-format`, `cpplint`, `gersemi`) are pinned
+  in `pyproject.toml` + `uv.lock` (`[tool.uv] package = false`, synced via `mise deps uv` /
+  `uv sync --locked` on Python 3.14 for prebuilt `gersemi` wheels and run via `uv run --locked`),
+  and advisory CI mirrors those mise pins in `.github/ci/mise.toml` + `.github/ci/mise.lock`
+  (loaded in CI via `MISE_GLOBAL_CONFIG_FILE`).
   Renovate (`renovate.json`) opens update PRs against `.github/ci/mise.toml`, `pyproject.toml`,
   and `uv.lock`. No update merges itself: `renovate.json` turns automerge off because CI is
   advisory, so an agent checks the PR out in a worktree, runs `hk check --all` and has the Codex
   reviewer approve it before merging. To update advisory CI pins by hand: `mise run tools:outdated`,
   edit `.github/ci/mise.toml`, re-lock `.github/ci/mise.lock` with
-  `MISE_GLOBAL_CONFIG_FILE="$PWD/.github/ci/mise.toml" mise lock --global`, run
-  `mise run tools:lock-check`, then `mise run tools:lock-verify` (slow; installs from
+  `MISE_IGNORED_CONFIG_PATHS="$HOME/.config/mise" MISE_GLOBAL_CONFIG_FILE="$PWD/.github/ci/mise.toml" mise lock --global`,
+  run `mise run tools:lock-check`, then `mise run tools:lock-verify` (slow; installs from
   `.github/ci/mise.lock` into an empty directory). Never run `mise upgrade`. Keep
   `lockfile_mode = "merge"` in `.github/ci/mise.toml`. Find the active binary path via
   `mise which <tool>` (or `.venv/bin/<tool>` for uv-managed tools).

@@ -93,7 +93,7 @@ trap 'git worktree remove --force "$dir" >/dev/null 2>&1 || true; rm -rf "$dir"'
 git worktree add --quiet --detach "$dir" HEAD
 # paranoid mode trusts file by file; trust the whole scratch tree (its resolved path) instead.
 export MISE_TRUSTED_CONFIG_PATHS="$dir:$dir/.github/ci"
-(cd "$dir" && uv sync --locked --quiet && hk fix --all --skip-step check-clean-workspace)
+(cd "$dir" && unset VIRTUAL_ENV && uv sync --locked --quiet && hk fix --all --skip-step check-clean-workspace)
 git -C "$dir" status --short
 """
 

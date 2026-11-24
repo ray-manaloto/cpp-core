@@ -70,7 +70,12 @@ vs = {v for pair in urls for v in pair}
 if len(urls) != 2 or len(vs) != 1 or f"min_hk_version = \"{next(iter(vs))}\"" not in pkl:
     sys.exit(1)
 pin = next(iter(vs))
-cfg = os.environ.get("MISE_GLOBAL_CONFIG_FILE") or os.path.join(os.environ.get("XDG_CONFIG_HOME") or os.path.expanduser("~/.config"), "mise", "config.toml")
+cfg = (
+    os.environ.get("MISE_GLOBAL_CONFIG_FILE")
+    or os.environ.get("MISE_CONFIG_FILE")
+    or (os.path.join(os.environ["MISE_CONFIG_DIR"], "config.toml") if os.environ.get("MISE_CONFIG_DIR") else None)
+    or os.path.join(os.environ.get("XDG_CONFIG_HOME") or os.path.expanduser("~/.config"), "mise", "config.toml")
+)
 if os.path.exists(cfg):
     txt = open(cfg, encoding="utf-8").read()
     m = re.search(r"(?ms)^\[tools\]\s*(.*?)(?=^\[|\Z)", txt)
