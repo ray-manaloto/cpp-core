@@ -1,19 +1,20 @@
 // hk configuration for cpp-core: https://hk.jdx.dev/configuration
 //
-// Every tool a step runs is pinned in .mise.toml and locked in mise.lock.
+// Developer tools come from global dotfiles-v2, Python-packaged C++/CMake tools live in
+// pyproject.toml + uv.lock, and advisory CI pins live in .github/ci/mise.toml + .github/ci/mise.lock.
 //
 // The top-level `steps` make hk's implicit `check`, `fix` and `pre-commit` hooks: `check` only
 // checks, `fix` fixes without staging, and `pre-commit` fixes, stages the result and stashes
 // unstaged work. `pre-push` and `commit-msg` are declared below.
-amends "package://github.com/jdx/hk/releases/download/v2.12.0/hk@2.12.0#/Config.pkl"
+amends "package://github.com/jdx/hk/releases/download/v2.14.0/hk@2.14.0#/Config.pkl"
 
-import "package://github.com/jdx/hk/releases/download/v2.12.0/hk@2.12.0#/Builtins.pkl"
+import "package://github.com/jdx/hk/releases/download/v2.14.0/hk@2.14.0#/Builtins.pkl"
 
-min_hk_version = "2.12.0"
+min_hk_version = "2.14.0"
 
 // Vendored upstream copies are checked byte for byte against upstream/manifest.json, and the repro
 // sources are kept as they were run; no step may rewrite either.
-exclude = List("docs/**/upstream/**", "docs/**/repro/**", "build/**", ".cache/**")
+exclude = List("docs/**/upstream/**", "docs/**/repro/**", "build/**", ".cache/**", ".venv/**")
 
 local cxxGlob =
   List(
@@ -41,12 +42,23 @@ local linters = new Mapping<String, Step> {
   // C and C++
   ["clang-format"] = (Builtins.clang_format) {
     glob = cxxGlob
+    check = new CommandSpec {
+      command = "uv run --locked clang-format --dry-run -Werror {{files}}"
+      effect = "read"
+    }
+    fix = new CommandSpec {
+      command = "uv run --locked clang-format -i {{files}}"
+      effect = "write"
+    }
   }
   ["cpp-lint"] = (Builtins.cpp_lint) {
     glob = cxxGlob
     // cpplint skips .cppm files ("not a valid file name"); cpp-lint-modules lints them.
     exclude = List("**/*.cppm")
-    check = new CommandSpec { command = "cpplint --config=.cpplint {{files}}"; effect = "read" }
+    check = new CommandSpec {
+      command = "uv run --locked cpplint --config=.cpplint {{files}}"
+      effect = "read"
+    }
   }
   // Module interface units. --extensions=cppm makes cpplint read them (it replaces cpplint's
   // extension list, so this step lints .cppm files only). The two filters, on top of .cpplint's,
@@ -58,7 +70,7 @@ local linters = new Mapping<String, Step> {
     glob = List("**/*.cppm")
     check = new CommandSpec {
       command =
-        "cpplint --config=.cpplint --extensions=cppm --filter=-whitespace/blank_line,-build/include_subdir {{files}}"
+        "uv run --locked cpplint --config=.cpplint --extensions=cppm --filter=-whitespace/blank_line,-build/include_subdir {{files}}"
       effect = "read"
     }
   }
@@ -69,8 +81,14 @@ local linters = new Mapping<String, Step> {
     glob = List("**/CMakeLists.txt", "**/*.cmake")
     exclude = List("ports/**")
     batch = true
-    check = new CommandSpec { command = "gersemi --check {{files}}"; effect = "read" }
-    fix = new CommandSpec { command = "gersemi --in-place {{files}}"; effect = "write" }
+    check = new CommandSpec {
+      command = "uv run --locked gersemi --check {{files}}"
+      effect = "read"
+    }
+    fix = new CommandSpec {
+      command = "uv run --locked gersemi --in-place {{files}}"
+      effect = "write"
+    }
   }
 
   // TOML. tombi both lints and formats, so taplo is not used.
@@ -78,7 +96,7 @@ local linters = new Mapping<String, Step> {
     exclude = List(".typos.toml")
   }
   ["tombi-format"] = (Builtins.tombi_format) {
-    exclude = List(".typos.toml")
+    exclude = List(".typos.toml", ".mise.toml", ".github/ci/mise.toml", "mise/**/*.toml")
   }
 
   // JSON
@@ -87,6 +105,7 @@ local linters = new Mapping<String, Step> {
     // Derived by scripts/*.py in their own layout, and checked against a fresh derivation.
     exclude =
       List(
+        ".github/ci/.mise/locks/**",
         "docs/cxx26-features-audit/audit-index.json",
         "docs/cxx26-features-audit/citations.json",
         "docs/cxx26-features-audit/measurements.json",
@@ -138,7 +157,17 @@ local linters = new Mapping<String, Step> {
       )
     // Mirrors .typos.toml's extend-exclude, so hk does not hand typos files it would skip.
     exclude =
-      List("docs/**", "ports/**", "**/upstream/**", "**/repro/**", ".opencode/**", "build/**")
+      List(
+        "docs/**",
+        "ports/**",
+        "**/upstream/**",
+        "**/repro/**",
+        ".github/ci/.mise/**",
+        ".github/ci/mise.lock",
+        ".opencode/**",
+        "build/**",
+        "uv.lock",
+      )
   }
 
   // Secrets and dependencies
@@ -195,14 +224,25 @@ local linters = new Mapping<String, Step> {
     fix = new CommandSpec { command = "pkl format --write {{files}}"; effect = "write" }
   }
   ["mise-fmt"] {
-    glob = List("mise.toml", ".mise.toml", "mise.local.toml", ".mise.local.toml")
-    check = new CommandSpec { command = "mise fmt --check"; effect = "read" }
+    glob =
+      List(
+        "mise.toml",
+        ".mise.toml",
+        "mise.local.toml",
+        ".mise.local.toml",
+        ".github/ci/mise.toml",
+        "mise/**/*.toml",
+      )
+    check = new CommandSpec {
+      command = "mise fmt --check && mise -C .github/ci fmt --check"
+      effect = "read"
+    }
     // `mise fmt` rewrites in place; it has no --write flag.
-    fix = new CommandSpec { command = "mise fmt"; effect = "write" }
+    fix = new CommandSpec { command = "mise fmt && mise -C .github/ci fmt"; effect = "write" }
   }
   ["hk-validate"] {
     glob = List("hk.pkl")
-    check = new CommandSpec { command = "hk validate"; effect = "read" }
+    check = new CommandSpec { command = "hk validate --deny-warnings"; effect = "read" }
   }
 
   // The audit's own checker. It reads the whole tree (citations, vendored copies, derived JSON),
@@ -222,14 +262,21 @@ local linters = new Mapping<String, Step> {
   }
 }
 
-// mise.lock must be able to install every pin. Fast, but only needed when the pins move, so it
-// runs on `hk check` and pre-push, not pre-commit. `mise run tools:lock-verify` does the slow
+// .github/ci/mise.lock and uv.lock must match .github/ci/mise.toml and pyproject.toml. Fast, so
+// it runs on `hk check` and pre-push, not pre-commit. `mise run tools:lock-verify` does the slow
 // install-from-lock proof.
 local lockCheck = new Mapping<String, Step> {
   ["mise-lock"] {
-    glob = List(".mise.toml", "mise.lock")
+    glob =
+      List(
+        ".mise.toml",
+        ".github/ci/mise.toml",
+        ".github/ci/mise.lock",
+        "pyproject.toml",
+        "uv.lock",
+      )
     check = new CommandSpec {
-      command = "python3 scripts/check_mise_lock.py --self-test"
+      command = "python3 scripts/check_mise_lock.py --self-test && uv lock --check --offline"
       effect = "read"
     }
   }

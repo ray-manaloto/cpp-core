@@ -20,19 +20,19 @@ alias = "commit-msg"
 description = "Validate commit message"
 run = "hk run commit-msg"
 
-# The tools are pinned in .mise.toml and locked in mise.lock; this installs exactly those.
+# Developer tools come from global dotfiles-v2; Python-packaged C++/CMake tools sync via uv.
 [setup_tools]
-description = "Install the pinned tools from mise.lock, then validate hk.pkl"
+description = "Sync Python-packaged C++/CMake lint tools from uv.lock, then validate hk.pkl"
 run = """
-mise install --locked
-hk validate
+mise deps uv
+hk validate --deny-warnings
 """
 
-# What Renovate would update next, for a bump by hand. It reads only and changes nothing.
+# What Renovate would update next in .github/ci/mise.toml, for a bump by hand. Read-only.
 [tools_outdated]
 alias = "tools:outdated"
-description = "List the project's pinned tools that have a newer release"
-run = "mise outdated --bump --no-global"
+description = "List advisory CI pins in .github/ci/mise.toml that have a newer release"
+run = 'MISE_IGNORED_CONFIG_PATHS="$HOME/.config/mise" MISE_GLOBAL_CONFIG_FILE="$PWD/.github/ci/mise.toml" mise outdated --bump --global'
 
 # Read-only: each Dependency Dashboard revision's "Repository Problems" lines, with the time of the
 # revision. Shows when a Renovate warning appeared and went away; the Mend log names its branch.
@@ -44,13 +44,13 @@ run = "python3 scripts/renovate_problems.py"
 # Fast and read-only; hk runs it on pre-push and `hk check`.
 [tools_lock_check]
 alias = "tools:lock-check"
-description = "Check that mise.lock has a record for every pin and every conda dependency"
-run = "python3 scripts/check_mise_lock.py --self-test"
+description = "Check that .github/ci/mise.lock matches .github/ci/mise.toml and uv.lock matches pyproject.toml"
+run = "python3 scripts/check_mise_lock.py --self-test && uv lock --check --offline"
 
-# Slow: downloads every tool into an empty temporary data directory. Run after a bump.
+# Slow: downloads every advisory CI tool into an empty temporary data directory. Run after a bump.
 [tools_lock_verify]
 alias = "tools:lock-verify"
-description = "Install every tool from mise.lock into an empty data directory"
+description = "Install every advisory CI tool from .github/ci/mise.lock into an empty data directory"
 run = "python3 scripts/check_mise_lock.py --self-test --install"
 
 [setup_all]

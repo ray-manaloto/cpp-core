@@ -15,66 +15,19 @@
 
 #:schema https://mise.jdx.dev/schema/mise.json
 
-min_version = "2026.10.9"
+min_version = "2026.11.13"
 
-# Every tool an hk step runs on this repository, pinned at its latest version and locked in
-# mise.lock, which is the record of what the checks were run with. Renovate (renovate.json) opens
-# the update PRs. To bump one by hand, `mise run tools:outdated` shows what is stale; edit the
-# version here, then run `mise lock`, `mise run tools:lock-check` and `mise install --locked`
-# (never `mise upgrade`).
-# Secret scanning is betterleaks (patterns; gitleaks' successor) plus kingfisher (validated
-# findings); gitleaks and trufflehog would only duplicate them.
-[tools]
-betterleaks = "1.10.1"
-clang-format = "23.1.5"
-hk = "2.12.0"
-jactionlint = "2.6.0"
-kingfisher = "2.18.1"
-lychee = "0.24.2"
-# prettier is an npm tool: mise installs it without node, but it needs node to run.
-node = "26.13.1"
-# Renovate itself, for its renovate-config-validator (hk step renovate-config). Runs on the node above.
-# aube's trust policy refuses @yarnpkg/libzip 3.2.2 (via @yarnpkg/core 4.9.1, which needs ^3.2.2):
-# yarnbot published 3.2.0 and 3.2.1 with npm provenance; a maintainer account published 3.2.2
-# without it. Its code change from 3.2.1, three parentPath fields in ZipFS.js, is in the source at
-# the upstream tag @yarnpkg/libzip/3.2.2 (yarnpkg/berry #6889, the TypeScript 5.9 bump), so that
-# one version, and no other, is exempt. The dependency graph is locked under .mise/locks/.
-"npm:renovate" = { version = "44.239.1", trust_policy_excludes = [
-  "@yarnpkg/libzip@3.2.2",
-] }
-osv-scanner = "2.7.1"
-"pipx:cpplint" = "2.0.2"
-pkl = "0.33.0"
-prettier = "3.10.1"
-# cmakelang (cmake-format) fails on Python 3.15; gersemi replaces it, on 3.14.
-"pypi:gersemi" = { version = "0.29.2", python = "3.14.10" }
-# cpplint and gersemi install from Python dependency locks, which need a Python interpreter and
-# uv >= 0.12.10 from this config, not from the global one. gersemi stays on 3.14.10; cpplint and
-# the rest run on 3.15.2.
-python = "3.15.2"
-ruff = { version = "0.17.5", minimum_release_age = "0s" }
-rumdl = { version = "0.3.4", minimum_release_age = "0s" }
-shellcheck = { version = "0.11.0", minimum_release_age = "0s" }
-shfmt = { version = "3.14.1", minimum_release_age = "0s" }
-tombi = "1.11.2"
-ty = { version = "0.0.104", minimum_release_age = "0s" }
-typos = "1.52.2"
-uv = "0.13.8"
-zizmor = "1.32.0"
+# Per the 2026-11-24 owner ruling (overturning 2026-11-15), developer tools live at user/global
+# scope (dotfiles-v2), Python-packaged C++/CMake tools live in pyproject.toml + uv.lock, and
+# advisory CI tool pins live in .github/ci/mise.toml + .github/ci/mise.lock.
 
 [settings]
-lockfile = true
-# The default "merge" mode. The trial "generate" mode makes `mise install` write a macos-arm64
-# clang-format entry that names a conda package it has no record for, and `mise install --locked`
-# then fails (mise 2026.11.8). `mise run tools:lock-check` catches a lock like that.
-lockfile_mode = "merge"
-# Hold back versions published in the last 24 hours whenever mise resolves a version itself:
-# a fuzzy or "latest" request in `mise lock` or `mise lock --bump` (Renovate's lock file
-# maintenance). An exact pin skips the filter, and so do its unrecorded transitive
-# dependencies; the exact pins here move only through Renovate's per-tool PRs, which wait one
-# day. Set here so it does not depend on mise's default or a user's global config. The per-tool
-# "0s" entries above opt out.
-minimum_release_age = "24h"
+experimental = true
+python.uv_venv_auto = "source"
+
+[deps.uv]
+auto = false
+run = "uv sync --locked"
 
 [task_config]
 includes = [
@@ -88,3 +41,43 @@ includes = [
   "mise/render/tasks.toml",
   "mise/ship/tasks.toml",
 ]
+
+[doctor.checks.no-project-tools]
+description = "No project-level [tools], no root mise.lock, and slim pyproject.toml (dotfiles-v2)"
+run = '''
+python3 -I -c 'import glob, os, re, sys
+for f in [".mise.toml"] + sorted(glob.glob("mise/**/*.toml", recursive=True)):
+    txt = open(f, encoding="utf-8").read()
+    if re.search(r"(?m)^\[(?:tools|tool_alias)(?:[.\]])", txt):
+        print(f"{f}: declares [tools]"); sys.exit(1)
+for bad in ("mise.lock", ".mise/locks", ".tool-versions", "package.json"):
+    if os.path.exists(bad):
+        print(f"forbidden root file: {bad}"); sys.exit(1)
+py = open("pyproject.toml", encoding="utf-8").read()
+if not re.search(r"(?m)^package\s*=\s*false\b", py) or not re.search(r"(?m)^dependencies\s*=\s*\[\s*\]", py):
+    print("pyproject.toml: require [tool.uv].package = false and empty [project].dependencies"); sys.exit(1)'
+'''
+hint = "Declare developer tools in global ~/.config/mise/config.toml (dotfiles-v2), CI pins in .github/ci/mise.toml, and Python linters in pyproject.toml [dependency-groups]."
+timeout = "5s"
+
+[doctor.checks.hk-pin-match]
+description = "hk.pkl pins one hk version consistently and matches global mise hk where set"
+run = '''
+python3 -I -c 'import os, re, sys
+pkl = open("hk.pkl", encoding="utf-8").read()
+urls = re.findall(r"releases/download/v([^/]+)/hk@([^#]+)#", pkl)
+vs = {v for pair in urls for v in pair}
+if len(urls) != 2 or len(vs) != 1 or f"min_hk_version = \"{next(iter(vs))}\"" not in pkl:
+    sys.exit(1)
+pin = next(iter(vs))
+cfg = os.environ.get("MISE_GLOBAL_CONFIG_FILE") or os.path.join(os.environ.get("XDG_CONFIG_HOME") or os.path.expanduser("~/.config"), "mise", "config.toml")
+if os.path.exists(cfg):
+    txt = open(cfg, encoding="utf-8").read()
+    m = re.search(r"(?ms)^\[tools\]\s*(.*?)(?=^\[|\Z)", txt)
+    if m:
+        hk = re.search(r"(?m)^\s*hk\s*=\s*(?:\"([^\"]+)\"|\{[^}]*version\s*=\s*\"([^\"]+)\")", m.group(1))
+        if hk and (hk.group(1) or hk.group(2)) != pin:
+            sys.exit(1)'
+'''
+hint = "Align hk.pkl's two package URLs, min_hk_version, and the global mise hk pin."
+timeout = "5s"

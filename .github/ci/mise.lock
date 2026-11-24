@@ -2,158 +2,6 @@
 
 lockfile_version = 4
 
-[conda-packages.linux-arm64."_openmp_mutex-4.5-20_gnu"]
-url = "https://conda.anaconda.org/conda-forge/linux-aarch64/_openmp_mutex-4.5-20_gnu.conda"
-checksum = "sha256:a2527b1d81792a0ccd2c05850960df119c2b6d8f5fdec97f2db7d25dc23b1068"
-
-[conda-packages.linux-arm64."clang-format-23-23.1.5-default_h01b09c7_0"]
-url = "https://conda.anaconda.org/conda-forge/linux-aarch64/clang-format-23-23.1.5-default_h01b09c7_0.conda"
-checksum = "sha256:5e556f8100d0f07b69518cb8ed4f8377bb496a888b6d179bc6edd698c4324530"
-
-[conda-packages.linux-arm64."libclang-cpp23.1-23.1.5-default_h01b09c7_0"]
-url = "https://conda.anaconda.org/conda-forge/linux-aarch64/libclang-cpp23.1-23.1.5-default_h01b09c7_0.conda"
-checksum = "sha256:fb71debcfd125fb514bc12bce982af7c1ff32dd558af30b5c5a16446cb8b7da5"
-
-[conda-packages.linux-arm64."libgcc-16.2.0-h205dda4_7"]
-url = "https://conda.anaconda.org/conda-forge/linux-aarch64/libgcc-16.2.0-h205dda4_7.conda"
-checksum = "sha256:eae7a3449d5a3b5351c5427137c076cc3fc826645c7bfc42dc10772b783826f1"
-
-[conda-packages.linux-arm64."libgomp-16.2.0-h8acb6b2_7"]
-url = "https://conda.anaconda.org/conda-forge/linux-aarch64/libgomp-16.2.0-h8acb6b2_7.conda"
-checksum = "sha256:4406fd67c5beeb99b9372f9bf07aa3e40ca141e337eceebac3ff64aa72799494"
-
-[conda-packages.linux-arm64."libiconv-1.18-h1ea5142_3"]
-url = "https://conda.anaconda.org/conda-forge/linux-aarch64/libiconv-1.18-h1ea5142_3.conda"
-checksum = "sha256:d22c666eb887afd2119aac2110e23a0e817e9391bda99293421f7c46dab1564c"
-
-[conda-packages.linux-arm64."libllvm23-23.1.5-h680871c_0"]
-url = "https://conda.anaconda.org/conda-forge/linux-aarch64/libllvm23-23.1.5-h680871c_0.conda"
-checksum = "sha256:fc290d5795cd007a36dd92963fd96f6ae4e88b64873bf20b396b851ca942d994"
-
-[conda-packages.linux-arm64."liblzma-5.8.3-he30d5cf_1"]
-url = "https://conda.anaconda.org/conda-forge/linux-aarch64/liblzma-5.8.3-he30d5cf_1.conda"
-checksum = "sha256:f760669fd1cea27f689f411c0d5488e26ce50e382c9b63e4ad348f959850124a"
-
-[conda-packages.linux-arm64."libstdcxx-16.2.0-hef695bb_7"]
-url = "https://conda.anaconda.org/conda-forge/linux-aarch64/libstdcxx-16.2.0-hef695bb_7.conda"
-checksum = "sha256:b241a3acfa9cdb1359112864a1241225533c92642de3000d52ae65ef5d3a9786"
-
-[conda-packages.linux-arm64."libxml2-16-2.15.4-h183574b_1"]
-url = "https://conda.anaconda.org/conda-forge/linux-aarch64/libxml2-16-2.15.4-h183574b_1.conda"
-checksum = "sha256:935a9ee7eedc0e79b0eb3243fa1d1070fa981f37a492dea3f898ecb49e17ae09"
-
-[conda-packages.linux-arm64."libxml2-2.15.4-ha1111c9_1"]
-url = "https://conda.anaconda.org/conda-forge/linux-aarch64/libxml2-2.15.4-ha1111c9_1.conda"
-checksum = "sha256:4d2fb77baf134ca2c4ba0c4ad760ff59f9c968aecbb7be7bbd530bd175e33953"
-
-[conda-packages.linux-arm64."libzlib-1.3.2-hdc9db2a_3"]
-url = "https://conda.anaconda.org/conda-forge/linux-aarch64/libzlib-1.3.2-hdc9db2a_3.conda"
-checksum = "sha256:76efa6cc9d7e6f5ee3bbca0939f64054af2bdfb3c3632531f8e633cf6c2ea41e"
-
-[conda-packages.linux-arm64."zstd-1.5.7-h9d15635_7"]
-url = "https://conda.anaconda.org/conda-forge/linux-aarch64/zstd-1.5.7-h9d15635_7.conda"
-checksum = "sha256:427fd14bcb3b8659796fecc682716617409350fb5a98e5b7b47558a10d1a2fc7"
-
-[conda-packages.linux-x64."_openmp_mutex-4.5-20_gnu"]
-url = "https://conda.anaconda.org/conda-forge/linux-64/_openmp_mutex-4.5-20_gnu.conda"
-checksum = "sha256:1dd3fffd892081df9726d7eb7e0dea6198962ba775bd88842135a4ddb4deb3c9"
-
-[conda-packages.linux-x64."clang-format-23-23.1.5-default_h0acdd01_0"]
-url = "https://conda.anaconda.org/conda-forge/linux-64/clang-format-23-23.1.5-default_h0acdd01_0.conda"
-checksum = "sha256:be6497f218a8da66949b1b446c2d7c4fdf621b62047c31c2fb234de42acf8f00"
-
-[conda-packages.linux-x64."icu-78.3-py310h44b86e0_2"]
-url = "https://conda.anaconda.org/conda-forge/linux-64/icu-78.3-py310h44b86e0_2.conda"
-checksum = "sha256:9f07834f0c546ab14d885ce0366285f61f44e326c0edd1fc63b8294e113ae432"
-
-[conda-packages.linux-x64."libclang-cpp23.1-23.1.5-default_h0acdd01_0"]
-url = "https://conda.anaconda.org/conda-forge/linux-64/libclang-cpp23.1-23.1.5-default_h0acdd01_0.conda"
-checksum = "sha256:0c506f0e598c90e6fe374188e6e102a1346dcbf2b43d25e3db3e3975700d8a5d"
-
-[conda-packages.linux-x64."libgcc-16.2.0-ha9f2e26_7"]
-url = "https://conda.anaconda.org/conda-forge/linux-64/libgcc-16.2.0-ha9f2e26_7.conda"
-checksum = "sha256:e031634c3a928f9594eba868bc46ef5230d6571a364a0c63215b06c4563bfcea"
-
-[conda-packages.linux-x64."libgomp-16.2.0-he0feb66_7"]
-url = "https://conda.anaconda.org/conda-forge/linux-64/libgomp-16.2.0-he0feb66_7.conda"
-checksum = "sha256:92a0bb350c7be6a4eedcb4e111c60aefd176018e6b1c009a6e025dbe9bbcd758"
-
-[conda-packages.linux-x64."libiconv-1.18-h0cb94f2_3"]
-url = "https://conda.anaconda.org/conda-forge/linux-64/libiconv-1.18-h0cb94f2_3.conda"
-checksum = "sha256:f943117edb9cd4d9c61cc972eee5a34291dc55ea7a6e9e38da104995841cbcb6"
-
-[conda-packages.linux-x64."libllvm23-23.1.5-h474f4eb_0"]
-url = "https://conda.anaconda.org/conda-forge/linux-64/libllvm23-23.1.5-h474f4eb_0.conda"
-checksum = "sha256:9ab8b037a54db1abeb20f9a5e82e90a22f8a4b27094b599c04846ab58ed9a654"
-
-[conda-packages.linux-x64."liblzma-5.8.3-hb03c661_1"]
-url = "https://conda.anaconda.org/conda-forge/linux-64/liblzma-5.8.3-hb03c661_1.conda"
-checksum = "sha256:9787df8c22a59c9a70d3e5a10db9ad663485e75e9ccc3f09bd092cb7b95e0dab"
-
-[conda-packages.linux-x64."libstdcxx-16.2.0-h934c35e_7"]
-url = "https://conda.anaconda.org/conda-forge/linux-64/libstdcxx-16.2.0-h934c35e_7.conda"
-checksum = "sha256:fa7018298629fc429971fffd6ecba3d27a7b02e4e890d6a93ea01ffebe8cb745"
-
-[conda-packages.linux-x64."libxml2-16-2.15.4-hf3af7cc_1"]
-url = "https://conda.anaconda.org/conda-forge/linux-64/libxml2-16-2.15.4-hf3af7cc_1.conda"
-checksum = "sha256:d1906463070c21f3215cd5de93164f31c44d5bac6ae9b5d8f5adf42b1e304039"
-
-[conda-packages.linux-x64."libxml2-2.15.4-h7df9aa5_1"]
-url = "https://conda.anaconda.org/conda-forge/linux-64/libxml2-2.15.4-h7df9aa5_1.conda"
-checksum = "sha256:8c32be9e8720bc413d2b4267517459d7d71fad4a5f398a2aa8319b6d7b8a00e6"
-
-[conda-packages.linux-x64."libzlib-1.3.2-h25fd6f3_3"]
-url = "https://conda.anaconda.org/conda-forge/linux-64/libzlib-1.3.2-h25fd6f3_3.conda"
-checksum = "sha256:eb8a0db0aa570124f7d2a93d7c7f596e3390df5e047818d873baad32985fc736"
-
-[conda-packages.linux-x64."zstd-1.5.7-hb78ec9c_7"]
-url = "https://conda.anaconda.org/conda-forge/linux-64/zstd-1.5.7-hb78ec9c_7.conda"
-checksum = "sha256:47d682b9f6d6ec9eb1a6e6c3e75ea6273e899e78fb7fc59f81d39745009fbc60"
-
-[conda-packages.macos-arm64."clang-format-23-23.1.5-default_h8bbc02d_0"]
-url = "https://conda.anaconda.org/conda-forge/osx-arm64/clang-format-23-23.1.5-default_h8bbc02d_0.conda"
-checksum = "sha256:89914035e5919a5066a85de3c57e239684a293ed0e4a65efde60f14f17a6f3bd"
-
-[conda-packages.macos-arm64."icu-78.3-py310h579977c_2"]
-url = "https://conda.anaconda.org/conda-forge/osx-arm64/icu-78.3-py310h579977c_2.conda"
-checksum = "sha256:6cdb5dee54c72e56ab189fb3ad33cb28533553d42590e7e831160248f4416a43"
-
-[conda-packages.macos-arm64."libclang-cpp23.1-23.1.5-default_h8bbc02d_0"]
-url = "https://conda.anaconda.org/conda-forge/osx-arm64/libclang-cpp23.1-23.1.5-default_h8bbc02d_0.conda"
-checksum = "sha256:64fa0320233ace12b0cca4b4353fe4ca18df6231e1918b44a32b70873c308e6b"
-
-[conda-packages.macos-arm64."libcxx-23.1.5-hc645fd0_2"]
-url = "https://conda.anaconda.org/conda-forge/osx-arm64/libcxx-23.1.5-hc645fd0_2.conda"
-checksum = "sha256:a839afbb532798d2cb2c51306506fb4b3aa48e075319513a917bd98d7b6cb0eb"
-
-[conda-packages.macos-arm64."libiconv-1.18-he4c29f2_3"]
-url = "https://conda.anaconda.org/conda-forge/osx-arm64/libiconv-1.18-he4c29f2_3.conda"
-checksum = "sha256:689a14968267f2f97c07112fca5636e7d756036b9aee969911267c20bd3eea1f"
-
-[conda-packages.macos-arm64."libllvm23-23.1.5-h759d1ac_0"]
-url = "https://conda.anaconda.org/conda-forge/osx-arm64/libllvm23-23.1.5-h759d1ac_0.conda"
-checksum = "sha256:9288fdfba716a08aa6dca482a180ebf1bcf1cd1573d479b92e39d6c7cf97b412"
-
-[conda-packages.macos-arm64."liblzma-5.8.3-h8088a28_1"]
-url = "https://conda.anaconda.org/conda-forge/osx-arm64/liblzma-5.8.3-h8088a28_1.conda"
-checksum = "sha256:23d0630046a3e8b164d8f80f2b74ed2605af2e7050ab9913018056402fae4311"
-
-[conda-packages.macos-arm64."libxml2-16-2.15.4-heb56d2d_1"]
-url = "https://conda.anaconda.org/conda-forge/osx-arm64/libxml2-16-2.15.4-heb56d2d_1.conda"
-checksum = "sha256:1acd4dd49c6f54440dc172ab469d0e2c7c3c02de5b1f21158a233eb585ec3c38"
-
-[conda-packages.macos-arm64."libxml2-2.15.4-h550178d_1"]
-url = "https://conda.anaconda.org/conda-forge/osx-arm64/libxml2-2.15.4-h550178d_1.conda"
-checksum = "sha256:f333b4c6c823ea317aeb0b817520ae3ba2fb16277923d848f5f2aee2049198e5"
-
-[conda-packages.macos-arm64."libzlib-1.3.2-h8088a28_3"]
-url = "https://conda.anaconda.org/conda-forge/osx-arm64/libzlib-1.3.2-h8088a28_3.conda"
-checksum = "sha256:a18fa5d5bac452401459f966cf0d872224e8080c4ff93c77e168d43ab42ef9d7"
-
-[conda-packages.macos-arm64."zstd-1.5.7-hf451053_7"]
-url = "https://conda.anaconda.org/conda-forge/osx-arm64/zstd-1.5.7-hf451053_7.conda"
-checksum = "sha256:da867f5092eb0cb746d353694f0098031fd9817a4ce7d5743121209ae0f406ca"
-
 [[tools.betterleaks]]
 version = "1.10.1"
 backend = "aqua:betterleaks/betterleaks"
@@ -177,90 +25,26 @@ url = "https://github.com/betterleaks/betterleaks/releases/download/v1.10.1/bett
 url_api = "https://api.github.com/repos/betterleaks/betterleaks/releases/assets/740237732"
 provenance = "cosign"
 
-[[tools.clang-format]]
-version = "23.1.5"
-backend = "conda:clang-format"
-specifiers = ["23.1.5"]
-
-[tools.clang-format.options]
-channel = "conda-forge"
-
-[tools.clang-format."platforms.linux-arm64"]
-checksum = "sha256:0cbb47060297c7bb15e510163c666e0717b3777d6390623f472c3172a0942b8f"
-url = "https://conda.anaconda.org/conda-forge/linux-aarch64/clang-format-23.1.5-default_h7ff7a00_0.conda"
-conda_deps = [
-    "clang-format-23-23.1.5-default_h01b09c7_0",
-    "libclang-cpp23.1-23.1.5-default_h01b09c7_0",
-    "libllvm23-23.1.5-h680871c_0",
-    "libzlib-1.3.2-hdc9db2a_3",
-    "libstdcxx-16.2.0-hef695bb_7",
-    "libgcc-16.2.0-h205dda4_7",
-    "zstd-1.5.7-h9d15635_7",
-    "libxml2-2.15.4-ha1111c9_1",
-    "libxml2-16-2.15.4-h183574b_1",
-    "_openmp_mutex-4.5-20_gnu",
-    "libgomp-16.2.0-h8acb6b2_7",
-    "libiconv-1.18-h1ea5142_3",
-    "liblzma-5.8.3-he30d5cf_1",
-]
-
-[tools.clang-format."platforms.linux-x64"]
-checksum = "sha256:d6468a6b5a529d79c8a5d0b0c035b08f9466f02812d66c1aa56b7144104a3d33"
-url = "https://conda.anaconda.org/conda-forge/linux-64/clang-format-23.1.5-default_ha3b7fd0_0.conda"
-conda_deps = [
-    "clang-format-23-23.1.5-default_h0acdd01_0",
-    "libclang-cpp23.1-23.1.5-default_h0acdd01_0",
-    "libllvm23-23.1.5-h474f4eb_0",
-    "libzlib-1.3.2-h25fd6f3_3",
-    "libstdcxx-16.2.0-h934c35e_7",
-    "libgcc-16.2.0-ha9f2e26_7",
-    "libxml2-2.15.4-h7df9aa5_1",
-    "libxml2-16-2.15.4-hf3af7cc_1",
-    "zstd-1.5.7-hb78ec9c_7",
-    "_openmp_mutex-4.5-20_gnu",
-    "libgomp-16.2.0-he0feb66_7",
-    "liblzma-5.8.3-hb03c661_1",
-    "icu-78.3-py310h44b86e0_2",
-    "libiconv-1.18-h0cb94f2_3",
-]
-
-[tools.clang-format."platforms.macos-arm64"]
-checksum = "sha256:aef73946efae42a9e53e4a0beefcd597365ec7aa1b734113a24df22345537fc5"
-url = "https://conda.anaconda.org/conda-forge/osx-arm64/clang-format-23.1.5-default_h94b63bd_0.conda"
-conda_deps = [
-    "clang-format-23-23.1.5-default_h8bbc02d_0",
-    "libclang-cpp23.1-23.1.5-default_h8bbc02d_0",
-    "libllvm23-23.1.5-h759d1ac_0",
-    "libcxx-23.1.5-hc645fd0_2",
-    "libzlib-1.3.2-h8088a28_3",
-    "libxml2-2.15.4-h550178d_1",
-    "libxml2-16-2.15.4-heb56d2d_1",
-    "zstd-1.5.7-hf451053_7",
-    "liblzma-5.8.3-h8088a28_1",
-    "icu-78.3-py310h579977c_2",
-    "libiconv-1.18-he4c29f2_3",
-]
-
 [[tools.hk]]
-version = "2.12.0"
+version = "2.14.0"
 backend = "packslip:github.com/jdx/hk"
-specifiers = ["2.12.0"]
+specifiers = ["2.14.0"]
 
 [tools.hk."platforms.linux-arm64"]
-checksum = "sha256:0f4e44802c3fcf98461b6608281353ae1944b82fd12f4a683f8e2e6683e562f3"
-url = "https://github.com/jdx/hk/releases/download/v2.12.0/hk-aarch64-unknown-linux-gnu.tar.gz"
+checksum = "sha256:a5503bc4a6cef77697aed92c966f7b444b3fdea4b62b63d9fb0b2b1af7f08c83"
+url = "https://github.com/jdx/hk/releases/download/v2.14.0/hk-aarch64-unknown-linux-gnu.tar.gz"
 signer = "sigstore-oidc:https://github.com/jdx/hk/.github/workflows/release.yml"
 repository_ids = { repository = "922514152" }
 
 [tools.hk."platforms.linux-x64"]
-checksum = "sha256:db98f893b882f064c1f7abcc96f4ccc31e8154fd1ba0f7f94823d371c2c4fdad"
-url = "https://github.com/jdx/hk/releases/download/v2.12.0/hk-x86_64-unknown-linux-gnu.tar.gz"
+checksum = "sha256:230e89eaa3bf78aea23ac1584c8de9dd49141487f6067083003d8bdb38fa6c34"
+url = "https://github.com/jdx/hk/releases/download/v2.14.0/hk-x86_64-unknown-linux-gnu.tar.gz"
 signer = "sigstore-oidc:https://github.com/jdx/hk/.github/workflows/release.yml"
 repository_ids = { repository = "922514152" }
 
 [tools.hk."platforms.macos-arm64"]
-checksum = "sha256:269c17d47e884c19adb77144d5957e854fc5fc6a1a6f9c1a0a5b19431e2fabb8"
-url = "https://github.com/jdx/hk/releases/download/v2.12.0/hk-aarch64-apple-darwin.tar.gz"
+checksum = "sha256:82a6ceb4a69bcf9667502f5bdf487a7d1a3aa5078197e981cf0538086d90b778"
+url = "https://github.com/jdx/hk/releases/download/v2.14.0/hk-aarch64-apple-darwin.tar.gz"
 signer = "sigstore-oidc:https://github.com/jdx/hk/.github/workflows/release.yml"
 repository_ids = { repository = "922514152" }
 
@@ -352,15 +136,12 @@ url = "https://nodejs.org/dist/v26.13.1/node-v26.13.1-darwin-arm64.tar.gz"
 
 [[tools."npm:renovate"]]
 version = "44.239.1"
-aube = { path = ".mise/locks/npm-renovate/44.239.1~aa673d8d", digest = "sha256:324c7eebb7e5441c844a6e64971e94f9799484b9338cd8ab233e8ab613a5c594" }
+aube = { path = ".mise/locks/npm-renovate/44.239.1~aa673d8d", digest = "sha256:f52551d88d83e6f5b4b58b33fc0afa15ee06e95772075bcb0bc8c0ed1b66078b" }
 backend = "npm:renovate"
 specifiers = ["44.239.1"]
 
 [tools."npm:renovate".options]
 trust_policy_excludes = '["@yarnpkg/libzip@3.2.2"]'
-
-[tools."npm:renovate".provenance]
-repository = "github.com/renovatebot/renovate"
 
 [[tools.osv-scanner]]
 version = "2.7.1"
@@ -385,89 +166,34 @@ checksum_source = "mise-versions"
 url = "https://github.com/google/osv-scanner/releases/download/v2.7.1/osv-scanner_darwin_arm64"
 url_api = "https://api.github.com/repos/google/osv-scanner/releases/assets/726165290"
 
-[[tools."pipx:cpplint"]]
-version = "2.0.2"
-backend = "pipx:cpplint"
-specifiers = ["2.0.2"]
-uv = { path = ".mise/locks/pipx-cpplint/2.0.2", digest = "sha256:9c0032289e35292126e652f50d73dacf98cdb536cd8fef8f54eb87346e574ba4" }
-
 [[tools.pkl]]
-version = "0.33.0"
+version = "0.33.1"
 backend = "aqua:apple/pkl"
-specifiers = ["0.33.0"]
+specifiers = ["0.33.1"]
 
 [tools.pkl."platforms.linux-arm64"]
-checksum = "sha256:edcea361402ecab0f3a93f86b1a896c41d00a9241f4962f70278254b08fbd26d"
+checksum = "sha256:4a752096dab13d7432e1f0a4f1219833df95e1e36ce0b8d424b0edb2cd5436f9"
 checksum_source = "mise-versions"
-url = "https://github.com/apple/pkl/releases/download/0.33.0/pkl-linux-aarch64"
-url_api = "https://api.github.com/repos/apple/pkl/releases/assets/714756970"
+url = "https://github.com/apple/pkl/releases/download/0.33.1/pkl-linux-aarch64"
+url_api = "https://api.github.com/repos/apple/pkl/releases/assets/764390162"
 
 [tools.pkl."platforms.linux-x64"]
-checksum = "sha256:b9a6ddea6b382b7d4db4cf78e77aa3858e0c8a7e02939d2ba298574b5d1fcc69"
+checksum = "sha256:acbca9bb4f31139d09e295d03c9fb25f77edf5a74af4e772b56b32dc6dc17c44"
 checksum_source = "mise-versions"
-url = "https://github.com/apple/pkl/releases/download/0.33.0/pkl-linux-amd64"
-url_api = "https://api.github.com/repos/apple/pkl/releases/assets/714756975"
+url = "https://github.com/apple/pkl/releases/download/0.33.1/pkl-linux-amd64"
+url_api = "https://api.github.com/repos/apple/pkl/releases/assets/764390166"
 
 [tools.pkl."platforms.macos-arm64"]
-checksum = "sha256:e39c157df0f00a35d34b46270a768784edcaf509aafbf743849b27b4c83ef83b"
+checksum = "sha256:6f93ddf6524a5771bd4b6ebde11010c6dfee8e3a8906ffebaa8f52f8a0ba16b7"
 checksum_source = "mise-versions"
-url = "https://github.com/apple/pkl/releases/download/0.33.0/pkl-macos-aarch64"
-url_api = "https://api.github.com/repos/apple/pkl/releases/assets/714757040"
+url = "https://github.com/apple/pkl/releases/download/0.33.1/pkl-macos-aarch64"
+url_api = "https://api.github.com/repos/apple/pkl/releases/assets/764390310"
 
 [[tools.prettier]]
 version = "3.10.1"
 aube = { path = ".mise/locks/prettier/3.10.1", digest = "sha256:2d1e8d35e9c42e9df167e305f2f8d5fc6fa8ab982cf1070a7e5148d73b5c5534" }
 backend = "npm:prettier"
 specifiers = ["3.10.1"]
-
-[[tools."pypi:gersemi"]]
-version = "0.29.2"
-backend = "pypi:gersemi"
-specifiers = ["0.29.2"]
-uv = { path = ".mise/locks/pypi-gersemi/0.29.2~7d0592b0", digest = "sha256:32bc44f9063359585d6837db4cf1107a69ec479856e404015737cd93ad82859e" }
-
-[tools."pypi:gersemi".options]
-python = "3.14.10"
-
-[[tools.python]]
-version = "3.15.2"
-backend = "core:python"
-specifiers = ["3.15.2"]
-
-[tools.python."platforms.linux-arm64"]
-checksum = "sha256:d1367a6c3cd86a9e35712072841f1376859f3b47a2a54e224421a0f9fd169047"
-url = "https://github.com/astral-sh/python-build-standalone/releases/download/20261110/cpython-3.15.2+20261110-aarch64-unknown-linux-gnu-install_only_stripped.tar.gz"
-provenance = "github-attestations"
-
-[tools.python."platforms.linux-x64"]
-checksum = "sha256:ad23d1b73fac26440b0306ae06911031344c49a90ec19716c8362e7fa40cae43"
-url = "https://github.com/astral-sh/python-build-standalone/releases/download/20261110/cpython-3.15.2+20261110-x86_64-unknown-linux-gnu-install_only_stripped.tar.gz"
-provenance = "github-attestations"
-
-[tools.python."platforms.macos-arm64"]
-checksum = "sha256:7e58607647b5b4832092a339ff1c55eeeccee128221232509b8fc8d27957065e"
-url = "https://github.com/astral-sh/python-build-standalone/releases/download/20261110/cpython-3.15.2+20261110-aarch64-apple-darwin-install_only_stripped.tar.gz"
-provenance = "github-attestations"
-
-[[tools.python]]
-version = "3.14.10"
-backend = "core:python"
-specifiers = ["3.14.10"]
-
-[tools.python."platforms.linux-arm64"]
-checksum = "sha256:38fd50f07170adc29d481913d1c30b17ecb538fbe290315fe1f83d84fdd5b694"
-url = "https://github.com/astral-sh/python-build-standalone/releases/download/20261110/cpython-3.14.10+20261110-aarch64-unknown-linux-gnu-install_only_stripped.tar.gz"
-provenance = "github-attestations"
-
-[tools.python."platforms.linux-x64"]
-checksum = "sha256:c2ff2e97422f5d3896a16e0317fd212ba977bbf2688d93a6f7a03d817506bd30"
-url = "https://github.com/astral-sh/python-build-standalone/releases/download/20261110/cpython-3.14.10+20261110-x86_64-unknown-linux-gnu-install_only_stripped.tar.gz"
-provenance = "github-attestations"
-
-[tools.python."platforms.macos-arm64"]
-checksum = "sha256:f15ec3d15460dd66c2eb88639b152cd9040e7d1ece11e38bf89e8f53f0171e02"
-url = "https://github.com/astral-sh/python-build-standalone/releases/download/20261110/cpython-3.14.10+20261110-aarch64-apple-darwin-install_only_stripped.tar.gz"
-provenance = "github-attestations"
 
 [[tools.ruff]]
 version = "0.17.5"
@@ -631,26 +357,26 @@ url = "https://github.com/crate-ci/typos/releases/download/v1.52.2/typos-v1.52.2
 url_api = "https://api.github.com/repos/crate-ci/typos/releases/assets/733789873"
 
 [[tools.uv]]
-version = "0.13.8"
+version = "0.13.9"
 backend = "aqua:astral-sh/uv"
-specifiers = ["0.13.8"]
+specifiers = ["0.13.9"]
 
 [tools.uv."platforms.linux-arm64"]
-checksum = "sha256:74f2f5c6024d397481db228db8fc25eed420db192243f88438c118e7e013e585"
-url = "https://github.com/astral-sh/uv/releases/download/0.13.8/uv-aarch64-unknown-linux-gnu.tar.gz"
-url_api = "https://api.github.com/repos/astral-sh/uv/releases/assets/740313629"
+checksum = "sha256:0797542018e541a9288855df555c8077eed06f7a47d206362030480e8ecc9f3d"
+url = "https://github.com/astral-sh/uv/releases/download/0.13.9/uv-aarch64-unknown-linux-gnu.tar.gz"
+url_api = "https://api.github.com/repos/astral-sh/uv/releases/assets/758513657"
 provenance = "github-attestations"
 
 [tools.uv."platforms.linux-x64"]
-checksum = "sha256:5acfd9177cfecf0bf87578f059728215ccc884388988f55f7a65041b57387d91"
-url = "https://github.com/astral-sh/uv/releases/download/0.13.8/uv-x86_64-unknown-linux-gnu.tar.gz"
-url_api = "https://api.github.com/repos/astral-sh/uv/releases/assets/740313966"
+checksum = "sha256:a7fbaff2b9a271d85c1bdb540941090fd1ce011797b4abeb48e4dcd39c2471d5"
+url = "https://github.com/astral-sh/uv/releases/download/0.13.9/uv-x86_64-unknown-linux-gnu.tar.gz"
+url_api = "https://api.github.com/repos/astral-sh/uv/releases/assets/758513954"
 provenance = "github-attestations"
 
 [tools.uv."platforms.macos-arm64"]
-checksum = "sha256:6b71028a6b904f2ae3340ef52e595512de807d06c0a20eaef2f692581b246558"
-url = "https://github.com/astral-sh/uv/releases/download/0.13.8/uv-aarch64-apple-darwin.tar.gz"
-url_api = "https://api.github.com/repos/astral-sh/uv/releases/assets/740313603"
+checksum = "sha256:5aeca67f2283f75235de40d0bd9c0a5bbc5fce23b6d48b3bf9fa1b2db08382ca"
+url = "https://github.com/astral-sh/uv/releases/download/0.13.9/uv-aarch64-apple-darwin.tar.gz"
+url_api = "https://api.github.com/repos/astral-sh/uv/releases/assets/758513631"
 provenance = "github-attestations"
 
 [[tools.zizmor]]

@@ -6,20 +6,6 @@
     "automerge": false,
     "minimumReleaseAge": null
   },
-  "customManagers": [
-    {
-      "customType": "regex",
-      "description": "gersemi's own python pin in .mise.toml, which the mise manager does not read. It does not update mise.lock: whoever checks the PR out runs mise lock, tools:lock-check and tools:lock-verify.",
-      "managerFilePatterns": ["/^\\.mise\\.toml$/"],
-      "matchStrings": [
-        "\"pypi:gersemi\"\\s*=\\s*\\{[^}]*\\bpython\\s*=\\s*\"(?<currentValue>[^\"]+)\""
-      ],
-      "depNameTemplate": "python (gersemi)",
-      "packageNameTemplate": "python/cpython",
-      "datasourceTemplate": "github-tags",
-      "extractVersionTemplate": "^v(?<version>\\S+)"
-    }
-  ],
   "packageRules": [
     {
       "description": "CI here is advisory, not a merge gate, so every update waits for the local checks, the Codex review and a manual merge.",
@@ -31,11 +17,6 @@
       "matchDatasources": ["docker"],
       "matchPackageNames": ["ubuntu"],
       "allowedVersions": "/^\\d{2}\\.\\d{2}$/"
-    },
-    {
-      "description": "cmakelang (cmake-format) fails on Python 3.15, so gersemi's python stays on 3.14 patch releases.",
-      "matchDepNames": ["python (gersemi)"],
-      "allowedVersions": "<3.15"
     },
     {
       "description": "shellcheck is maintained (commits and merges through 2026-11) but its releases from v0.8.0 (2021-11) to v0.11.0 (2025-08) came 13 to 17 months apart, so the default 1-year abandonment threshold flags it (koalaman/shellcheck#3609). cpplint keeps the default: its maintainer gap is real (cpplint/cpplint#402).",
