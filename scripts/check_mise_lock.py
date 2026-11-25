@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
-"""Check that mise.lock can install every pinned tool on every locked platform.
+"""Check that .github/ci/mise.lock can install every pinned CI tool on every locked platform.
 
 Two checks, both read-only:
 
-- every tool in .mise.toml's [tools] has a mise.lock entry at the pinned version;
+- every tool in .github/ci/mise.toml's [tools] has a .github/ci/mise.lock entry at the pinned version;
 - every conda dependency a platform entry names (`conda_deps`) has its own
   `[conda-packages.<platform>]` record with a URL and a checksum. A dangling one makes
   `mise install --locked` fail on that platform ("conda package ... not found in lockfile").
@@ -31,8 +31,8 @@ import tomllib
 from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
-CONFIG = REPO_ROOT / ".mise.toml"
-LOCK = REPO_ROOT / "mise.lock"
+CONFIG = REPO_ROOT / ".github" / "ci" / "mise.toml"
+LOCK = REPO_ROOT / ".github" / "ci" / "mise.lock"
 
 
 def platform_entries(entry: dict) -> dict[str, dict]:
@@ -133,10 +133,11 @@ def isolated_env(root: Path) -> dict[str, str]:
     }
     env.update(
         MISE_CONFIG_DIR=str(root / "config"),
+        MISE_GLOBAL_CONFIG_FILE=str(CONFIG),
         MISE_DATA_DIR=str(root / "data"),
         MISE_CACHE_DIR=str(root / "cache"),
         MISE_STATE_DIR=str(root / "state"),
-        MISE_TRUSTED_CONFIG_PATHS=str(REPO_ROOT),
+        MISE_TRUSTED_CONFIG_PATHS=f"{REPO_ROOT}:{CONFIG.parent}",
         MISE_NPM_PACKAGE_MANAGER=npm_installer,
     )
     return env
@@ -156,7 +157,7 @@ def current_tools(env: dict[str, str]) -> dict[str, list[dict]]:
 
 
 def foreign_tools(env: dict[str, str], pinned: set[str]) -> list[str]:
-    """Tools mise would load in this environment that .mise.toml does not pin."""
+    """Tools mise would load in this environment that .github/ci/mise.toml does not pin."""
     return sorted(set(current_tools(env)) - pinned)
 
 
@@ -243,7 +244,9 @@ def main() -> int:
         print(f"problem: {line}")
     if found:
         return 1
-    print(f"mise.lock holds every pin: {len(config.get('tools', {}))} tools")
+    print(
+        f".github/ci/mise.lock holds every pin: {len(config.get('tools', {}))} CI tools"
+    )
     if args.install:
         return install_locked(set(config.get("tools", {})))
     return 0

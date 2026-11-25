@@ -51,19 +51,26 @@ and it is deliberately conservative about what enters the module interface.
   the prose claims, Markdown table shape, fence balance, relative links, the parts tables, the
   privacy scan, the vendored upstream copies, and the citation anchor. It is fast, needs only Python, and must pass before each commit. The hk `audit-verify` step runs it in check, fix, pre-commit and pre-push, so `git commit` enforces it. No CI check gates a merge: the owner ruled on 2026-11-15 that cpp-core uses no paid services. `.github/workflows/ci.yml` runs on GitHub Actions, which is free on this public repository, as an advisory check; `ci` is not a required check, so a red run reports a problem but blocks nothing. The gate is local: `hk check --all` in the worktree and the Codex reviewer's approval.
 
-- **Tools:** cpp-core pins every tool its hk steps run in `.mise.toml` and commits `mise.lock`,
-  which records what the checks ran with (the owner's ruling of 2026-11-15). Renovate, with the
-  `risu729/renovate-config` preset in `renovate.json`, opens the update PRs and updates `mise.lock`
-  with them. No update merges itself: `renovate.json` turns automerge off, because CI on this repository is advisory, not a merge gate, and no update PR merges on CI alone: an agent checks it out in its own worktree, runs `hk check --all` there and has the Codex reviewer approve it, then merges it as Shipping describes. To update by hand:
-  `mise run tools:outdated`, edit the version, `mise lock`,
-  `mise run tools:lock-check`, then `mise run tools:lock-verify` (slow; installs from the lock into
-  an empty directory). Never run `mise upgrade`. Keep `lockfile_mode = "merge"`: the trial
-  `"generate"` mode writes an incomplete conda entry for clang-format. `tools:lock-verify`
-  installs all 23 pins from the lock, prettier included (mise installs npm tools with its embedded
-  aube). Python and uv are pinned because cpplint and gersemi install from Python dependency locks. The lock check runs on pre-push
-  and in `hk check --all`, not on pre-commit. Find the copy of a tool the checks run with
-  `mise ls --current --json <tool>` (its `install_path`), not `$PATH`: an agent's shell keeps the
-  PATH its session started with, which can name an older install.
+- **Tools:** Per the **2026-11-24 owner ruling** (overturning the 2026-11-15 project-lockfile
+  ruling), cpp-core declares zero `[tools]` in `.mise.toml` and commits no root `mise.lock`:
+  developer tools live at user/global scope (`dotfiles-v2`, including `hk`, `betterleaks`,
+  `hadolint`, `jactionlint`, `kingfisher`, `lychee`, `node`, `osv-scanner`, `pkl`, `prettier`,
+  `npm:renovate`, `ruff`, `rumdl`, `shellcheck`, `shfmt`, `tombi`, `ty`, `typos`, `uv`, `zizmor`),
+  Python-packaged C++/CMake lint and format tools (`clang-format`, `cpplint`, `gersemi`) are pinned
+  in `pyproject.toml` + `uv.lock` (`[tool.uv] package = false`, synced via `mise deps uv` /
+  `uv sync --locked` on Python 3.14 for prebuilt `gersemi` wheels and run via `uv run --locked`),
+  and advisory CI mirrors those mise pins in `.github/ci/mise.toml` + `.github/ci/mise.lock`
+  (loaded in CI via `MISE_GLOBAL_CONFIG_FILE`).
+  Renovate (`renovate.json`) opens update PRs against `.github/ci/mise.toml`, `pyproject.toml`,
+  and `uv.lock`. No update merges itself: `renovate.json` turns automerge off because CI is
+  advisory, so an agent checks the PR out in a worktree, runs `hk check --all` and has the Codex
+  reviewer approve it before merging. To update advisory CI pins by hand: `mise run tools:outdated`,
+  edit `.github/ci/mise.toml`, re-lock `.github/ci/mise.lock` with
+  `MISE_IGNORED_CONFIG_PATHS="$HOME/.config/mise" MISE_GLOBAL_CONFIG_FILE="$PWD/.github/ci/mise.toml" mise lock --global`,
+  run `mise run tools:lock-check`, then `mise run tools:lock-verify` (slow; installs from
+  `.github/ci/mise.lock` into an empty directory). Never run `mise upgrade`. Keep
+  `lockfile_mode = "merge"` in `.github/ci/mise.toml`. Find the active binary path via
+  `mise which <tool>` (or `.venv/bin/<tool>` for uv-managed tools).
 
 - **Renovate warnings:** `mise run renovate:problems` lists the "Repository Problems" in each
   revision Renovate saved to the Dependency Dashboard (#12), with its time. It shows when a warning
@@ -199,7 +206,7 @@ All are stdlib-only Python, none invokes a compiler.
 | `scripts/measure.py` | Measures project: shape, discipline, API, audit coverage, dependency closure (`--write`, `--check`) |
 | `scripts/verify_upstream.py` | Vendored upstream copies against `upstream/manifest.json` |
 | `scripts/check_overlay_drift.py` | Overlay ports' pins against their upstreams' tips (`--network`) |
-| `scripts/check_mise_lock.py` | mise.lock has every pin and every conda dependency record (`--self-test`, `--install`) |
+| `scripts/check_mise_lock.py` | `.github/ci/mise.lock` holds every pin in `.github/ci/mise.toml` (`--self-test`, `--install`) |
 | `scripts/check_doc_commands.py` | Every `mise run <task>` in the docs and scripts names a real task (`--self-test`) |
 | `scripts/ship_merge.py` | Merges a pull request only when the Shipping gates hold (`--dry-run`) |
 | `scripts/renovate_problems.py` | Dependency Dashboard's Repository Problems, revision by revision (`--since`, `--issue`) |
@@ -272,8 +279,11 @@ All documentation has been migrated to OKF bundles. See the bundles for complete
 | File | Purpose |
 |------|---------|
 | `hk.pkl` | hk configuration: shared steps for check, fix, pre-commit and pre-push, plus commit-msg |
-| `.mise.toml` | pinned tools, lockfile settings, and the task file includes |
-| `mise.lock` | the locked tool versions, URLs and checksums for macos-arm64, linux-x64 and linux-arm64 |
+| `.mise.toml` | tool-free task runner config, `[deps.uv]`, doctor checks, and task includes |
+| `pyproject.toml` | pinned Python-packaged C++/CMake lint/format tools (`clang-format`, `cpplint`, `gersemi`) |
+| `uv.lock` | locked wheels for `pyproject.toml` `[dependency-groups].dev` |
+| `.github/ci/mise.toml` | advisory CI tool pins loaded via `MISE_GLOBAL_CONFIG_FILE` |
+| `.github/ci/mise.lock` | locked CI tool versions, URLs and checksums for `linux-arm64`, `linux-x64` and `macos-arm64` |
 | `.clang-format` | clang-format configuration |
 | `.rumdl.toml` | rumdl configuration (MD013, MD041, MD052, MD033 disabled) |
 | `.cpplint` | cpplint configuration (line length 120, disable specific checks) |

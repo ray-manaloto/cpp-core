@@ -73,6 +73,8 @@ jobs:
     timeout-minutes: 30
     permissions:
       contents: read
+    env:
+      MISE_GLOBAL_CONFIG_FILE: ${{ github.workspace }}/.github/ci/mise.toml
     steps:
       # node, which runs prettier, needs libatomic.so.1.
       - name: Install git, Python and libatomic
@@ -84,15 +86,17 @@ jobs:
       - name: Trust the checkout
         run: |
           git config --global --add safe.directory "$GITHUB_WORKSPACE"
-          echo "MISE_TRUSTED_CONFIG_PATHS=$GITHUB_WORKSPACE" >> "$GITHUB_ENV"
-      # The action adds --locked because mise.lock exists; it is spelled out so that a
-      # missing lock fails instead of resolving fresh versions.
+          echo "MISE_TRUSTED_CONFIG_PATHS=$GITHUB_WORKSPACE:$GITHUB_WORKSPACE/.github/ci" >> "$GITHUB_ENV"
       - uses: jdx/mise-action@d5574b52816a478f9d4e6529a3f6ff17a8a36785 # v5.2.8
         with:
-          version: 2026.11.8
+          version: 2026.11.13
           install_args: --locked
+          cache_key: mise-v1-{{platform}}-{{version}}-${{ hashFiles('.github/ci/mise.toml', '.github/ci/mise.lock') }}
           cache_save: ${{ github.ref == 'refs/heads/main' }}
-      - run: hk validate
+      - name: Sync uv lint environment
+        run: mise deps uv
+      - run: mise doctor project
+      - run: hk validate --deny-warnings
       - run: hk check --all
 
   ci:

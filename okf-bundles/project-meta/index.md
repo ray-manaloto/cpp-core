@@ -41,29 +41,23 @@ sources:
 
 Reference for cpp-core project metadata, tool versions, and configuration files.
 
-### Tool Versions (from `.mise.toml`)
+### Tooling Scope (`dotfiles-v2`, `uv.lock`, `.github/ci/mise.toml`)
 
-| Tool | Version | Purpose |
-|------|---------|---------|
-| clang-format | 23.1.4 | C/C++ formatter |
-| cmakelang (pipx) | 0.6.13 | cmake-format, cmake-lint |
-| cpplint (pipx) | 2.0.2 | C++ linter |
-| prettier | 3.10.1 | JSON/Markdown/YAML formatter |
-| ruff | 0.17.5 | Python linter/formatter |
-| rumdl | 0.3.4 | Markdown linter |
-| shellcheck | 0.11.0 | Shell script linter |
-| shfmt | 3.14.1 | Shell script formatter |
-| taplo | 0.10.0 | TOML linter/formatter |
-| ty | 0.0.102 | Python type checker |
-| yamlfmt | 0.21.0 | YAML formatter |
-| yamllint | 1.38.0 | YAML linter |
-| lychee | 0.24.2 | Link checker |
+Per the **2026-11-24 owner ruling** (overturning 2026-11-15), `.mise.toml` declares zero `[tools]` and commits no root `mise.lock`:
+
+- **Developer workstation tools (`dotfiles-v2`):** `hk` (`2.14.0`), `betterleaks`, `hadolint`, `jactionlint`, `kingfisher`, `lychee`, `node`, `osv-scanner`, `pkl`, `prettier`, `npm:renovate`, `ruff`, `rumdl`, `shellcheck`, `shfmt`, `tombi`, `ty`, `typos`, `uv`, `zizmor` come from global `~/.config/mise/config.toml`.
+- **Python-packaged C++/CMake tools (`pyproject.toml` + `uv.lock`):** `clang-format==23.1.5`, `cpplint==2.0.2`, and `gersemi==0.29.2` install via `mise deps uv` (`uv sync --locked`) into `.venv/` and run via `uv run --locked`.
+- **Advisory CI tools (`.github/ci/mise.toml` + `.github/ci/mise.lock`):** `.github/workflows/ci.yml` sets `MISE_GLOBAL_CONFIG_FILE=${{ github.workspace }}/.github/ci/mise.toml` and mirrors the repository's CI pins under `--locked`.
 
 ### Configuration Files
 
 | File | Purpose |
 |------|---------|
-| `.mise.toml` | Task runner config (modular, 8 task files) |
+| `.mise.toml` | Tool-free task runner config, `[deps.uv]`, doctor checks, and task includes |
+| `pyproject.toml` | Pinned `clang-format`, `cpplint`, and `gersemi` dev dependency group |
+| `uv.lock` | Locked Python wheels for `.venv/` lint tools |
+| `.github/ci/mise.toml` | Advisory CI tool pins (`MISE_GLOBAL_CONFIG_FILE`) |
+| `.github/ci/mise.lock` | Locked advisory CI tool checksums (`linux-arm64`, `linux-x64`, `macos-arm64`) |
 | `mise/audit/tasks.toml` | Audit verification tasks (13) |
 | `mise/hk/tasks.toml` | hk-based checks and utilities (14) |
 | `mise/ci/tasks.toml` | CI pipeline (parallelized, 4) |
@@ -72,7 +66,7 @@ Reference for cpp-core project metadata, tool versions, and configuration files.
 | `mise/doctor/tasks.toml` | mise/hk doctor diagnostics (6) |
 | `mise/setup/tasks.toml` | Tool installation, hooks, validation (6) |
 | `mise/render/tasks.toml` | Render tasks (placeholder) |
-| `hk.pkl` | hk git hooks config (27 checks, 4 hooks) |
+| `hk.pkl` | hk git hooks config (`hk@2.14.0`, check, fix, pre-commit, pre-push, commit-msg) |
 | `.clang-format` | clang-format config (LLVM style, 120 cols) |
 | `.rumdl.toml` | rumdl config (MD013, MD041, MD052, MD033 disabled) |
 | `.cpplint` | cpplint config (line length 120, specific disables) |
@@ -83,14 +77,14 @@ Reference for cpp-core project metadata, tool versions, and configuration files.
 
 ### HK Configuration Summary
 
-**Hooks**: check, pre-commit, pre-push, commit-msg
+**Hooks**: check, fix, pre-commit, pre-push, commit-msg
 
-**Steps (28 total)**:
+**Steps**:
 
-- Formatters: clang-format, shfmt, ruff-format, taplo-format, rumdl-format, prettier, mise-fmt, pkl-format, yamlfmt
-- Linters: clang-format (check), cpplint, ruff, rumdl, taplo, yamllint, shellcheck, ty, python-check-ast, python-debug-statements, **lychee**
-- Utilities: check-merge-conflict, check-added-large-files, check-symlinks, trailing-whitespace, newlines, mixed-line-ending, fix-smart-quotes, byte-order-marker, check-case-conflict, check-executables-have-shebangs, check-shebang-scripts-are-executable, hk-validate
-- Commit: check-conventional-commit (commit-msg hook)
+- Formatters: `clang-format`, `gersemi`, `shfmt`, `ruff-format`, `tombi-format`, `rumdl-format`, `prettier`, `mise-fmt`, `pkl-format`
+- Linters: `clang-format` (check), `cpp-lint`, `cpp-lint-modules`, `gersemi` (check), `ruff`, `rumdl`, `tombi`, `renovate-config`, `jactionlint`, `zizmor`, `hadolint`, `shellcheck`, `ty`, `typos`, `python-check-ast`, `python-debug-statements`, `betterleaks`, `kingfisher`, `osv-scanner`, **lychee**
+- Utilities & Audit: `check-merge-conflict`, `check-added-large-files`, `check-symlinks`, `trailing-whitespace`, `newlines`, `mixed-line-ending`, `fix-smart-quotes`, `byte-order-marker`, `check-case-conflict`, `check-executables-have-shebangs`, `check-shebang-scripts-are-executable`, `destroyed-symlinks`, `detect-private-key`, `forbid-submodules`, `hk-validate`, `audit-verify`, `docs-commands`, `mise-lock`, `check-clean-workspace`
+- Commit: `check-conventional-commit` (`commit-msg` hook)
 
 **Parallel Execution**: `mise run hk_check ::: verify ::: doctor` (142% CPU)
 
