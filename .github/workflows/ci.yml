@@ -27,7 +27,7 @@ jobs:
   audit:
     name: audit (verify_audit.py, lock check)
     runs-on: ubuntu-26.04
-    container: ubuntu:26.10@sha256:b5194b8e58989da0865ebc80078bf9f5f8742ec6a867c53f6ae699f6036756f7
+    container: ubuntu:26.10@sha256:29ac5e68db830ab61b7d77c1ffdb78c73f0631de88a5d77bf4399868f64f38dd
     timeout-minutes: 10
     permissions:
       contents: read
@@ -69,7 +69,7 @@ jobs:
     needs: audit
     if: needs.audit.outputs.full == 'true'
     runs-on: ubuntu-26.04
-    container: ubuntu:26.10@sha256:b5194b8e58989da0865ebc80078bf9f5f8742ec6a867c53f6ae699f6036756f7
+    container: ubuntu:26.10@sha256:29ac5e68db830ab61b7d77c1ffdb78c73f0631de88a5d77bf4399868f64f38dd
     timeout-minutes: 30
     permissions:
       contents: read
