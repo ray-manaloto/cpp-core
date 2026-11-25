@@ -45,16 +45,16 @@ includes = [
 [doctor.checks.no-project-tools]
 description = "No project-level [tools], no root mise.lock, and slim pyproject.toml (dotfiles-v2)"
 run = '''
-python3 -I -c 'import glob, os, re, sys
-for f in [".mise.toml"] + sorted(glob.glob("mise/**/*.toml", recursive=True)):
-    txt = open(f, encoding="utf-8").read()
-    if re.search(r"(?m)^\[(?:tools|tool_alias)(?:[.\]])", txt):
-        print(f"{f}: declares [tools]"); sys.exit(1)
+python3 -I -c 'import glob, os, sys, tomllib
+from pathlib import Path
+for f in ["mise.toml", ".mise.toml", *glob.glob("mise/**/*.toml", recursive=True)]:
+    if Path(f).is_file() and {"tools", "tool_alias"}.intersection(tomllib.loads(Path(f).read_text())):
+        print(f"{f}: declares project tools"); sys.exit(1)
 for bad in ("mise.lock", ".mise/locks", ".tool-versions", "package.json"):
     if os.path.exists(bad):
         print(f"forbidden root file: {bad}"); sys.exit(1)
-py = open("pyproject.toml", encoding="utf-8").read()
-if not re.search(r"(?m)^package\s*=\s*false\b", py) or not re.search(r"(?m)^dependencies\s*=\s*\[\s*\]", py):
+py = tomllib.loads(Path("pyproject.toml").read_text())
+if py.get("tool", {}).get("uv", {}).get("package") is not False or py.get("project", {}).get("dependencies") != []:
     print("pyproject.toml: require [tool.uv].package = false and empty [project].dependencies"); sys.exit(1)'
 '''
 hint = "Declare developer tools in global ~/.config/mise/config.toml (dotfiles-v2), CI pins in .github/ci/mise.toml, and Python linters in pyproject.toml [dependency-groups]."
@@ -63,7 +63,7 @@ timeout = "5s"
 [doctor.checks.hk-pin-match]
 description = "hk.pkl pins one hk version consistently and matches global mise hk where set"
 run = '''
-python3 -I -c 'import os, re, sys
+python3 -I -c 'import os, re, sys, tomllib
 pkl = open("hk.pkl", encoding="utf-8").read()
 urls = re.findall(r"releases/download/v([^/]+)/hk@([^#]+)#", pkl)
 vs = {v for pair in urls for v in pair}
@@ -77,12 +77,12 @@ cfg = (
     or os.path.join(os.environ.get("XDG_CONFIG_HOME") or os.path.expanduser("~/.config"), "mise", "config.toml")
 )
 if os.path.exists(cfg):
-    txt = open(cfg, encoding="utf-8").read()
-    m = re.search(r"(?ms)^\[tools\]\s*(.*?)(?=^\[|\Z)", txt)
-    if m:
-        hk = re.search(r"(?m)^\s*hk\s*=\s*(?:\"([^\"]+)\"|\{[^}]*version\s*=\s*\"([^\"]+)\")", m.group(1))
-        if hk and (hk.group(1) or hk.group(2)) != pin:
-            sys.exit(1)'
+    with open(cfg, "rb") as stream:
+        hk = tomllib.load(stream).get("tools", {}).get("hk")
+    if isinstance(hk, dict):
+        hk = hk.get("version")
+    if hk is not None and hk != pin:
+        sys.exit(1)'
 '''
 hint = "Align hk.pkl's two package URLs, min_hk_version, and the global mise hk pin."
 timeout = "5s"
