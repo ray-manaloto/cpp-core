@@ -585,26 +585,26 @@ url_api = "https://api.github.com/repos/tombi-toml/tombi/releases/assets/7318658
 provenance = "github-attestations"
 
 [[tools.ty]]
-version = "0.0.104"
+version = "0.0.112"
 backend = "aqua:astral-sh/ty"
-specifiers = ["0.0.104"]
+specifiers = ["0.0.112"]
 
 [tools.ty."platforms.linux-arm64"]
-checksum = "sha256:47386ea5ae924841cbd54167fe571fa220219da271bb2bf0dc51c6e8212431c2"
-url = "https://github.com/astral-sh/ty/releases/download/0.0.104/ty-aarch64-unknown-linux-gnu.tar.gz"
-url_api = "https://api.github.com/repos/astral-sh/ty/releases/assets/745145445"
+checksum = "sha256:ebf30609c29fdf1198fe86b99206ca1c469c3fbe17e1e42f06ddc2d77f7824eb"
+url = "https://github.com/astral-sh/ty/releases/download/0.0.112/ty-aarch64-unknown-linux-gnu.tar.gz"
+url_api = "https://api.github.com/repos/astral-sh/ty/releases/assets/796733152"
 provenance = "github-attestations"
 
 [tools.ty."platforms.linux-x64"]
-checksum = "sha256:f4cd2dd31eb21382fd46bb5b7dcdc13a5990d0b31fa787dc0dd77030a98738c9"
-url = "https://github.com/astral-sh/ty/releases/download/0.0.104/ty-x86_64-unknown-linux-gnu.tar.gz"
-url_api = "https://api.github.com/repos/astral-sh/ty/releases/assets/745145682"
+checksum = "sha256:660b429933023f19f3c02516e58efbcc81745702a235a209030318e0629eaa25"
+url = "https://github.com/astral-sh/ty/releases/download/0.0.112/ty-x86_64-unknown-linux-gnu.tar.gz"
+url_api = "https://api.github.com/repos/astral-sh/ty/releases/assets/796733514"
 provenance = "github-attestations"
 
 [tools.ty."platforms.macos-arm64"]
-checksum = "sha256:1547e776e35d53d592edffdce5c91403c0b27fd9e78183499a908b4da9be596c"
-url = "https://github.com/astral-sh/ty/releases/download/0.0.104/ty-aarch64-apple-darwin.tar.gz"
-url_api = "https://api.github.com/repos/astral-sh/ty/releases/assets/745145385"
+checksum = "sha256:f41132683a2ed9f05af9b8863578768e1aec2f57a61eb966aa48fb56b940634c"
+url = "https://github.com/astral-sh/ty/releases/download/0.0.112/ty-aarch64-apple-darwin.tar.gz"
+url_api = "https://api.github.com/repos/astral-sh/ty/releases/assets/796733066"
 provenance = "github-attestations"
 
 [[tools.typos]]
